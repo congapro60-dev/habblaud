@@ -10,6 +10,12 @@ do meio (0.**3**.0).
 
 ## [Não lançado]
 
+## [1.2.0] - 2026-10-18
+
+### Adicionado
+
+- **Interface em vietnamita:** suporte locale `vi` às 3.000 chaves traduzidas, incluindo os textos de servidor e scripts. Datas e números usam `vi-VN`. Habblaud World ainda não aceita `vi`; o cadastro continua enviando `pt-BR` para esse serviço. As traduções base foram geradas por tradução automática e passaram por validação de chaves e placeholders.
+
 ## [1.1.0] - 2026-10-18
 
 ### Adicionado
@@ -589,7 +595,8 @@ Primeira versão publicada.
   Subagentes chegam, trabalham e entregam ao principal. Mostra as duas contas, com o uso de 5 horas e semanal de
   cada uma (tap de statusline), além de feed de atividade, avisos e modo demonstração. Roda no Node ou no Docker local.
 
-[Não lançado]: https://github.com/congapro60-dev/habblaud/compare/v1.1.0...HEAD
+[Não lançado]: https://github.com/congapro60-dev/habblaud/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/congapro60-dev/habblaud/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/congapro60-dev/habblaud/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/marmottajr/habblaud/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/marmottajr/habblaud/compare/v1.0.1...v1.0.2

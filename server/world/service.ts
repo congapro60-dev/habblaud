@@ -391,7 +391,7 @@ export class WorldService {
       const client = this.o.client!;
       const altcha = await this.altcha(client);
       if (!altcha.ok) return altcha;
-      const locale = input.locale ?? this.o.locale?.() ?? (getLocale() as WorldLocale);
+      const locale = input.locale ?? this.o.locale?.() ?? (getLocale() === 'vi' ? 'pt-BR' : getLocale() as WorldLocale);
       return client.register({
         email: input.email,
         password: input.password,

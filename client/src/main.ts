@@ -3,6 +3,7 @@
 import { getLocale, registerDictionary, type Locale } from '../../shared/i18n';
 
 const LOADERS: Partial<Record<Locale, () => Promise<Readonly<Record<string, string>>>>> = {
+  vi: () => import('../../shared/locales/vi').then((m) => m.VI),
   en: () => import('../../shared/locales/en').then((m) => m.EN),
   es: () => import('../../shared/locales/es').then((m) => m.ES),
   fr: () => import('../../shared/locales/fr').then((m) => m.FR),

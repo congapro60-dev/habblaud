@@ -165,7 +165,7 @@ const worldUplink =
           const b = readBuildInfo(config.rootDir);
           return { commit: b.commit, dirty: b.dirty };
         },
-        locale: () => getLocale() as WorldLocale,
+        locale: () => (getLocale() === 'vi' ? 'pt-BR' : getLocale()) as WorldLocale,
         store: worldStore,
         canAct: () => config.terminal,
         agents: () => office.list(),

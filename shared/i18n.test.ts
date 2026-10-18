@@ -3,6 +3,7 @@ import { getLocale, intlLocale, normalizeLocale, serverLocale, setLocale, tr } f
 import { EN } from './locales/en';
 import { ES } from './locales/es';
 import { FR } from './locales/fr';
+import { VI } from './locales/vi';
 
 const placeholders = (s: string) => new Set(s.match(/\{\w+\}/g) ?? []);
 
@@ -14,6 +15,8 @@ describe('i18n', () => {
   });
 
   it('reconhece os formatos de idioma do navegador e do sistema', () => {
+    expect(normalizeLocale('vi')).toBe('vi');
+    expect(normalizeLocale('vi-VN')).toBe('vi');
     expect(normalizeLocale('fr')).toBe('fr');
     expect(normalizeLocale('fr-CA')).toBe('fr');
     expect(normalizeLocale('fr_FR.UTF-8')).toBe('fr');
@@ -38,6 +41,15 @@ describe('i18n', () => {
     expect(intlLocale()).toBe('fr-FR');
   });
 
+  it('em vietnamita traduz e formata no locale do Vietnã', () => {
+    setLocale('vi');
+    expect(tr('Configurações')).toBe('Cài đặt');
+    expect(tr('Laço')).toBe('Nơ');
+    expect(tr('Editar personagem')).toBe('Chỉnh sửa nhân vật');
+    expect(tr('o agente')).toBe('tác nhân');
+    expect(intlLocale()).toBe('vi-VN');
+  });
+
   it('lacunas sem argumento ficam como estão (as nomeadas são preenchidas por quem chama)', () => {
     expect(tr('Ganhei de {a} a {b}! 🏆')).toBe('Ganhei de {a} a {b}! 🏆');
     expect(tr('{0} e {1}', ['um'])).toBe('um e {1}');
@@ -45,10 +57,11 @@ describe('i18n', () => {
 
   it('servidor: HABBLAUD_LANG vale para qualquer idioma; do sistema, o inglês não conta', () => {
     expect(serverLocale({ HABBLAUD_LANG: 'en' }, 'pt-BR')).toBe('en');
+    expect(serverLocale({ HABBLAUD_LANG: 'vi' }, 'pt-BR')).toBe('vi');
     expect(serverLocale({ HABBLAUD_LANG: 'es-MX', LANG: 'fr_FR.UTF-8' })).toBe('es');
     // Mac com LANG em inglês e o container sem LANG (Intl en-US): o escritório fica em português.
-    expect(serverLocale({ LANG: 'en_US.UTF-8' }, 'en-US')).toBe('pt-BR');
-    expect(serverLocale({}, 'en-US')).toBe('pt-BR');
+    expect(serverLocale({ LANG: 'en_US.UTF-8' }, 'en-US')).toBe('vi');
+    expect(serverLocale({}, 'en-US')).toBe('vi');
     expect(serverLocale({ LANG: 'en_US.UTF-8' }, 'pt-BR')).toBe('pt-BR');
     expect(serverLocale({ LANG: 'fr_FR.UTF-8' })).toBe('fr');
     expect(serverLocale({ LC_ALL: 'es_ES.UTF-8', LANG: 'en_US.UTF-8' })).toBe('es');
@@ -63,7 +76,7 @@ describe('i18n', () => {
   });
 
   it('nenhuma tradução fica vazia nem perde ou inventa lacunas', () => {
-    for (const [lang, dict] of Object.entries({ en: EN, es: ES, fr: FR })) {
+    for (const [lang, dict] of Object.entries({ vi: VI, en: EN, es: ES, fr: FR })) {
       for (const [pt, t] of Object.entries(dict)) {
         expect(t.trim(), `${lang}: ${pt}`).not.toBe('');
         const original = placeholders(pt);

@@ -19,7 +19,7 @@ Ao usar o World, sai do computador, por HTTPS, para o servidor do mundo:
 | E-mail e senha | No cadastro, ao entrar e ao trocar a senha | Para a conta existir. A senha não fica gravada no computador; no servidor, só um hash (Argon2id) |
 | Nome de jogador (nickname) | No cadastro | É o nome do seu personagem (3 a 20 caracteres, único no mundo, sem diferença de maiúsculas ou acentos): fica reservado para você enquanto a conta espera na lista, e o personagem nasce com ele |
 | Código de 6 dígitos | Ao confirmar o e-mail ou trocar a senha | Provar que o e-mail é seu |
-| Idioma da interface (`pt-BR`, `en`, `es` ou `fr`) | No cadastro | Para os e-mails virem no seu idioma |
+| Idioma da interface (`pt-BR`, `vi`, `en`, `es` ou `fr`) | No cadastro | Para os e-mails virem no seu idioma; a interface `vi` é enviada como `pt-BR` até o protocolo suportar vietnamita |
 | Aceite dos Termos de Uso (só a versão, `v1`) e o código de convite, se você tiver um | No cadastro | Registrar o aceite; o convite põe a conta no próximo lote da lista de espera |
 | Solução do desafio anti-robô (ALTCHA) | No cadastro, nos pedidos de e-mail e, se o servidor pedir, ao entrar | É só um número calculado pelo seu Habblaud, no lugar de um captcha |
 | Personagem: aparência (cores e estilos), 2 ou 3 traços, a frase de apresentação e, ao trocá-lo, o nome de jogador (ao criar, o nome é o reservado no cadastro: nem vai no pedido) | Ao salvar o personagem | É o que os outros jogadores vão ver |
@@ -49,7 +49,7 @@ mundo e o seu prédio entra na cidade. Pela conexão sai **só** isto:
 
 | Sai | Como | Por quê |
 | --- | --- | --- |
-| Primeira mensagem da conexão (`hello`) | O `token` do dispositivo, a `version` do Habblaud, o `build` (`commit` do código em uso e `dirty`, a marca de "cópia modificada") e o `locale` da interface (`pt-BR`, `en`, `es` ou `fr`) | Autenticar, saber se é uma versão oficial e mandar os avisos no seu idioma. O token vai só aqui, nunca na URL; o idioma não vai no pacote do prédio. Nunca o caminho da pasta nem nada da máquina |
+| Primeira mensagem da conexão (`hello`) | O `token` do dispositivo, a `version` do Habblaud, o `build` (`commit` do código em uso e `dirty`, a marca de "cópia modificada") e o `locale` da interface (`pt-BR`, `vi`, `en`, `es` ou `fr`; `vi` é convertido para `pt-BR` antes do envio enquanto o protocolo não o suporta) | Autenticar, saber se é uma versão oficial e mandar os avisos no seu idioma. O token vai só aqui, nunca na URL; o idioma não vai no pacote do prédio. Nunca o caminho da pasta nem nada da máquina |
 | O pacote do prédio | Ao conectar e, depois, quando o escritório muda: no máximo um a cada 5 segundos, e nada se o pacote não mudou | É o prédio ao vivo |
 | Sinal de vida (`ping`, e o `pong` quando o servidor pergunta) | A cada 30 segundos, sem conteúdo | Para o prédio ficar aceso enquanto o Habblaud está aberto (pausado ou fora do mundo, não acende nada: só mantém a conexão da cena Mundo) |
 | Cena Mundo aberta ou fechada (`view` e `view.off`) | Ao abrir e ao fechar a cidade no navegador, sem conteúdo | Para o servidor mandar o pedaço da cidade em volta do seu personagem só enquanto você olha; com a cena fechada, nada desce |

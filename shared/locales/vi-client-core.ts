@@ -1,0 +1,16 @@
+export const VI_CLIENT_CORE: Readonly<Record<string, string>> = {
+  'Escritório virtual em pixel art que mostra, em tempo real, o que seus agentes do Claude Code estão fazendo.': 'Văn phòng ảo phong cách pixel art, hiển thị theo thời gian thực hoạt động của các tác nhân Claude Code.',
+  'dia inválido': 'ngày không hợp lệ',
+  'Este pedido já foi respondido.': 'Yêu cầu này đã được trả lời.',
+  'Não foi possível responder (erro {0}).': 'Không thể trả lời (lỗi {0}).',
+  'Editar o personagem só funciona com o escritório ao vivo.': 'Chỉ có thể chỉnh sửa nhân vật khi văn phòng đang hoạt động trực tiếp.',
+  'Sem conexão com o Habblaud.': 'Không có kết nối với Habblaud.',
+  'Não foi possível salvar o personagem (erro {0}).': 'Không thể lưu nhân vật (lỗi {0}).',
+  'erro {0}': 'lỗi {0}',
+  'agente desconhecido: ele já saiu do escritório?': 'không rõ tác nhân: có phải tác nhân đã rời văn phòng không?',
+  'este agente não recebe mensagens agora': 'hiện tại tác nhân này không nhận tin nhắn',
+  'o agente saiu do escritório': 'tác nhân đã rời văn phòng',
+  'Não combina com este cabelo': 'Không hợp với kiểu tóc này',
+  'Não combina com o boné ou o gorro': 'Không hợp với mũ lưỡi trai hoặc mũ len',
+  'Não combina com o laço': 'Không hợp với nơ',
+};
