@@ -17,6 +17,9 @@ export type AgentKind = 'main' | 'sub';
  */
 export type Provider = 'claude' | 'codex';
 
+/** Engine observed behind a provider. Additive: Habblaud World keeps the old provider protocol. */
+export type AgentEngine = 'claude' | 'codex' | 'opencode';
+
 /**
  * Estado de alto nível de um agente — é o que dirige o comportamento do personagem.
  * - working: processando um turno (ocupado). Fica na mesa digitando.
@@ -136,6 +139,8 @@ export interface AgentInfo {
   kind: AgentKind;
   /** Ferramenta do agente; ausente = 'claude'. */
   provider?: Provider;
+  /** Runtime engine label. `opencode` is read-only adapter data; provider stays additive-compatible. */
+  engine?: AgentEngine;
   /** Para subagentes: id do agente que o disparou. */
   parentId?: string;
   roomId: string;
@@ -259,6 +264,7 @@ export interface SourceInfo {
   label: string;
   /** Ferramenta da fonte; ausente = 'claude'. */
   provider?: Provider;
+  engine?: AgentEngine;
   path: string;
   /** Sessões abertas detectadas nesta fonte. */
   sessions: number;

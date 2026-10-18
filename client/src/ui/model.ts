@@ -338,6 +338,7 @@ export function matchesQuery(agent: AgentInfo, room: RoomInfo | undefined, accou
       room?.name ?? '',
       room?.path ?? '',
       accountText(account),
+      agent.engine === 'opencode' ? 'OpenCode' : '',
       agent.activity?.text ?? '',
       // Quem espera um shell também aparece ao buscar "shell" (ou pelo rótulo do comando).
       agent.status === 'shell' ? STATUS_LABEL.shell : '',

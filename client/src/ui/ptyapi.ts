@@ -8,8 +8,8 @@ import { tr } from '../../../shared/i18n';
  * Dá para encerrar ou assumir este agente pelo escritório? Só o agente principal de uma sessão do Claude Code: o
  * Codex não tem registro de sessões nem `--resume` aqui, e os agentes do demo não existem de verdade.
  */
-export function ptyControllable(a: Pick<AgentInfo, 'id' | 'kind' | 'provider'> | null | undefined): boolean {
-  return !!a && a.kind === 'main' && providerOf(a) === 'claude' && !isDemoId(a.id);
+export function ptyControllable(a: Pick<AgentInfo, 'id' | 'kind' | 'provider' | 'engine'> | null | undefined): boolean {
+  return !!a && a.engine !== 'opencode' && a.kind === 'main' && providerOf(a) === 'claude' && !isDemoId(a.id);
 }
 
 export async function postPty<T = unknown>(url: string, body: unknown): Promise<T | undefined> {

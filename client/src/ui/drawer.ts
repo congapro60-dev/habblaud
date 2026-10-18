@@ -531,6 +531,7 @@ class AgentView {
     const room = this.ctx.store.room(a.roomId);
     const provider = providerOf(a);
     const codex = provider === 'codex';
+    const openCode = a.engine === 'opencode';
 
     updateAvatar(this.avatar, a, 'lg');
     setStyleVar(this.avatar, '--acc', account?.color ?? '#8b98b3');
@@ -543,7 +544,7 @@ class AgentView {
     setTitle(this.title, a.title ?? '');
     updateAccountChip(this.accChip, account, a.account, a.provider);
     setText(this.accName, account?.name ?? a.account);
-    updateProviderTag(this.accProv, provider, account?.name ?? '');
+    updateProviderTag(this.accProv, provider, account?.name ?? '', a.engine);
     // E-mail (Claude Code) ou, no Codex (sem e-mail), o plano.
     const accSub = account?.email ?? (codex && account?.plan ? tr('plano {0}', [account.plan]) : '');
     setText(this.accEmail, accSub);
@@ -574,7 +575,7 @@ class AgentView {
     if (waiting) {
       const accName = account?.name ?? a.account;
       // Codex: "Vá ao Codex (Conta X)"; sem repetir quando a conta já se chama "Codex".
-      const where = codex ? tr('ao Codex{0}', [/codex/i.test(accName) ? '' : ` (${accName})`]) : tr('ao terminal da {0}', [accName]);
+      const where = openCode ? tr('ao OpenCode') : codex ? tr('ao Codex{0}', [/codex/i.test(accName) ? '' : ` (${accName})`]) : tr('ao terminal da {0}', [accName]);
       setText(this.alertText, tr('Vá {0} em {1} para responder{2}', [where, room?.name ?? tr('seu projeto'), a.waitingFor ? `: ${a.waitingFor}` : '.']));
     }
     // Perguntas do AskUserQuestion (só leitura): o Codex não pergunta pelo escritório.
@@ -699,7 +700,8 @@ class AgentView {
     const kind = !this.id ? '' : router?.interactive(this.id) ? 'interativo' : !readOnly && this.pty.enabled && ptyControllable(this.last) ? 'em outro terminal' : 'ao vivo';
     setText(this.termRo, kind === 'interativo' ? tr('interativo') : kind === 'ao vivo' ? tr('ao vivo') : kind ? tr('em outro terminal') : '');
     // aria-disabled (e não disabled): o botão continua focável e a dica do porquê aparece no hover.
-    const enabled = open || (available && live);
+    const openCode = this.last?.engine === 'opencode';
+    const enabled = !openCode && (open || (available && live));
     if (enabled) setHidden(this.termWhy, true);
     setAttr(this.termBtn, 'aria-disabled', enabled ? null : 'true');
     this.termBtn.classList.toggle('is-disabled', !enabled);
@@ -708,7 +710,9 @@ class AgentView {
     setText(this.termLabel, open ? tr('Fechar terminal') : tr('Abrir terminal'));
     setTitle(
       this.termBtn,
-      open
+      openCode
+        ? tr('Phiên OpenCode chỉ xem trong Habblaud; mở OpenCode để điều khiển.')
+        : open
         ? tr('Fechar o terminal (T)')
         : !available
           ? this.ctx.store.replaying

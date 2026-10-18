@@ -135,7 +135,7 @@ shrinks on its own.
 ### 1. Get the project
 
 ```bash
-git clone https://github.com/marmottajr/habblaud.git
+git clone https://github.com/congapro60-dev/habblaud.git
 cd habblaud
 npm install
 ```
@@ -301,7 +301,7 @@ in the clear on the network). In Node mode: `HABBLAUD_REMOTE_PORT` and `HABBLAUD
 ### Updating
 
 The version in use shows up in the top bar, next to "Connected", and in **Settings › About**. Every 6 hours
-Habblaud checks GitHub for a new version (the [releases](https://github.com/marmottajr/habblaud/releases)
+Habblaud checks GitHub for a new version (the [releases](https://github.com/congapro60-dev/habblaud/releases)
 of this repository). When there is one, the green **New version** badge appears in place of the number, along with a notice and a dot on the
 settings button. **About** has the link to what changed and the **Check now** button (each version's notes
 are also in [`CHANGELOG.md`](CHANGELOG.md)). To update:
@@ -338,8 +338,8 @@ npm run docker:up        # tira o container codetown e copia os dados do volume 
 - **Browser:** preferences and coins move to the new keys the first time the page opens.
 - **Variables:** the `CODETOWN_*` ones no longer work; rename them to `HABBLAUD_*` in `.env` (e.g. `HABBLAUD_BIND`). The
   server and `docker:up` warn you when they find an old one.
-- **Repository:** it's now `github.com/marmottajr/habblaud` (GitHub redirects the old address). To fix your
-  clone: `git remote set-url origin https://github.com/marmottajr/habblaud.git`. The local folder can keep its
+- **Repository:** upstream is `github.com/marmottajr/habblaud`; this fork is `github.com/congapro60-dev/habblaud`.
+  To switch back to upstream: `git remote set-url origin https://github.com/marmottajr/habblaud.git`. The local folder can keep its
   old name.
 - `settings.json` backups made before the switch keep the name `settings.json.codetown-backup-<data>`.
 
@@ -608,6 +608,42 @@ Codex account chip is hollow and carries the **CODEX** tag.
   little while to leave after you close the terminal.
 - ChatGPT cloud conversations (with no file on the computer) don't show up. `HABBLAUD_CODEX=0` turns Codex off.
 
+### OpenCode and 9Router (read-only adapter)
+
+This fork can show OpenCode sessions as office agents without sending prompts or
+controlling sessions. The adapter is off unless `HABBLAUD_OPENCODE_URL` is set.
+It polls `/session` and `/session/status`, listens to `/event` when available,
+and labels a reported `providerID/modelID`. 9Router is optional metadata only:
+the adapter reads `HABBLAUD_9ROUTER_URL/v1/models` and never assumes that a
+requested model was served.
+
+For a standalone local server, start OpenCode in one terminal from the project folder:
+
+```powershell
+opencode serve --hostname 127.0.0.1 --port 60146
+```
+
+Attach the OpenCode TUI to that server in another terminal:
+
+```powershell
+opencode attach http://127.0.0.1:60146 --dir 'C:\path\to\project'
+```
+
+Start Habblaud in a third terminal, from its folder:
+
+```powershell
+$env:HABBLAUD_OPENCODE_URL = 'http://127.0.0.1:60146'
+$env:HABBLAUD_OPENCODE_DIRS = 'C:\path\to\project'
+$env:HABBLAUD_9ROUTER_URL = 'http://127.0.0.1:20128'
+$env:HABBLAUD_WORLD = '0'
+npm start
+```
+
+If the OpenCode server uses Basic Auth, also set `HABBLAUD_OPENCODE_USERNAME` and
+`HABBLAUD_OPENCODE_PASSWORD` in that terminal. Values remain process environment
+only. Habblaud binds locally by default, reads event names and sanitized tool
+labels, and does not access prompt text, send prompts, or expose session controls.
+
 ### GitHub in the office
 
 What the agents do on GitHub livens up the project's room, with no token and no internet access: Habblaud reads the
@@ -716,6 +752,12 @@ Everything works without configuring anything. If you need to adjust something, 
 | `HABBLAUD_HOST` | `127.0.0.1` | Server interface in Node mode. Anything other than `127.0.0.1`/`localhost` turns off the terminal (and answering and sending messages from the office). |
 | `HABBLAUD_BIND` | `127.0.0.1` | Docker only (in `.env`): where the port is published. `0.0.0.0` opens it to the local network (and turns off the terminal and anything that acts on the sessions). |
 | `HABBLAUD_CLAUDE_DIRS` | automatic detection | Account folders, comma-separated (e.g. `/caminho/conta1,/caminho/conta2`). |
+| `HABBLAUD_OPENCODE_URL` | off | Read-only OpenCode server URL. Set explicitly to enable the adapter. |
+| `HABBLAUD_OPENCODE_DIRS` | current process directory | OpenCode directories, comma-separated. |
+| `HABBLAUD_OPENCODE_POLL_MS` | `1000` | Minimum polling interval for OpenCode status. |
+| `HABBLAUD_OPENCODE_RECENT_HOURS` | `24` | Hide older idle sessions. `0` includes all history. |
+| `HABBLAUD_OPENCODE_USERNAME` / `HABBLAUD_OPENCODE_PASSWORD` | unset | Basic Auth for a loopback OpenCode server; environment only. |
+| `HABBLAUD_9ROUTER_URL` | `http://127.0.0.1:20128` | Optional loopback `/v1/models` metadata endpoint; no request routing. |
 | `HABBLAUD_DATA_DIR` | `~/.habblaud` | Where Habblaud keeps its own data (character and room names, the timelapse timeline and the My day stats). |
 | `HABBLAUD_TIMELINE` | on | `0` turns off timeline recording (the days already recorded stay in the timelapse). In Docker it's always on. |
 | `HABBLAUD_USAGE_DIR` | `~/.habblaud/usage` | Where the mod (or the statusline tap) writes usage. |
@@ -940,7 +982,7 @@ metadata (letter, email, organization) is read on the host by `docker:up` and pa
   (`habblaud-mensagens`) is separate precisely because it acts: it types into the session what you sent from the office.
 - **Local only, by default:** the server only accepts connections from the computer it runs on; opening it to the local network is optional.
   There's no telemetry. The only external call is the new-version check: every 6 hours, an anonymous request,
-  with no token, to the public GitHub API (`api.github.com/repos/marmottajr/habblaud/releases/latest`). It doesn't send anything
+  with no token, to the public GitHub API (`api.github.com/repos/congapro60-dev/habblaud/releases/latest`). It doesn't send anything
   about your sessions; GitHub only sees your IP and the version in use, which goes in the `User-Agent`.
   `HABBLAUD_UPDATE_CHECK=0` turns off the request.
   [Habblaud World](#habblaud-world) (on by default) only sends something to the world server after you create an

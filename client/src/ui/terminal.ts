@@ -862,7 +862,7 @@ export class TerminalPanel implements UiComponent, TerminalControl {
     setHidden(this.accEl, true);
     setText(this.nameEl, name);
     setTitle(this.nameEl, '');
-    updateProviderTag(this.provEl, providerOf(a));
+    updateProviderTag(this.provEl, providerOf(a), '', a?.engine);
     setText(this.roleEl, a ? roleLabel(a) : '');
     setHidden(this.roleEl, !a);
     if (a) setVariant(this.roleEl, 'ui-role--', a.kind);

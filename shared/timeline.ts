@@ -13,7 +13,7 @@
 // Só entram os campos que o mundo e a interface usam para desenhar, com os resumos de atividade já
 // mascarados (a mesma exposição do /api/snapshot): nada de detalhe de comando, tarefa ou transcript.
 import type { AppearanceParts } from './appearance';
-import type { AccountInfo, AccountUsage, Activity, ActivityKind, AgentInfo, AgentKind, AgentStatus, OfficeSnapshot, Provider, RoomInfo, ShellJob } from './types';
+import type { AccountInfo, AccountUsage, Activity, ActivityKind, AgentEngine, AgentInfo, AgentKind, AgentStatus, OfficeSnapshot, Provider, RoomInfo, ShellJob } from './types';
 
 export const TIMELINE_VERSION = 1;
 
@@ -44,6 +44,7 @@ export interface TimelineAgent {
   kind: AgentKind;
   /** Ausente = 'claude' (AgentInfo.provider). */
   provider?: Provider;
+  engine?: AgentEngine;
   parentId?: string;
   roomId: string;
   name: string;
@@ -197,6 +198,7 @@ export function compactAgent(a: AgentInfo, demo = false): TimelineAgent {
     seed: a.seed,
   };
   if (a.provider) out.provider = a.provider;
+  if (a.engine) out.engine = a.engine;
   if (a.parentId) out.parentId = a.parentId;
   if (a.waitingFor) out.waitingFor = a.waitingFor;
   if (a.activity) out.activity = compactActivity(a.activity);
@@ -425,6 +427,7 @@ export function toAgentInfo(t: TimelineAgent, recent: Activity[] = []): AgentInf
     seed: t.seed,
   };
   if (t.provider) a.provider = t.provider;
+  if (t.engine) a.engine = t.engine;
   if (t.parentId) a.parentId = t.parentId;
   if (t.title) a.title = t.title;
   if (t.waitingFor) a.waitingFor = t.waitingFor;

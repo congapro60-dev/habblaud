@@ -1,7 +1,7 @@
 # Novidades
 
 O que entrou em cada versão do Habblaud. Cada versão tem a sua seção aqui, e o texto dela vira as notas da
-[release no GitHub](https://github.com/marmottajr/habblaud/releases) (`npm run release`), que o Habblaud abre em
+[release no GitHub](https://github.com/congapro60-dev/habblaud/releases) (`npm run release`), que o Habblaud abre em
 **Configurações › Sobre › Ver o que mudou**.
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), e os números seguem o
@@ -9,6 +9,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), e
 do meio (0.**3**.0).
 
 ## [Não lançado]
+
+## [1.1.0] - 2026-10-18
+
+### Adicionado
+
+- **OpenCode no escritório (somente leitura):** sessões recentes aparecem por projeto, mostram estado, atividade e
+  modelo informado pela própria sessão. O adapter lê `/session`, `/session/status` e `/event`; não envia prompts,
+  comandos ou decisões. `HABBLAUD_OPENCODE_URL` precisa apontar para um server loopback. Para acompanhar sessões
+  ativas, inicie `opencode serve` e conecte o TUI com `opencode attach` ao mesmo endereço.
+- **9Router:** leitura opcional de `/v1/models` para indicar catálogo disponível. Não encaminha solicitações nem
+  afirma que o modelo pedido foi o modelo realmente servido.
+- Sessions antigas ociosas não entram como agentes ativos. `HABBLAUD_OPENCODE_RECENT_HOURS` controla a janela; valor
+  `0` inclui histórico inteiro.
 
 ## [1.0.3] - 2026-10-16
 
@@ -576,7 +589,8 @@ Primeira versão publicada.
   Subagentes chegam, trabalham e entregam ao principal. Mostra as duas contas, com o uso de 5 horas e semanal de
   cada uma (tap de statusline), além de feed de atividade, avisos e modo demonstração. Roda no Node ou no Docker local.
 
-[Não lançado]: https://github.com/marmottajr/habblaud/compare/v1.0.3...HEAD
+[Não lançado]: https://github.com/congapro60-dev/habblaud/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/congapro60-dev/habblaud/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/marmottajr/habblaud/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/marmottajr/habblaud/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/marmottajr/habblaud/compare/v1.0.0...v1.0.1
