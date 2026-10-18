@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { changelogSection, parseReleaseArgs, unwrapMarkdown } from '../../scripts/release';
+import { changelogSection, githubSlug, parseReleaseArgs, unwrapMarkdown } from '../../scripts/release';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 
@@ -58,6 +58,14 @@ describe('parseReleaseArgs', () => {
     expect(parseReleaseArgs([])).toEqual({ dryRun: false, help: false });
     expect(parseReleaseArgs(['--dry-run'])).toEqual({ dryRun: true, help: false });
     expect(() => parseReleaseArgs(['--force'])).toThrow(/opção desconhecida/);
+  });
+});
+
+describe('githubSlug', () => {
+  it('reads HTTPS and SSH repository URL forms', () => {
+    expect(githubSlug({ url: 'git+https://github.com/congapro60-dev/habblaud.git' })).toBe('congapro60-dev/habblaud');
+    expect(githubSlug('git@github.com:owner/repo.git')).toBe('owner/repo');
+    expect(githubSlug({ url: 'https://example.com/owner/repo' })).toBeUndefined();
   });
 });
 

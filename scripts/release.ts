@@ -2,8 +2,8 @@
 // release com o texto dessa seção como notas (é o que o Habblaud abre em Configurações › Sobre › Ver o que mudou).
 //   npm run release                -> publica (precisa do gh autenticado)
 //   npm run release -- --dry-run   -> só confere e mostra as notas
-// Antes: suba a versão no package.json (npm version minor --no-git-tag-version), escreva a seção no CHANGELOG.md e
-// faça o merge na main.
+// O destino é lido do campo `repository` do package.json, para releases de forks irem ao repositório certo.
+// Antes: suba a versão no package.json, escreva a seção no CHANGELOG.md e faça o merge na main.
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -79,6 +79,16 @@ function fail(msg: string): never {
   process.exit(1);
 }
 
+export function githubSlug(repository: unknown): string | undefined {
+  const value = typeof repository === 'string'
+    ? repository
+    : repository && typeof repository === 'object' && 'url' in repository
+      ? String((repository as { url?: unknown }).url ?? '')
+      : '';
+  const match = /github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?\/?$/.exec(value);
+  return match?.[1];
+}
+
 function main(argv: string[]): void {
   let args: ReleaseArgs;
   try {
@@ -91,7 +101,10 @@ function main(argv: string[]): void {
     return;
   }
 
-  const version = (JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { version: string }).version;
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { version: string; repository?: unknown };
+  const version = pkg.version;
+  const repo = githubSlug(pkg.repository);
+  if (!repo) fail('repository do package.json precisa apontar para um repositório GitHub.');
   const tag = `v${version}`;
   const section = changelogSection(readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8'), version);
   if (!section) fail(`o CHANGELOG.md não tem a seção "## [${version}]" (ou ela está vazia): escreva o que entrou nesta versão.`);
@@ -107,7 +120,15 @@ function main(argv: string[]): void {
   } catch {
     tagExists = false;
   }
-  if (tagExists) fail(`a tag ${tag} já existe: suba a versão no package.json antes.`);
+  if (tagExists) {
+    try {
+      run('git', ['merge-base', '--is-ancestor', tag, 'HEAD'], { quiet: true });
+    } catch {
+      fail(`a tag ${tag} não aponta para um commit da main atual.`);
+    }
+  }
+  const releases = JSON.parse(run('gh', ['release', 'list', '--repo', repo, '--json', 'tagName', '--limit', '1000'])) as Array<{ tagName: string }>;
+  if (releases.some((release) => release.tagName === tag)) fail(`a release ${tag} já existe em ${repo}.`);
   const notes = unwrapMarkdown(section);
 
   console.log(`Habblaud ${tag}\n\n${notes}\n`);
@@ -120,9 +141,11 @@ function main(argv: string[]): void {
   try {
     const file = join(dir, 'notas.md');
     writeFileSync(file, `${notes}\n`);
-    run('git', ['tag', '-a', tag, '-m', `Habblaud ${tag}`]);
-    run('git', ['push', 'origin', tag]);
-    const url = run('gh', ['release', 'create', tag, '--verify-tag', '--title', `Habblaud ${tag}`, '--notes-file', file]);
+    if (!tagExists) {
+      run('git', ['tag', '-a', tag, '-m', `Habblaud ${tag}`]);
+      run('git', ['push', 'origin', tag]);
+    }
+    const url = run('gh', ['release', 'create', tag, '--repo', repo, '--verify-tag', '--title', `Habblaud ${tag}`, '--notes-file', file]);
     console.log(`✓ Release publicada: ${url}`);
   } finally {
     rmSync(dir, { recursive: true, force: true });
