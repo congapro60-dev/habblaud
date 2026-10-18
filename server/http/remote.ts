@@ -24,7 +24,7 @@ import http, { type IncomingMessage, type ServerResponse } from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
 import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, posix } from 'node:path';
 import { parsePasswordHash, verifyPassword, type PasswordHash } from '../remote/password';
 import { hostAllowed } from './guard';
 import { getLocale, tr } from '../../shared/i18n';
@@ -64,7 +64,9 @@ function truthy(v: string | undefined): boolean {
 
 export function defaultTlsDir(env: NodeJS.ProcessEnv, inDocker: boolean): string {
   if (env.HABBLAUD_REMOTE_TLS_DIR?.trim()) return env.HABBLAUD_REMOTE_TLS_DIR.trim();
-  return inDocker ? '/remote-tls' : join(env.HOME || homedir(), '.habblaud', 'remote-tls', 'server');
+  const home = env.HOME || homedir();
+  const unixHome = home.replaceAll('\\', '/');
+  return inDocker ? '/remote-tls' : unixHome.startsWith('/') ? `${unixHome}/.habblaud/remote-tls/server` : join(home, '.habblaud', 'remote-tls', 'server');
 }
 
 /** Liga o acesso remoto a partir do ambiente. `warning` explica por que ficou desligado quando parece intencional. */

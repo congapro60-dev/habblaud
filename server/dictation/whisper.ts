@@ -8,7 +8,7 @@
 import { execFile } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
-import { delimiter, join } from 'node:path';
+import { delimiter, join, posix } from 'node:path';
 import { tr } from '../../shared/i18n';
 
 export const TRANSCRIBE_TIMEOUT_MS = 120_000;
@@ -48,10 +48,11 @@ export function findWhisper(env: NodeJS.ProcessEnv = process.env, exists: (p: st
   if (!bin || !exists(bin)) return { missing: 'whisper-cli (brew install whisper-cpp)' };
   const ffmpeg = env.HABBLAUD_FFMPEG_BIN?.trim() || ['/opt/homebrew/bin/ffmpeg', '/usr/local/bin/ffmpeg'].find(exists) || onPath('ffmpeg', env);
   if (!ffmpeg || !exists(ffmpeg)) return { missing: 'ffmpeg (brew install ffmpeg)' };
-  const dirs = [join(home, '.local', 'share', 'whisper'), join(home, '.whisper'), '/opt/homebrew/share/whisper-cpp', '/usr/local/share/whisper-cpp'];
+  const homeJoin = home.replaceAll('\\', '/').startsWith('/') ? posix.join : join;
+  const dirs = [homeJoin(home, '.local', 'share', 'whisper'), homeJoin(home, '.whisper'), '/opt/homebrew/share/whisper-cpp', '/usr/local/share/whisper-cpp'];
   const model =
     env.HABBLAUD_WHISPER_MODEL?.trim() ||
-    MODELS.flatMap((m) => dirs.map((d) => join(d, m))).find(exists);
+    MODELS.flatMap((m) => dirs.map((d) => (d.startsWith('/') ? posix.join(d, m) : join(d, m)))).find(exists);
   if (!model || !exists(model)) return { missing: tr('um modelo multilíngue do Whisper (ggml-small.bin ou ggml-base.bin em ~/.local/share/whisper)') };
   const langs = (env.HABBLAUD_DICTATION_LANGS ?? '')
     .split(',')

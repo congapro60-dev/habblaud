@@ -5,7 +5,7 @@
 // Node puro e sem dependências: também é importado pelo auxiliar do host (via tsx).
 import { existsSync, realpathSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, posix } from 'node:path';
 import type { DeliveryAttachmentKind } from '../../shared/types';
 import { tr } from '../../shared/i18n';
 
@@ -51,9 +51,10 @@ export function fileType(path: string): { kind: DeliveryAttachmentKind; type: st
 
 /** Motivo para NÃO mostrar o caminho (só olhando o texto), ou undefined. */
 export function pathProblem(path: string): string | undefined {
-  if (!path || path.includes('\0') || !path.startsWith('/') || /(^|\/)\.\.(\/|$)/.test(path)) return tr('caminho inválido');
-  if (!fileType(path)) return tr('tipo de arquivo que não se mostra aqui');
-  if (SECRET_DIRS.test(path) || SECRET_NAMES.test(path)) return tr('arquivo protegido');
+  const p = path.replaceAll('\\', '/');
+  if (!p || p.includes('\0') || !p.startsWith('/') || /(^|\/)\.\.(\/|$)/.test(p)) return tr('caminho inválido');
+  if (!fileType(p)) return tr('tipo de arquivo que não se mostra aqui');
+  if (SECRET_DIRS.test(p) || SECRET_NAMES.test(p)) return tr('arquivo protegido');
   return undefined;
 }
 
@@ -99,12 +100,14 @@ export function insideKnownFolder(
   path: string,
   opts: { accountDirs: readonly string[]; roots: readonly string[]; exists?: (p: string) => boolean },
 ): boolean {
-  if (opts.roots.some((r) => r && path.startsWith(`${r.replace(/\/+$/, '')}/`))) return true;
+  const p = path.replaceAll('\\', '/');
+  const roots = opts.roots.map((r) => r.replaceAll('\\', '/'));
+  if (roots.some((r) => r && p.startsWith(`${r.replace(/\/+$/, '')}/`))) return true;
   const exists = opts.exists ?? existsSync;
   // Mesma codificação de sources/watcher.ts (encodeCwd): todo caractere não alfanumérico vira "-".
-  for (let dir = dirname(path); dir.split('/').filter(Boolean).length >= 2; dir = dirname(dir)) {
+  for (let dir = posix.dirname(p); dir.split('/').filter(Boolean).length >= 2; dir = posix.dirname(dir)) {
     const encoded = dir.replace(/[^a-zA-Z0-9]/g, '-');
-    if (opts.accountDirs.some((acc) => exists(join(acc, 'projects', encoded)))) return true;
+    if (opts.accountDirs.some((acc) => exists(acc.startsWith('/') ? posix.join(acc, 'projects', encoded) : join(acc, 'projects', encoded)))) return true;
   }
   return false;
 }

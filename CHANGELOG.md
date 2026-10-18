@@ -10,6 +10,14 @@ do meio (0.**3**.0).
 
 ## [Não lançado]
 
+## [1.2.1] - 2026-10-18
+
+### Corrigido
+
+- Compatibilidade Windows/POSIX em caminhos de anexos, arquivos entregues, Whisper, executável Claude e TLS remoto.
+- Testes de permissões Unix agora não falham no Windows; normalização de fim de linha Docker.
+- Versões dos plugins alinhadas com o pacote `1.2.1`.
+
 ## [1.2.0] - 2026-10-18
 
 ### Adicionado

@@ -18,8 +18,21 @@ export function isExecutableFile(file: string, platform: NodeJS.Platform = proce
 export function findExecutable(name: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): string | undefined {
   const sep = platform === 'win32' ? ';' : ':';
   const exts =
-    platform === 'win32' && !extname(name) ? ['.exe', ...(env.PATHEXT ?? '.COM;.CMD;.BAT').split(';').filter(Boolean).map((e) => e.toLowerCase())] : [''];
-  const dirs = (env.PATH ?? env.Path ?? '').split(sep).filter(Boolean);
+    platform === 'win32' && !extname(name) ? ['', '.exe', ...(env.PATHEXT ?? '.COM;.CMD;.BAT').split(';').filter(Boolean).map((e) => e.toLowerCase())] : [''];
+  const rawPath = env.PATH ?? env.Path ?? '';
+  // Test fixtures and some launchers expose a POSIX PATH on Windows. Accept
+  // both separators; keep drive-letter colons intact when semicolons exist.
+  let dirs = rawPath.split(sep);
+  if (platform === 'win32' && !rawPath.includes(';')) {
+    const parts = rawPath.split(':');
+    dirs = [];
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (part && part.length === 1 && /^[A-Za-z]$/.test(part) && i + 1 < parts.length && /^[\\/]/.test(parts[i + 1])) dirs.push(`${part}:${parts[++i]}`);
+      else dirs.push(part);
+    }
+  }
+  dirs = dirs.filter(Boolean);
   for (const dir of dirs) {
     for (const ext of exts) {
       const file = resolve(dir, name + ext);

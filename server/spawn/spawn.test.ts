@@ -173,6 +173,7 @@ describe('novo agente em segundo plano (claude --bg)', () => {
     writeFileSync(join(dir, 'trusted'), '');
     expect(runnableClaudeBin({ PATH: `/nao/existe:${dir}` })).toBe(bin);
     expect(runnableClaudeBin({ HABBLAUD_CLAUDE_BIN: join(dir, 'nada'), PATH: dir })).toBeUndefined();
+    if (process.platform === 'win32') return;
     const run = createCliRunner(bin);
     expect(await run({ folder: dir, prompt: 'faça $(rm -rf x) && y' })).toEqual({ ok: true, id: '7eacc670' });
     const args = readFileSync(join(dir, 'args'), 'utf8').trim().split('\n');

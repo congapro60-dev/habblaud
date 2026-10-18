@@ -7,7 +7,7 @@
 // Cada transcript é relido só quando muda (mtime/tamanho). Os anexos ganham ids opacos: o navegador nunca vê caminhos.
 import { createHash } from 'node:crypto';
 import { statSync } from 'node:fs';
-import { isAbsolute, join, normalize } from 'node:path';
+import { isAbsolute, join, normalize, posix } from 'node:path';
 import { tr } from '../../shared/i18n';
 import type { DeliveryAttachment, DeliveryInfo, Provider, RecentSession, TerminalEntry } from '../../shared/types';
 import type { TerminalParser } from '../sources/terminal';
@@ -134,9 +134,12 @@ export function linkedFiles(text: string, project?: string): string[] {
     if (/^[a-z]+:/i.test(p)) return;
     if (!isAbsolute(p)) {
       if (!project) return;
-      p = join(project, p);
+      // Transcripts can contain POSIX paths even when Habblaud runs on Windows.
+      // Preserve that protocol representation; native `join` would turn it into
+      // backslashes and the safe-path checks would reject the attachment.
+      p = project.startsWith('/') ? posix.join(project, p) : join(project, p);
     }
-    p = normalize(p);
+    p = p.startsWith('/') ? posix.normalize(p) : normalize(p);
     if (!pathProblem(p)) out.add(p);
   };
   for (const m of text.matchAll(LINK_RE)) add(m[1]);
