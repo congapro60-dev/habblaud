@@ -6,6 +6,7 @@ import type {
   Activity,
   AgentDetail,
   AgentInfo,
+  AgentEngine,
   AgentStats,
   AgentStatus,
   FeedItem,
@@ -100,6 +101,7 @@ export interface MainInput {
   id: string;
   /** Ferramenta do agente (AgentInfo.provider); ausente = 'claude'. Os subagentes herdam a do principal. */
   provider?: Provider;
+  engine?: AgentEngine;
   account: string;
   sessionId: string;
   cwd: string;
@@ -347,6 +349,7 @@ export class Office {
       seed: chosen?.seed ?? hash32(p.id),
     };
     if (p.provider && p.provider !== 'claude') info.provider = p.provider;
+    if (p.engine && p.engine !== 'claude') info.engine = p.engine;
     if (chosen) {
       info.custom = true;
       if (chosen.parts) info.parts = { ...chosen.parts };

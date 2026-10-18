@@ -1,6 +1,6 @@
 // Peças visuais reutilizadas pelos painéis: chip de conta (e o selo "Codex"), ponto de status, selo de papel, barra
 // de progresso.
-import type { AccountInfo, Activity, AgentInfo, AgentStatus, Provider } from '../../../shared/types';
+import type { AccountInfo, Activity, AgentEngine, AgentInfo, AgentStatus, Provider } from '../../../shared/types';
 import { h, setAttr, setHidden, setStyleVar, setText, setTitle, setVariant } from './dom';
 import { WORDMARK } from './icons';
 import { shellDoneKind, shellLine, shellStage, statusLabel, type ShellWait } from './model';
@@ -32,8 +32,16 @@ export function createProviderTag(extra = ''): HTMLElement {
 }
 
 /** Mostra o selo só para o Codex (e não repete quando o nome da conta já diz "Codex"). */
-export function updateProviderTag(tag: HTMLElement, provider: Provider, accountName = ''): void {
-  setHidden(tag, !showsProviderTag(provider, accountName));
+export function updateProviderTag(tag: HTMLElement, provider: Provider, accountName = '', engine?: AgentEngine): void {
+  const openCode = engine === 'opencode';
+  setHidden(tag, !openCode && !showsProviderTag(provider, accountName));
+  if (openCode) {
+    setText(tag, 'OpenCode');
+    setTitle(tag, 'OpenCode session (read-only)');
+  } else {
+    setText(tag, 'Codex');
+    setTitle(tag, tr('Agente do Codex (OpenAI)'));
+  }
 }
 
 /** Quadradinho de status (pixel), com pulso quando precisa de você. */
