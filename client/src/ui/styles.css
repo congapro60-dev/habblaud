@@ -11177,3 +11177,29 @@ html.is-replay #world {
 .ui-world-chip__visitors[hidden] {
   display: none;
 }
+
+/* ── Đấu trường Chibi (battle-arena) ─────────────────────────────── */
+.ui-battle { width: min(430px, calc(100vw - 20px)); max-height: min(720px, calc(100vh - 84px)); overflow: auto; padding: 14px; }
+.ui-battle__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.ui-battle__close { font-size: 20px; line-height: 1; }
+.ui-battle__hint, .ui-battle__status { color: var(--ui-muted); margin: 8px 0; }
+.ui-battle__roster { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.ui-battle__chip { border: 1px solid var(--ui-line, #dbe3f0); border-radius: 999px; padding: 3px 9px; font: 600 11px var(--font-px); background: var(--ui-accent-soft, #eef3ff); }
+.ui-battle__start { margin: 6px 0 10px; }
+.ui-battle__arena { display: grid; gap: 6px; margin-bottom: 8px; }
+.ui-battle__fighter { display: grid; grid-template-columns: 34px 1fr 46px; grid-template-rows: auto auto; align-items: center; gap: 2px 8px; padding: 6px 8px; border: 1px solid var(--ui-line, #dbe3f0); border-radius: 10px; transition: opacity .3s; }
+.ui-battle__sym { grid-row: span 2; display: grid; place-items: center; width: 34px; height: 34px; border: 2px solid var(--ui-accent); border-radius: 7px; background: var(--ui-accent-soft, #eef3ff); color: var(--ui-accent); font: 600 10px var(--font-px); }
+.ui-battle__bar { grid-column: 2; height: 8px; border-radius: 999px; background: var(--ui-line, #dbe3f0); overflow: hidden; }
+.ui-battle__bar-fill { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #4d9970, #7bc796); transition: width .45s; }
+.ui-battle__hp { grid-column: 3; font: 600 11px var(--font-px); text-align: right; }
+.ui-battle__fighter.is-hit .ui-battle__bar-fill { animation: ui-battle-hit .45s; }
+.ui-battle__fighter.is-down { opacity: .45; }
+.ui-battle__fighter.is-down .ui-battle__bar-fill { background: #b3474d; }
+.ui-battle__fighter.is-out { opacity: .35; }
+.ui-battle__fighter.is-champion { border-color: #d9a12e; box-shadow: 0 0 0 2px #d9a12e33; animation: ui-battle-win .9s ease-in-out 3; }
+@keyframes ui-battle-hit { 0% { transform: translateX(0); } 30% { transform: translateX(-3px); } 60% { transform: translateX(3px); } 100% { transform: translateX(0); } }
+@keyframes ui-battle-win { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+.ui-battle__log { max-height: 180px; overflow: auto; border-top: 1px solid var(--ui-line, #dbe3f0); padding-top: 6px; display: grid; gap: 2px; }
+.ui-battle__round { font: 700 10px var(--font-px); text-transform: uppercase; letter-spacing: .08em; color: var(--ui-muted); margin: 6px 0 2px; }
+.ui-battle__line { margin: 0; font-size: 12px; }
+.ui-battle__champ { margin: 8px 0 0; font: 700 13px var(--font-px); color: #d9a12e; }

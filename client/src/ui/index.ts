@@ -42,6 +42,7 @@ import { WorldChip } from './world/world-chip';
 import { WorldDialog } from './world/world-dialog';
 import { WorldSocialNotifier } from './world/away-summary';
 import { DirectorRoom } from './director-room';
+import { BattleArena } from './battle-arena';
 import { worldGate } from './world/settings-world';
 import { worldSectionMode } from './world/world-model';
 import { SceneSwitch, type CitySceneHost } from './world/scene-switch';
@@ -217,6 +218,8 @@ export function createUI(root: HTMLElement, store: OfficeStore, world: WorldApi,
   topbar.panelGroup.prepend(deliveries.button);
   const director = new DirectorRoom(ctx);
   topbar.addPanelButton(director.button);
+  const battle = new BattleArena(ctx);
+  topbar.addPanelButton(battle.button);
   // Links com ?agent= / ?delivery= (abrem o agente ou a entrega ao carregar).
   const openLink = (url: URL) => {
     const agent = url.searchParams.get('agent');
@@ -291,7 +294,7 @@ export function createUI(root: HTMLElement, store: OfficeStore, world: WorldApi,
   const scrim = h('div', { class: 'ui-scrim', attrs: { 'aria-hidden': 'true' }, on: { click: () => ctx.togglePanel('sidebar', false) } });
 
   root.classList.add('ui-root');
-  root.append(timelapse.vignette, topbar.el, sidebar.el, scrim, feed.el, drawer.el, terminal.el, pty.el, timelapse.el, timelapse.badge, toasts.el, banner.el, update.el, empty.el, popups.el, tip.el, settings.el, worldDialog.el, history.el, deliveries.el, director.el, help.el, renamer.el, live, splash.el);
+  root.append(timelapse.vignette, topbar.el, sidebar.el, scrim, feed.el, drawer.el, terminal.el, pty.el, timelapse.el, timelapse.badge, toasts.el, banner.el, update.el, empty.el, popups.el, tip.el, settings.el, worldDialog.el, history.el, deliveries.el, director.el, battle.el, help.el, renamer.el, live, splash.el);
   area = new FreeArea(world, { root, topbar: topbar.el, sidebar: sidebar.el, drawer: drawer.el, feed: feed.el }, () => ({
     sidebar: panels.sidebar,
     feed: panels.feed,
