@@ -4,6 +4,7 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { parseAppearanceParts, parseCharacterName, parseSeed, type AppearanceParts } from '../../shared/appearance';
+import { LOCAL_EMPLOYEE_NAMES, pickLocalCharacterName } from '../../shared/local-character-roster';
 import { pickName, type PersonName } from '../../shared/names';
 import { errMsg, log } from '../log';
 import { tr } from '../../shared/i18n';
@@ -66,17 +67,20 @@ export class NameStore {
   /** `file` null = só em memória (testes ou diretório de dados indisponível). */
   constructor(
     private readonly file: string | null,
-    opts: { now?: () => number } = {},
+    opts: { now?: () => number; roster?: readonly PersonName[] } = {},
   ) {
     this.now = opts.now ?? Date.now;
+    this.roster = opts.roster;
   }
+
+  private readonly roster?: readonly PersonName[];
 
   load(): void {
     if (!this.file) return;
     try {
       const j = JSON.parse(readFileSync(this.file, 'utf8')) as Partial<NamesFile>;
       for (const [key, v] of Object.entries(j.names ?? {})) {
-        if (v && typeof v.name === 'string' && (v.look === 'f' || v.look === 'm')) {
+        if (v && typeof v.name === 'string' && (!this.roster || this.roster.some((candidate) => candidate.name === v.name)) && (v.look === 'f' || v.look === 'm')) {
           this.names.set(key, { name: v.name, look: v.look, at: typeof v.at === 'number' ? v.at : 0 });
         }
       }
@@ -98,7 +102,7 @@ export class NameStore {
       this.scheduleFlush();
       return { name: stored.name, look: stored.look };
     }
-    const person = pickName(key, used);
+    const person = this.roster ? pickLocalCharacterName(key, used) : pickName(key, used);
     this.remember(key, person);
     return person;
   }

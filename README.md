@@ -612,7 +612,7 @@ Codex account chip is hollow and carries the **CODEX** tag.
 
 This fork can show OpenCode sessions as office agents without sending prompts or
 controlling sessions. The adapter is off unless `HABBLAUD_OPENCODE_URL` is set.
-It polls `/session` and `/session/status`, listens to `/event` when available,
+It detects OpenCode v1 (`/session`, `/session/status`, `/event`) and v2 (`/api/session`, `/api/session/status`, `/api/global/event`) automatically,
 and labels a reported `providerID/modelID`. 9Router is optional metadata only:
 the adapter reads `HABBLAUD_9ROUTER_URL/v1/models` and never assumes that a
 requested model was served.
@@ -635,6 +635,8 @@ Start Habblaud in a third terminal, from its folder:
 $env:HABBLAUD_OPENCODE_URL = 'http://127.0.0.1:60146'
 $env:HABBLAUD_OPENCODE_DIRS = 'C:\path\to\project'
 $env:HABBLAUD_9ROUTER_URL = 'http://127.0.0.1:20128'
+$env:HABBLAUD_OPENCODE_USERNAME = 'opencode'
+$env:HABBLAUD_OPENCODE_PASSWORD = '<OPENCODE_SERVER_PASSWORD>'
 $env:HABBLAUD_WORLD = '0'
 npm start
 ```
@@ -643,6 +645,35 @@ If the OpenCode server uses Basic Auth, also set `HABBLAUD_OPENCODE_USERNAME` an
 `HABBLAUD_OPENCODE_PASSWORD` in that terminal. Values remain process environment
 only. Habblaud binds locally by default, reads event names and sanitized tool
 labels, and does not access prompt text, send prompts, or expose session controls.
+
+### Codex model picker with 9Router / xKiro / Vilao
+
+Codex uses the loopback 9Router Responses provider in the user-level
+`~/.codex/config.toml`. Refresh the local picker catalog with:
+
+```powershell
+node scripts/update-codex-9router-catalog.mjs
+```
+
+The generator preserves native Codex entries and adds live tool-advertised xKiro
+and Vilao60 routes. It cross-checks xKiro's public catalog/pricing table and the
+existing Vilao60 credential in OpenCode (never printed or stored in the catalog).
+Names carry cost groups: `FREE`, `TRONG GÓI*`, `TRỪ VÍ`, `GÓI CAO HƠN`; unknown
+billing stays `GÓI/VÍ` or `PHÍ CHƯA RÕ`. `TRONG GÓI*` is conditional on an active
+plan and its allowance; wallet fallback, when enabled upstream, can still charge.
+Vilao is prepaid token billing, not a free subscription. Grok 4.5 on xKiro is
+explicit PAYG; Astra and Fable 5.1 require higher plans than the user's Pro.
+The generated file is
+the existing top-level `model_catalog_json` path in `~/.codex/config.toml`
+(fallback filename: `9router-free-models.json`). Restart Codex after refreshing.
+These are name prefixes, not collapsible
+OpenCode-style UI groups. The generator never changes the default model and
+excludes fallback combos. Unprobed entries say `thử nghiệm`; a catalog listing
+does not prove account access or working tools. Vision stays off until probed.
+External context is capped at 256K; remove any global `model_context_window`
+override so each selected model uses its own limit. No ChatGPT quota is required
+for independent API routes, but ChatGPT-backed routes retain their own limits.
+Run `node scripts/update-codex-9router-catalog.mjs --self-test` for offline checks.
 
 ### GitHub in the office
 

@@ -1,7 +1,7 @@
 // Regras puras da camada de texto do mundo (balões e enquadramento).
 import { describe, expect, it } from 'vitest';
 import { overviewFrame } from '../camera';
-import { rationBubbles, waitBubbleText } from './overlay';
+import { CORE_HEADS, rationBubbles, waitBubbleText } from './overlay';
 
 describe('balões', () => {
   it('espera: só o motivo, sem o prefixo redundante', () => {
@@ -42,5 +42,13 @@ describe('visão geral', () => {
     // começa acima da parede norte (placas) e termina abaixo da fachada sul
     expect(ui.cy).toBeGreaterThan(building.h / 2);
     expect(ui.dy).toBeGreaterThan(0);
+  });
+});
+
+describe('trưởng phòng', () => {
+  it('giữ biểu tượng ổn định cho mọi phòng hệ thống', () => {
+    const ids = ['core:lounge', 'core:claude', 'core:codex', 'core:gemini', 'core:opencode', 'core:review', 'core:archive'];
+    expect(ids.every((id) => CORE_HEADS[id]?.symbol && CORE_HEADS[id]?.name)).toBe(true);
+    expect(new Set(ids.map((id) => CORE_HEADS[id]!.symbol)).size).toBe(ids.length);
   });
 });

@@ -50,7 +50,24 @@ const CORE_NAMES: Record<string, string> = {
   'core:recepcao': tr('Recepção'),
   'core:banheiros': tr('Banheiros'),
   'core:copa': tr('Copa'),
-  'core:lounge': tr('Lounge'),
+  'core:lounge': tr('Phòng giám đốc'),
+  'core:claude': tr('Phòng Claude'),
+  'core:codex': tr('Phòng Codex'),
+  'core:gemini': tr('Phòng Gemini / Antigravity'),
+  'core:opencode': tr('Phòng OpenCode / 9Router'),
+  'core:review': tr('Phòng Review'),
+  'core:archive': tr('Kho lưu trữ'),
+};
+
+/** Trưởng phòng gắn với phòng vật lý. Luôn render biểu tượng; không phụ thuộc task đang chạy. */
+export const CORE_HEADS: Readonly<Record<string, { name: string; symbol: string; color: string }>> = {
+  'core:lounge': { name: 'Vũ Việt Cường', symbol: 'VVC', color: '#cf6b43' },
+  'core:claude': { name: 'Đặng Tuệ Minh', symbol: 'CL', color: '#b77a53' },
+  'core:codex': { name: 'Dương Phạm Tường Vi', symbol: 'CX', color: '#4f83b7' },
+  'core:gemini': { name: 'Nguyễn Mai Phương', symbol: 'AG', color: '#8a71b1' },
+  'core:opencode': { name: 'Trần Đức Khải', symbol: 'OC', color: '#4d9970' },
+  'core:review': { name: 'Đinh Bình Minh', symbol: 'RV', color: '#b28a36' },
+  'core:archive': { name: 'Đinh Nhật Minh', symbol: 'AR', color: '#6e7785' },
 };
 
 /** 'shell' = espera de shell: balão escuro de terminal com texto verde. 'say' = fala das rodas (papo, torcida, apostas). */
@@ -99,6 +116,14 @@ interface Label {
   y: number;
   w: number;
   h: number;
+}
+
+interface HeadTravel {
+  headId: string;
+  from: string;
+  to: string;
+  startedAt: number;
+  duration: number;
 }
 
 type Item = Bubble | Label;
@@ -199,6 +224,7 @@ export class Overlay {
   private ox = 0;
   private oy = 0;
   private zoom = 1;
+  private readonly travels = new Map<string, HeadTravel>();
 
   constructor(
     private readonly ctx: CanvasRenderingContext2D,
@@ -211,6 +237,22 @@ export class Overlay {
   resetCaches(): void {
     this.widths.clear();
     this.fitted.clear();
+  }
+
+  /** Journal-driven head travel. Visual-only; never enters Sim/OfficeSnapshot. */
+  setHeadTravel(headId: string, targetRoomId: string, now: number, returning = false): void {
+    const home = ({
+      'head:vvc': 'core:lounge', 'head:claude': 'core:claude', 'head:codex': 'core:codex',
+      'head:antigravity': 'core:gemini', 'head:opencode-9router': 'core:opencode',
+      'head:review': 'core:review', 'head:archive': 'core:archive',
+    } as Record<string, string>)[headId];
+    const target = targetRoomId.startsWith('core:') ? targetRoomId : ({
+      director: 'core:lounge', claude: 'core:claude', codex: 'core:codex',
+      'gemini-antigravity': 'core:gemini', 'opencode-9router': 'core:opencode',
+      review: 'core:review', archive: 'core:archive',
+    } as Record<string, string>)[targetRoomId];
+    if (!home || !target || home === target) return;
+    this.travels.set(headId, { headId, from: returning ? target : home, to: returning ? home : target, startedAt: now, duration: 1100 });
   }
 
   private measure(font: string, text: string): number {
@@ -419,7 +461,7 @@ export class Overlay {
       const anim = room ? buildAnim(room.phase, room.progress(now)) : null;
       // texto da placa quando ela fica grande o bastante para ler; senão, o nome flutuante
       const rect = this.renderer.signRect(vis);
-      const text = room ? room.info.name : vis.id === 'core:recepcao' ? 'Habblaud' : null;
+      const text = room ? room.info.name : CORE_NAMES[vis.id] ?? (vis.id === 'core:recepcao' ? 'Habblaud' : null);
       const readable = !!rect && rect.h * zoom >= SIGN_MIN_PX;
       if (readable && rect && text && (!anim || anim.sign >= 1)) {
         const ax = this.sx(rect.x);
@@ -431,6 +473,8 @@ export class Overlay {
           this.place(ax, ay, w, h);
         }
       }
+      const head = CORE_HEADS[vis.id];
+      if (head) this.drawCoreHeadBadge(head, r);
       if (room ? readable : zoom >= 1.4) continue;
       const cx = this.sx((r.x + r.w / 2) * TILE);
       const cy = this.sy(r.y * TILE + 6);
@@ -443,6 +487,67 @@ export class Overlay {
         this.drawCorePill(CORE_NAMES[vis.id], cx, cy, colW - 8);
       }
     }
+    this.drawHeadTravels(now);
+  }
+
+  private drawHeadTravels(now: number): void {
+    for (const [key, travel] of this.travels) {
+      const from = this.renderer.areas.get(travel.from)?.layout.rect;
+      const to = this.renderer.areas.get(travel.to)?.layout.rect;
+      const head = Object.values(CORE_HEADS).find((candidate) => candidate.name && ({
+        'head:vvc': 'Vũ Việt Cường', 'head:claude': 'Đặng Tuệ Minh', 'head:codex': 'Dương Phạm Tường Vi',
+        'head:antigravity': 'Nguyễn Mai Phương', 'head:opencode-9router': 'Trần Đức Khải',
+        'head:review': 'Đinh Bình Minh', 'head:archive': 'Đinh Nhật Minh',
+      } as Record<string, string>)[travel.headId] === candidate.name);
+      if (!from || !to || !head) { this.travels.delete(key); continue; }
+      const p = Math.min(1, Math.max(0, (now - travel.startedAt) / travel.duration));
+      const x = from.x + from.w / 2 + (to.x + to.w / 2 - from.x - from.w / 2) * p;
+      const y = from.y + from.h / 2 + (to.y + to.h / 2 - from.y - from.h / 2) * p;
+      this.drawTravelBadge(head, x * TILE, y * TILE);
+      if (p >= 1) this.travels.delete(key);
+    }
+  }
+
+  private drawTravelBadge(head: { symbol: string; color: string }, wx: number, wy: number): void {
+    const { ctx, camera } = this;
+    const size = Math.max(18, Math.min(32, 26 * this.zoom));
+    const x = Math.round(this.sx(wx) - size / 2);
+    const y = Math.round(this.sy(wy) - size / 2);
+    if (x + size < 0 || x > camera.viewW || y + size < 0 || y > camera.viewH) return;
+    ctx.save();
+    ctx.globalAlpha = 0.96;
+    ctx.fillStyle = 'rgba(16,20,32,0.9)';
+    ctx.beginPath(); ctx.roundRect(x + 2, y + 3, size, size, Math.max(4, size * 0.2)); ctx.fill();
+    ctx.fillStyle = head.color;
+    ctx.beginPath(); ctx.roundRect(x, y, size, size, Math.max(4, size * 0.2)); ctx.fill();
+    ctx.font = `800 ${Math.max(7, Math.round(size * 0.28))}px ${UI_FONT}`;
+    ctx.fillStyle = luminance(head.color) > 0.62 ? '#1d2330' : '#fff';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(head.symbol, x + size / 2, y + size / 2 + 0.5);
+    ctx.restore();
+  }
+
+  private drawCoreHeadBadge(head: { name: string; symbol: string; color: string }, rect: { x: number; y: number; w: number; h: number }): void {
+    const { ctx, camera } = this;
+    const size = Math.max(18, Math.min(32, 26 * this.zoom));
+    const x = Math.round(this.sx((rect.x + 1) * TILE));
+    const y = Math.round(this.sy((rect.y + 1) * TILE));
+    if (x + size < 0 || x > camera.viewW || y + size < 0 || y > camera.viewH) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(16,20,32,0.85)';
+    ctx.beginPath();
+    ctx.roundRect(x + 1, y + 2, size, size, Math.max(4, size * 0.2));
+    ctx.fill();
+    ctx.fillStyle = head.color;
+    ctx.beginPath();
+    ctx.roundRect(x, y, size, size, Math.max(4, size * 0.2));
+    ctx.fill();
+    ctx.font = `800 ${Math.max(7, Math.round(size * 0.28))}px ${UI_FONT}`;
+    ctx.fillStyle = luminance(head.color) > 0.62 ? '#1d2330' : '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(head.symbol, x + size / 2, y + size / 2 + 0.5);
+    ctx.restore();
+    this.place(x, y, size + 1, size + 2);
   }
 
   /** Altura dos ícones sobre a cabeça, contando o balão "!" de quem viu o CI falhar (render/github-fx.ts). */

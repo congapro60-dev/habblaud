@@ -8,7 +8,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), e
 [versionamento semântico](https://semver.org/lang/pt-BR/): correção sobe o último número (0.2.**1**), novidade sobe o
 do meio (0.**3**.0).
 
-## [Não lançado]
+## [1.3.0] - 2026-10-29
+
+### Adicionado
+
+- Coordenação por departamento com família fixada, workers/reviewers restritos à mesma família e bloqueio sem telemetria; WorkOrders antigos continuam em modo global.
+- **Phòng giám đốc:** giao yêu cầu thành WorkOrder có journal bền vững, trạng thái, quyền đọc/ghi, runtime dự kiến và panel tiếng Việt trong Habblaud.
+- **Cockpit 9Router:** đọc catalog loopback, health, số model và trạng thái quota `unknown`; Director Room có role, route policy và model selector.
+- **Route decision:** WorkOrder ghi provider/model/role/policy/evidence; `free-fast` fail-closed nếu chưa có bằng chứng free.
+- **Phòng pixel:** khu lounge trở thành Phòng giám đốc, có avatar Vũ Việt Cường; alias phòng slug lỗi được làm sạch trong giao diện.
+- Tên trưởng phòng và nhân vật văn phòng dùng roster cục bộ do người dùng cung cấp; roster không đi vào Habblaud World.
+- Biểu tượng trưởng phòng có thể bấm để giao việc riêng theo model family; Director Room nhận cập nhật WorkOrder qua SSE cục bộ.
+- Kho lưu trữ conversation giữ nhiều message và WorkOrder liên kết; tin nhắn lặp dùng idempotency key, kiểm tra head/project trước khi ghi.
+- Trưởng phòng hiện hiển thị trạng thái nhận việc, điều phối, báo cáo và trở về theo event journal.
+- Badge trưởng phòng trong bản đồ pixel chạy giữa phòng nguồn và phòng đích theo WorkOrder event.
+- Các trưởng phòng có nhân vật pixel local trong phòng Claude/Codex/Gemini/OpenCode/Review/Lưu trữ; global task khiến nhân vật chạy theo đường đi trong tòa nhà.
+- Hỗ trợ OpenCode v2 API và CLI chính thức `@opencode/cli`; Habblaud tự nhận diện API v1/v2, vẫn chỉ đọc session/event.
+- Codex picker có catalog local phân nhóm FREE / TRONG GÓI* / TRỪ VÍ / GÓI CAO HƠN cho xKiro và Vilao60; default GPT-6.1 Sol giữ nguyên. Model chưa canary ghi thử nghiệm; không tự fallback trả phí.
 
 ## [1.2.1] - 2026-10-18
 

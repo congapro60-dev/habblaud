@@ -55,7 +55,7 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
   const visitMode = !!o.visit;
   const camera = new Camera();
   // Simulação e desenho são recriados quando o timelapse entra, pula ou sai (rebuild).
-  let sim = new Sim(art, () => options, undefined, { visit: visitMode });
+  let sim = new Sim(art, () => options, undefined, { visit: visitMode, heads: !visitMode });
   let renderer = new Renderer(canvas, art, sim, camera);
   let overlay = new Overlay(renderer.ctx, sim, renderer, camera);
   let assets: WorldAssets | null = null;
@@ -81,6 +81,8 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
   let framed = false;
   let lastCols = -1;
   const abort = new AbortController();
+  const headEvents = visitMode || typeof EventSource === 'undefined' ? null : new EventSource('/api/work-orders/stream?after=0');
+  const headEventsStartedAt = Date.now();
 
   // ------------------------------------------------------------------ tamanho/DPR
 
@@ -260,6 +262,17 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
   const offSnapshot = store.on('snapshot', onSnapshot);
   if (store.snapshot) onSnapshot();
 
+  headEvents?.addEventListener('work-order', (raw) => {
+    try {
+      const event = JSON.parse((raw as MessageEvent).data) as { type?: string; at?: number; payload?: { headId?: string; departmentId?: string; coordinationMode?: string } };
+      if (!event.at || event.at < headEventsStartedAt || event.payload?.coordinationMode !== 'global' || !event.payload?.headId || !event.payload.departmentId) return;
+      if (event.type === 'HEAD_ASSIGNED') sim.moveVirtualHead(event.payload.headId, event.payload.departmentId);
+      if (event.type === 'WORKER_FINISHED' || event.type === 'WORKER_CANCELLED') sim.moveVirtualHead(event.payload.headId, event.payload.departmentId, true);
+    } catch {
+      // A malformed private event cannot affect the office simulation.
+    }
+  });
+
   void loadWorldAssets(abort.signal).then((a) => {
     if (!a) return;
     assets = a;
@@ -371,7 +384,7 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
   const rebuild = () => {
     // As carteiras ao vivo gravam a cada 5 s: não perde o que mudou desde a última vez (no replay, não grava nada).
     sim.social.wallets.save(Date.now());
-    sim = new Sim(art, () => options, playback ? null : undefined, { visit: visitMode });
+    sim = new Sim(art, () => options, playback ? null : undefined, { visit: visitMode, heads: !visitMode });
     renderer = new Renderer(canvas, art, sim, camera);
     if (assets) renderer.setAssets(assets);
     if (playback) {
@@ -467,6 +480,7 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
     destroy: () => {
       cancelAnimationFrame(raf);
       abort.abort();
+      headEvents?.close();
       offSnapshot();
       detachInput();
       window.removeEventListener('resize', resize);

@@ -19,6 +19,7 @@ import { DayStatsService } from './history/daystats';
 import { describeStateMigration, legacyEnvWarning, migrateLegacyStateDir } from './legacy';
 import { errMsg, log } from './log';
 import { NameStore } from './model/names';
+import { LOCAL_EMPLOYEE_NAMES } from '../shared/local-character-roster';
 import { Office } from './model/office';
 import { RoomAliases } from './model/room-aliases';
 import { createPtyRoutes } from './http/pty';
@@ -59,6 +60,11 @@ import { OwnerSocial } from './world/social';
 import { BuildingTokens } from './world/tokens';
 import { BuildingUplink } from './world/uplink';
 import { WorldViewer } from './world/viewer';
+import { WorkOrderStore } from './work-orders';
+import { RouterService } from './router';
+import { ConversationStore } from './conversations';
+import { OpenCodeRuntime } from './runtime/opencode';
+import { WorkOrderOrchestrator } from './orchestration';
 
 const config = loadConfig();
 const startedAt = Date.now();
@@ -73,8 +79,19 @@ if (!config.inDocker) {
 const legacyEnv = legacyEnvWarning(Object.keys(process.env));
 if (legacyEnv) log.warn(legacyEnv);
 
-const names = new NameStore(join(config.dataDir, 'names.json'));
+const names = new NameStore(join(config.dataDir, 'names.json'), { roster: LOCAL_EMPLOYEE_NAMES });
 names.load();
+const workOrders = new WorkOrderStore(join(config.dataDir, 'work-orders.ndjson'));
+try {
+  workOrders.load();
+} catch (error) {
+  log.warn(tr('Sala do diretor indisponível: {0}', [errMsg(error)]));
+}
+const router = new RouterService(process.env);
+const conversations = new ConversationStore(join(config.dataDir, 'conversations.ndjson'));
+try { conversations.load(); } catch (error) { log.warn(tr('Kho conversation indisponível: {0}', [errMsg(error)])); }
+const runtime = new OpenCodeRuntime({ store: workOrders, env: process.env });
+const orchestration = new WorkOrderOrchestrator({ store: workOrders, router, runtime });
 // Nomes de sala escolhidos pelo usuário (botão direito > Renomear).
 const roomAliases = new RoomAliases(join(config.dataDir, 'rooms.json'));
 roomAliases.load();
@@ -379,6 +396,11 @@ const api = createApiHandler({
   updates,
   remote: config.remote ? { is: isRemoteRequest, allows: (f) => config.remote!.allow.has(f) } : undefined,
   world: world ? createWorldRoutes(world, worldViewer, worldSocial) : undefined,
+  workOrders,
+  router,
+  conversations,
+  runtime,
+  orchestration,
 });
 
 const server = http.createServer();

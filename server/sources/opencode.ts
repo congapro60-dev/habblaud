@@ -142,6 +142,8 @@ export class OpenCodeSource implements AgentSource {
   private readonly now: () => number;
   private readonly pollMs: number;
   private readonly recentMs: number;
+  /** v1 uses /session and /event; v2 uses /api/session and /api/global/event. */
+  private apiPrefix = '';
   private readonly office: Office;
   private readonly sessions = new Map<string, TrackedSession>();
   private readonly seenEvents = new Set<string>();
@@ -181,6 +183,7 @@ export class OpenCodeSource implements AgentSource {
     this.stopped = false;
     this.office.beginBoot();
     try {
+      await this.detectApiVersion();
       await this.pollAsync(true);
     } finally {
       this.office.endBoot();
@@ -211,9 +214,21 @@ export class OpenCodeSource implements AgentSource {
   private async request(path: string): Promise<unknown> {
     const headers = new Headers({ Accept: 'application/json' });
     if (this.authorization) headers.set('Authorization', this.authorization);
-    const response = await this.fetchBounded(`${this.url}${path}`, { headers });
+    const response = await this.fetchBounded(`${this.url}${this.apiPrefix}${path}`, { headers });
     if (!response.ok) throw new Error(`OpenCode HTTP ${response.status}`);
     return response.json();
+  }
+
+  private async detectApiVersion(): Promise<void> {
+    try {
+      const headers = new Headers({ Accept: 'application/json' });
+      if (this.authorization) headers.set('Authorization', this.authorization);
+      const response = await this.fetchBounded(`${this.url}/api/session`, { headers });
+      const contentType = response.headers?.get('content-type') ?? '';
+      this.apiPrefix = response.ok && (contentType.includes('json') || contentType === '') ? '/api' : '';
+    } catch {
+      this.apiPrefix = '';
+    }
   }
 
   private async fetchBounded(input: string, init: RequestInit): Promise<Response> {
@@ -330,10 +345,10 @@ export class OpenCodeSource implements AgentSource {
     try {
       while (!this.stopped) {
         try {
-          const query = directory ? `?directory=${encodeURIComponent(directory)}` : '';
+          const query = this.apiPrefix ? '' : (directory ? `?directory=${encodeURIComponent(directory)}` : '');
           const headers = new Headers({ Accept: 'text/event-stream' });
           if (this.authorization) headers.set('Authorization', this.authorization);
-          const response = await this.fetchImpl(`${this.url}/event${query}`, { headers, redirect: 'error', signal: controller.signal });
+          const response = await this.fetchImpl(`${this.url}${this.apiPrefix ? '/api/global/event' : '/event'}${query}`, { headers, redirect: 'error', signal: controller.signal });
           if (!response.ok || !response.body) throw new Error(`OpenCode event HTTP ${response.status}`);
           const reader = response.body.getReader();
           const decoder = new TextDecoder();

@@ -22,6 +22,13 @@ import { AUDIO_BODY_MAX, type DictationService } from '../dictation/dictation';
 import type { DeliveryIndex } from '../deliveries/deliveries';
 import type { FileFetcher } from '../deliveries/fetcher';
 import { HOST_WAIT_MS } from '../host-wait';
+import { WorkOrderError, type WorkOrderStore } from '../work-orders';
+import { assertDepartmentDispatch, CoordinationError } from '../../shared/work-orders';
+import type { RouterService } from '../router';
+import { ConversationError, type ConversationStore } from '../conversations';
+import { departmentForRuntime, departmentSnapshot, headIdFor } from '../departments';
+import type { OpenCodeRuntime } from '../runtime/opencode';
+import type { WorkOrderOrchestrator } from '../orchestration';
 
 export interface ApiDeps {
   office: Office;
@@ -94,12 +101,19 @@ export interface ApiDeps {
    * local com Host local: pela porta do celular, nem com login (403 `local_only`).
    */
   world?: (req: IncomingMessage, res: ServerResponse, url: URL) => void;
+  /** WorkOrders da sala do diretor; só pela porta local e com a trava do terminal. */
+  workOrders?: WorkOrderStore;
+  router?: RouterService;
+  conversations?: ConversationStore;
+  runtime?: OpenCodeRuntime;
+  orchestration?: WorkOrderOrchestrator;
 }
 
 /** GET /api/agents/:id/terminal (ids nunca contêm '/'). */
 const TERMINAL_ROUTE = /^\/api\/agents\/([^/]+)\/terminal$/;
 /** POST /api/agents/:id/stop|takeover (terminal interativo). */
 const AGENT_ACTION_ROUTE = /^\/api\/agents\/[^/]+\/(stop|takeover)$/;
+const WORK_ORDER_ROUTE = /^\/api\/work-orders(?:\/([^/]+))?$/;
 
 /** PUT|DELETE /api/agents/:id/character: personagem do projeto (ver Office.setCharacter). */
 const CHARACTER_ROUTE = /^\/api\/agents\/([^/]+)\/character$/;
@@ -324,6 +338,9 @@ export function createApiHandler(deps: ApiDeps): (req: IncomingMessage, res: Ser
   const fail = (res: ServerResponse, err: unknown) => {
     if (res.headersSent) return void res.destroy();
     if (err instanceof HttpError) sendJson(res, err.status, { error: err.message });
+    else if (err instanceof CoordinationError) sendJson(res, 400, { error: err.message });
+    else if (err instanceof WorkOrderError) sendJson(res, err.code === 'invalid' ? 400 : err.code === 'not-found' ? 404 : err.code === 'conflict' ? 409 : 503, { error: err.message });
+    else if (err instanceof ConversationError) sendJson(res, err.code === 'invalid' ? 400 : err.code === 'not-found' ? 404 : 503, { error: err.message });
     else sendJson(res, 500, { error: tr('erro interno') });
   };
 
@@ -355,9 +372,146 @@ export function createApiHandler(deps: ApiDeps): (req: IncomingMessage, res: Ser
       else hub.attach(req, res);
       return true;
     }
+    if (path === '/api/work-orders/stream') {
+      if (method !== 'GET') methodNotAllowed(res, 'GET');
+      else if (!deps.workOrders || isRemote(req) || !trusted(req, 'terminal')) sendJson(res, 403, { error: denied(req, tr('luồng WorkOrder chỉ hoạt động trên máy tính này')) });
+      else {
+        const cursor = Number.parseInt(url.searchParams.get('after') ?? '0', 10) || 0;
+        res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+        let last = cursor;
+        const write = () => {
+          try {
+            const events = deps.workOrders!.eventsSince(last);
+            for (const event of events) { const order = deps.workOrders!.get(event.workOrderId)?.order; const enriched = order ? { ...event, payload: { ...event.payload, headId: order.headId, departmentId: order.departmentId, coordinationMode: order.coordinationMode } } : event; res.write(`id: ${event.sequence}\nevent: work-order\ndata: ${JSON.stringify(enriched)}\n\n`); last = event.sequence; }
+            res.write(': ping\n\n');
+          } catch { res.end(); }
+        };
+        write();
+        const timer = setInterval(write, 500);
+        timer.unref?.();
+        req.on('close', () => clearInterval(timer));
+      }
+      return true;
+    }
     if (path === '/api/snapshot') {
       if (!isRead) methodNotAllowed(res, 'GET');
       else sendJson(res, 200, hub.current());
+      return true;
+    }
+    const workOrderMatch = WORK_ORDER_ROUTE.exec(path);
+    if (workOrderMatch) {
+      const store = deps.workOrders;
+      if (!store) sendJson(res, 403, { error: tr('sala do diretor desligada') });
+      else if (isRemote(req)) sendJson(res, 403, { error: tr('a sala do diretor só funciona pelo próprio computador') });
+      else if (!trusted(req, 'terminal')) sendJson(res, 403, { error: denied(req, tr('a sala do diretor só funciona pelo próprio computador')) });
+      else {
+        try {
+          const id = workOrderMatch[1] ? decodeURIComponent(workOrderMatch[1]) : undefined;
+          if (method === 'GET' && !id) sendJson(res, 200, { workOrders: store.list() });
+          else if (method === 'GET' && id) {
+            const value = store.get(id);
+            if (!value) sendJson(res, 404, { error: tr('WorkOrder não encontrado') });
+            else sendJson(res, 200, value);
+          } else if (method === 'POST' && !id) {
+            readJson(req)
+              .then((body) => {
+                const workOrder = store.create(body);
+                if (!deps.conversations) return sendJson(res, 201, { workOrder });
+                const b = body && typeof body === 'object' ? body as Record<string, unknown> : {};
+                const requestedConversation = typeof b.conversationId === 'string' ? deps.conversations.get(b.conversationId)?.conversation : undefined;
+                if (b.conversationId !== undefined && !requestedConversation) throw new ConversationError('not-found', 'conversation không tồn tại');
+                if (requestedConversation && requestedConversation.headId && requestedConversation.headId !== workOrder.headId) throw new ConversationError('invalid', 'conversation khác trưởng phòng');
+                if (requestedConversation && requestedConversation.projectPath && requestedConversation.projectPath !== workOrder.projectPath) throw new ConversationError('invalid', 'conversation khác project');
+                const conversation = requestedConversation ?? deps.conversations.create({ title: typeof b.objective === 'string' ? b.objective : 'WorkOrder', projectPath: b.projectPath, workOrderId: workOrder.id, headId: workOrder.headId ?? headIdFor(departmentForRuntime(workOrder.requestedRuntime, workOrder.role)) });
+                deps.conversations.update(conversation.id, { action: 'message', role: 'director', text: typeof b.objective === 'string' ? b.objective : 'WorkOrder', workOrderId: workOrder.id, idempotencyKey: `workorder:${workOrder.id}` });
+                return sendJson(res, 201, { workOrder: store.linkConversation(workOrder.id, conversation.id), conversation: deps.conversations.get(conversation.id)?.conversation });
+              })
+              .catch((err) => fail(res, err));
+          } else if (method === 'POST' && id) {
+            readJson(req)
+              .then((body) => {
+                const b = body as Record<string, unknown>;
+                if (b.action === 'report' && typeof b.report === 'string') return sendJson(res, 200, { workOrder: store.report(id, b.report) });
+                if (b.action === 'plan' && deps.orchestration) return sendJson(res, 200, { workOrder: deps.orchestration.plan(id, Array.isArray(b.tasks) ? b.tasks as never : undefined) });
+                if (b.action === 'start' && deps.orchestration && deps.router) {
+                  return deps.orchestration.start(id, { unknownCostOrQuota: b.confirmUnknownCostOrQuota === true, antigravityAccountSession: b.confirmAntigravityAccountSession === true, workspaceWrite: b.confirmWorkspaceWrite === true }).then((workOrder) => sendJson(res, 200, { workOrder }), (err) => fail(res, err));
+                }
+                if (b.action === 'start' && deps.runtime && deps.router) {
+                  const current = store.get(id);
+                  if (!current) throw new WorkOrderError('not-found', 'WorkOrder não encontrado');
+                  const decision = current.order.routeDecision;
+                  if (!decision) throw new WorkOrderError('conflict', 'WorkOrder ainda não tem route');
+                  return deps.router.refresh(true).then((catalog) => {
+                    const live = catalog.models.find((model) => model.modelId === decision.modelId);
+                    if (catalog.health !== 'ok' || !live || live.supportsTools !== true) throw new WorkOrderError('unavailable', 'route mudou ou não confirmou tools; selecione novamente');
+                    if (live.costClass === 'paid-api') throw new WorkOrderError('conflict', 'P1C não inicia API paga');
+                    assertDepartmentDispatch(current.order, live.modelId, live.servedModel);
+                    return sendJson(res, 200, { workOrder: deps.runtime!.startConfirmed(id, { unknownCostOrQuota: b.confirmUnknownCostOrQuota === true, antigravityAccountSession: b.confirmAntigravityAccountSession === true, workspaceWrite: b.confirmWorkspaceWrite === true }) });
+                  }).catch((err) => fail(res, err));
+                }
+                if (b.action === 'cancel' && deps.orchestration && store.get(id)?.order.tasks?.length) return deps.orchestration.cancel(id).then((workOrder) => sendJson(res, 200, { workOrder }), (err) => fail(res, err));
+                if (b.action === 'cancel' && deps.runtime) return sendJson(res, 200, { workOrder: deps.runtime.cancel(id) });
+                if (b.action === 'select-route' && deps.router) {
+                  const current = store.get(id)?.order;
+                  if (!current) throw new WorkOrderError('not-found', 'WorkOrder não encontrado');
+                  return deps.router.select(typeof b.modelId === 'string' && b.modelId ? b.modelId : undefined, (typeof b.policy === 'string' ? b.policy : 'balanced-code') as never, (typeof b.role === 'string' ? b.role : 'worker') as never, current)
+                    .then((decision) => {
+                      let workOrder = store.selectRoute(id, decision);
+                      if (!workOrder.headId || !workOrder.departmentId) workOrder = store.assignHead(id, departmentForRuntime(workOrder.requestedRuntime, workOrder.role));
+                      return sendJson(res, 200, { workOrder });
+                    });
+                }
+                if (b.action === 'assign-head' && typeof b.departmentId === 'string') return sendJson(res, 200, { workOrder: store.assignHead(id, b.departmentId as never) });
+                if (b.action === 'verify-after-tests' && Array.isArray(b.evidenceRefs)) return sendJson(res, 200, { workOrder: store.transition(id, 'VERIFIED', undefined, { mode: 'director-after-tests', evidenceRefs: b.evidenceRefs as never[] }) });
+                if (b.action === 'evidence' && Array.isArray(b.evidenceRefs)) return sendJson(res, 200, { workOrder: store.recordEvidence(id, b.evidenceRefs as never[]) });
+                if (b.action === 'request-approval' && (b.kind === 'commit' || b.kind === 'deploy') && Array.isArray(b.evidenceRefs)) return sendJson(res, 200, { workOrder: store.requestApproval(id, b.kind, b.evidenceRefs as never[]) });
+                if ((b.action === 'approve' || b.action === 'reject') && (b.kind === 'commit' || b.kind === 'deploy') && Number.isInteger(b.requestedRevision)) return sendJson(res, 200, { workOrder: store.decideApproval(id, b.kind, b.action === 'approve' ? 'approved' : 'rejected', b.requestedRevision as number, typeof b.reason === 'string' ? b.reason : undefined) });
+                if (b.action === 'status' && typeof b.status === 'string') return sendJson(res, 200, { workOrder: store.transition(id, b.status as never, typeof b.reason === 'string' ? b.reason : undefined) });
+                throw new HttpError(400, tr('esperado {action: start|cancel|status|report}'));
+              })
+              .catch((err) => fail(res, err));
+          } else methodNotAllowed(res, 'GET, POST');
+        } catch (err) {
+          fail(res, err);
+        }
+      }
+      return true;
+    }
+    if (path === '/api/router/catalog') {
+      if (!isRead) methodNotAllowed(res, 'GET');
+      else if (!deps.router) sendJson(res, 404, { error: tr('9Router não configurado') });
+      else if (!trusted(req, 'terminal')) sendJson(res, 403, { error: denied(req, tr('o cockpit do 9Router só funciona pelo próprio computador')) });
+      else deps.router.refresh().then((catalog) => sendJson(res, 200, catalog), (err) => fail(res, err));
+      return true;
+    }
+    if (path === '/api/departments') {
+      if (!isRead) methodNotAllowed(res, 'GET');
+      else if (!deps.router) sendJson(res, 200, { departments: departmentSnapshot({ snapshot: () => ({ baseUrl: '', checkedAt: null, health: 'unknown', quotaState: 'unknown', models: [] }) } as unknown as RouterService, deps.workOrders?.list() ?? []) });
+      else deps.router.refresh().then((catalog) => sendJson(res, 200, { departments: departmentSnapshot({ snapshot: () => catalog } as RouterService, deps.workOrders?.list() ?? []) }), () => sendJson(res, 200, { departments: departmentSnapshot(deps.router!, deps.workOrders?.list() ?? []) }));
+      return true;
+    }
+    if (path === '/api/conversations' || path.startsWith('/api/conversations/')) {
+      const store = deps.conversations;
+      if (!store) sendJson(res, 404, { error: tr('kho conversation không configurado') });
+      else if (!trusted(req, 'terminal') || isRemote(req)) sendJson(res, 403, { error: denied(req, tr('kho conversation chỉ hoạt động trên máy tính này')) });
+      else {
+        const id = path === '/api/conversations' ? undefined : decodeURIComponent(path.slice('/api/conversations/'.length));
+        try {
+          if (method === 'GET' && !id) sendJson(res, 200, { conversations: store.list() });
+          else if (method === 'GET' && id) { const value = store.get(id); if (!value) sendJson(res, 404, { error: tr('conversation không tồn tại') }); else sendJson(res, 200, value); }
+          else if (method === 'POST' && !id) readJson(req).then((body) => sendJson(res, 201, { conversation: store.create(body) })).catch((err) => fail(res, err));
+          else if (method === 'POST' && id) readJson(req).then((body) => {
+            const b = body && typeof body === 'object' ? body as Record<string, unknown> : {};
+            if (b.action === 'message' && typeof b.workOrderId === 'string' && deps.workOrders) {
+              const work = deps.workOrders.get(b.workOrderId)?.order;
+              const conversation = store.get(id)?.conversation;
+              if (!work || !conversation || work.conversationId !== id || (conversation.headId && work.headId !== conversation.headId) || (conversation.projectPath && work.projectPath !== conversation.projectPath)) throw new ConversationError('invalid', 'message không thuộc conversation/head/project này');
+            }
+            return sendJson(res, 200, { conversation: store.update(id, body) });
+          }).catch((err) => fail(res, err));
+          else methodNotAllowed(res, 'GET, POST');
+        } catch (err) { fail(res, err); }
+      }
       return true;
     }
     if (path === '/api/health') {

@@ -1287,7 +1287,6 @@ export const VI_AUTO: Readonly<Record<string, string>> = {
   "Recepção": "Thu nhận",
   "Banheiros": "Phòng vệ sinh",
   "Copa": "Phòng bếp",
-  "Lounge": "Phòng chờ",
   "Esperando o dono": "Chờ chủ nhân",
   "visitante": "du khách",
   "Monitorando um processo": "Giám sát một quá trình",

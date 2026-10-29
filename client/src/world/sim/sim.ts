@@ -2,11 +2,12 @@
 // planeja comportamentos e executa as filas de passos a cada frame.
 import { partsKey } from '../../../../shared/appearance';
 import type { AgentInfo, OfficeSnapshot, Provider, RoomInfo } from '../../../../shared/types';
+import { LOCAL_DEPARTMENT_HEADS } from '../../../../shared/local-character-roster';
 import type { ArtModule, Dir, RoomTheme } from '../../art/api';
 import type { WorldOptions } from '../api';
 import { COL_W, COMPACT_DELAY_MS, DISMANTLE_DELAY_MS, FOOT_DX, FOOT_DY, MISSING_DEBOUNCE_MS, RUN_SPEED, TILE, WALK_SPEED } from '../constants';
 import { assembleBuilding, type BuildingLayout } from '../layout/building';
-import { RECEPTION_ID } from '../layout/core';
+import { DIRECTOR_ID, RECEPTION_ID } from '../layout/core';
 import { columnsFor, inRect } from '../layout/geometry';
 import { layoutProjectRoom } from '../layout/room';
 import type { SpotDef, SpotKind } from '../layout/types';
@@ -57,6 +58,11 @@ export interface SimMode {
    * de quem está à toa há muito tempo, cronômetro do balão); mais o visitante e as luzes da visita.
    */
   visit?: boolean;
+  /**
+   * Trưởng phòng ảo cục bộ (Claude/Codex/Gemini/OpenCode/Review/Archive): chỉ ở scene văn phòng thật.
+   * Tắt mặc định để snapshot là nguồn duy nhất quyết định nhân vật (test và scene khác không thấy).
+   */
+  heads?: boolean;
 }
 
 /** Luzes da visita: 'away' (pausado) apaga tudo; 'discreet' acende as salas vazias; 'live' é o `Sim` de sempre. */
@@ -67,6 +73,15 @@ const SULK_MS = 4_000;
 const MAX_EFFECTS = 32;
 /** Dono das reservas dos lugares de uma sala fantasma (endereço antigo de uma mudança). */
 const GHOST_OWNER = '@mudança';
+export const DIRECTOR_AGENT_ID = 'director:vuvietcuong';
+const VIRTUAL_HEADS = [
+  { headId: 'head:claude', departmentId: 'claude', roomId: 'core:claude', key: 'claude' },
+  { headId: 'head:codex', departmentId: 'codex', roomId: 'core:codex', key: 'codex' },
+  { headId: 'head:antigravity', departmentId: 'gemini-antigravity', roomId: 'core:gemini', key: 'gemini-antigravity' },
+  { headId: 'head:opencode-9router', departmentId: 'opencode-9router', roomId: 'core:opencode', key: 'opencode-9router' },
+  { headId: 'head:review', departmentId: 'review', roomId: 'core:review', key: 'review' },
+  { headId: 'head:archive', departmentId: 'archive', roomId: 'core:archive', key: 'archive' },
+] as const;
 
 const FALLBACK_THEME: RoomTheme = {
   carpet: '#5b7fa6',
@@ -99,6 +114,8 @@ const lookSig = (a: AgentInfo): string => `${a.seed}|${a.look}|${partsKey(a.part
 
 export class Sim {
   readonly chars = new Map<string, Character>();
+  private readonly virtualHeadIds = new Set<string>();
+  private readonly virtualHeadHome = new Map<string, string>();
   readonly rooms = new Map<string, RoomState>();
   readonly spots = new SpotRegistry();
   readonly elevators: Elevator[] = [];
@@ -123,6 +140,8 @@ export class Sim {
   injected: { rooms: RoomInfo[]; agents: AgentInfo[] } = { rooms: [], agents: [] };
   /** Depuração: campos sobrepostos a agentes reais do snapshot (ex.: shells forçados). */
   readonly agentPatches = new Map<string, Partial<AgentInfo>>();
+  /** Personagem local do diretor; não faz parte dos agentes do servidor. */
+  director: Character | null = null;
   /** Efeitos pontuais (confete) para o render desenhar; o render esvazia a lista. */
   readonly effects: WorldEffect[] = [];
   /** Festa e alarme das salas (eventos do GitHub; sim/github.ts). */
@@ -141,6 +160,8 @@ export class Sim {
   visitorIntent: VisitorIntent = { ...NO_INTENT };
   /** Visita: as luzes do prédio (aplicadas a cada snapshot e a cada segundo). */
   visitLight: VisitLight = 'live';
+  /** Trưởng phòng ảo cục bộ: só quando o scene do escritório pede (`SimMode.heads`). */
+  private readonly withHeads: boolean;
 
   /** `storage` das carteiras: null = só em memória (o timelapse não mexe nas moedinhas de verdade). */
   constructor(
@@ -150,11 +171,117 @@ export class Sim {
     mode: SimMode = {},
   ) {
     this.visit = !!mode.visit;
+    this.withHeads = !this.visit && !!mode.heads;
     this.social = new Social(this, storage);
     this.building = assembleBuilding(columnsFor([]), [], 0);
     this.finder = new PathFinder(this.building.grid);
     this.spots.setSpots(this.building.spots);
     for (const s of this.spots.ofKind('elevator')) this.elevators.push(new Elevator(this.elevators.length, s.id));
+    this.addDirectorCharacter();
+    if (this.withHeads) this.addVirtualDepartmentHeads();
+  }
+
+  /** Local-only department heads. Never part of OfficeSnapshot or Habblaud World. */
+  private addVirtualDepartmentHeads(): void {
+    for (const def of VIRTUAL_HEADS) {
+      const person = LOCAL_DEPARTMENT_HEADS[def.key];
+      const area = this.building.core.find((candidate) => candidate.id === def.roomId);
+      if (!person || !area) continue;
+      const id = `virtual:${def.headId}`;
+      const info: AgentInfo = {
+        id, kind: 'main', roomId: def.roomId, name: person.name, look: person.look, role: 'Trưởng phòng',
+        title: 'Trưởng phòng', sessionId: id, account: '@habblaud-head', status: 'working', recent: [], tasks: [],
+        startedAt: 0, lastEventAt: 0, statusSince: 0, stats: { toolCalls: 0, tokensIn: 0, tokensOut: 0, subagents: 0 },
+        seed: (0x51000000 + def.key.length * 7919) >>> 0, custom: true, permissionMode: 'READ_ONLY',
+        activity: { id: `${id}:ready`, kind: 'plan', icon: '🧭', text: `${person.name} · Trưởng phòng`, at: 0 },
+      };
+      let appearance;
+      try { appearance = this.art.appearanceFromSeed(info.seed, { look: info.look, parts: info.parts }); } catch { continue; }
+      const ch = new Character(info, appearance);
+      const tx = Math.floor(area.rect.x + area.rect.w / 2);
+      const ty = Math.floor(area.rect.y + area.rect.h / 2);
+      const walkable = this.building.grid.nearestWalkable(tx, ty, 8) ?? { x: tx, y: ty };
+      ch.placeAtTile(walkable.x, walkable.y);
+      ch.mode = 'work';
+      ch.thinkAt = Number.POSITIVE_INFINITY;
+      ch.setPose('stand');
+      this.chars.set(id, ch);
+      this.virtualHeadIds.add(id);
+      this.virtualHeadHome.set(def.headId, def.roomId);
+    }
+  }
+
+  /** Moves a virtual head for a global WorkOrder journal event. */
+  moveVirtualHead(headId: string, departmentId: string, returning = false): void {
+    const id = `virtual:${headId}`;
+    const ch = this.chars.get(id);
+    if (!ch) return;
+    const targetRoom = returning ? this.virtualHeadHome.get(headId) : ({
+      claude: 'core:claude', codex: 'core:codex', 'gemini-antigravity': 'core:gemini',
+      'opencode-9router': 'core:opencode', review: 'core:review', archive: 'core:archive', director: 'core:lounge',
+    } as Record<string, string>)[departmentId];
+    if (!targetRoom || targetRoom === ch.roomId) return;
+    const area = this.building.core.find((candidate) => candidate.id === targetRoom);
+    if (!area) return;
+    const tx = Math.floor(area.rect.x + area.rect.w / 2);
+    const ty = Math.floor(area.rect.y + area.rect.h / 2);
+    const walkable = this.building.grid.nearestWalkable(tx, ty, 8) ?? { x: tx, y: ty };
+    ch.queue.length = 0;
+    ch.step = null;
+    ch.roomId = ch.info.roomId;
+    ch.queue.push(
+      { t: 'go', tx: walkable.x, ty: walkable.y, run: true },
+      { t: 'do', fn: () => { ch.roomId = targetRoom; ch.info.roomId = targetRoom; } },
+      { t: 'act', pose: 'stand', ms: 700 },
+    );
+  }
+
+  /** Personagem local do dono do escritório. Não entra no snapshot nem no Habblaud World. */
+  private addDirectorCharacter(): void {
+    if (this.visit) return;
+    const info: AgentInfo = {
+      id: DIRECTOR_AGENT_ID,
+      kind: 'main',
+      roomId: DIRECTOR_ID,
+      name: 'Vũ Việt Cường',
+      look: 'm',
+      role: 'Giám đốc',
+      title: 'Chủ trì cuộc họp',
+      sessionId: DIRECTOR_AGENT_ID,
+      account: '@director',
+      status: 'idle',
+      recent: [],
+      tasks: [],
+      startedAt: 0,
+      lastEventAt: 0,
+      statusSince: 0,
+      stats: { toolCalls: 0, tokensIn: 0, tokensOut: 0, subagents: 0 },
+      seed: 0x19041975,
+      custom: true,
+      permissionMode: 'READ_ONLY',
+      activity: { id: `${DIRECTOR_AGENT_ID}:ready`, kind: 'plan', icon: '🗂️', text: tr('Vũ Việt Cường · Giám đốc'), at: 0 },
+    };
+    let appearance;
+    try {
+      appearance = this.art.appearanceFromSeed(info.seed, { look: info.look, parts: info.parts });
+    } catch {
+      return;
+    }
+    const ch = new Character(info, appearance);
+    let seat: SpotDef | undefined;
+    for (const spot of this.spots.all()) {
+      if (spot.areaId === DIRECTOR_ID && spot.kind === 'desk') {
+        seat = spot;
+        break;
+      }
+    }
+    if (!seat || !this.spots.reserve(seat.id, ch.id)) return;
+    ch.homeSpot = seat.id;
+    this.snapTo(ch, seat);
+    ch.mode = 'work';
+    ch.thinkAt = Number.POSITIVE_INFINITY;
+    ch.setPose('sit', 'papers');
+    this.director = ch;
   }
 
   // =================================================================== snapshot
@@ -770,6 +897,22 @@ export class Sim {
   // =================================================================== execução dos passos
 
   private runCharacter(ch: Character, dt: number, now: number): void {
+    if (ch.id === DIRECTOR_AGENT_ID) {
+      ch.animT += dt * 1000;
+      ch.updateLane(dt);
+      return;
+    }
+    if (this.virtualHeadIds.has(ch.id)) {
+      ch.animT += dt * 1000;
+      ch.updateLane(dt);
+      if (!ch.step) ch.step = ch.queue.shift() ?? null;
+      if (ch.step) {
+        const done = this.runStep(ch, ch.step, dt, now);
+        ch.stepT += dt * 1000;
+        if (done) { ch.step = null; ch.stepT = 0; ch.stepStarted = false; }
+      } else ch.setPose('stand');
+      return;
+    }
     // animação
     ch.animT += dt * 1000;
     ch.updateLane(dt);
@@ -1724,12 +1867,13 @@ export class Sim {
   /** Os personagens desenhados: os agentes e, na visita, o visitante (por último). */
   *people(): IterableIterator<Character> {
     yield* this.chars.values();
+    if (this.director && !this.director.gone) yield this.director;
     if (this.visitor && !this.visitor.gone) yield this.visitor;
   }
 
   /** Um personagem desenhado pelo id (agente ou o visitante). */
   person(id: string): Character | undefined {
-    return this.chars.get(id) ?? (this.visitor?.id === id ? this.visitor : undefined);
+    return this.chars.get(id) ?? (this.director?.id === id ? this.director : this.visitor?.id === id ? this.visitor : undefined);
   }
 
   /** Visita: o visitante surge no elevador da recepção e sai para o hall (null = tira o visitante). */

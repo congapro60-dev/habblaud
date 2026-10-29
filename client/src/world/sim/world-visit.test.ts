@@ -319,7 +319,7 @@ describe('o visitante', () => {
     const room = sim.rooms.get('f_0a1b2c3d4e')!;
     const door = room.layout.door!;
     expect(sim.visitorWalkTo(door.x, door.y)).toBe(true);
-    run(sim, clock, 30, () => !ch.step && !ch.queue.length);
+    run(sim, clock, 180, () => !ch.step && !ch.queue.length);
     expect([ch.tx, ch.ty]).toEqual([door.x, door.y]);
     expect(ch.seated).toBe(false);
   });

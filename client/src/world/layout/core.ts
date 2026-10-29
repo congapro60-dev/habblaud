@@ -1,6 +1,6 @@
 // Núcleo do prédio (colunas 0 e 1): recepção com elevadores, banheiros, copa e lounge.
 import type { WallStyle } from '../../art/api';
-import { COL_W, NORTH_Y, ROOM_H, SOUTH_Y, TILE } from '../constants';
+import { COL_W, DOOR_W, DOOR_X, NORTH_Y, ROOM_H, SOUTH_Y, TILE } from '../constants';
 import { AreaBuilder, SEATED_SORT_BIAS } from './builder';
 import type { AreaLayout } from './types';
 
@@ -8,6 +8,14 @@ export const RECEPTION_ID = 'core:recepcao';
 export const RESTROOM_ID = 'core:banheiros';
 export const CAFE_ID = 'core:copa';
 export const LOUNGE_ID = 'core:lounge';
+/** Sala fixa do diretor; mantém o id antigo para preservar o layout salvo e os testes. */
+export const DIRECTOR_ID = LOUNGE_ID;
+export const CLAUDE_ID = 'core:claude';
+export const CODEX_ID = 'core:codex';
+export const GEMINI_ID = 'core:gemini';
+export const OPENCODE_ID = 'core:opencode';
+export const REVIEW_ID = 'core:review';
+export const ARCHIVE_ID = 'core:archive';
 
 /** Paredes do núcleo: tons claros e neutros (frios), com acabamentos diferentes por ambiente. */
 export const CORE_WALLS = {
@@ -205,6 +213,10 @@ export function layoutLounge(): AreaLayout {
   b.wall('tv', 4.5, undefined, { order: 0.4 });
   b.wall('painting', 1.75, undefined, { order: 0.5 });
 
+  // Mesa fixa do diretor: o ambiente continua tendo área social, mas a sala tem um dono visível.
+  const directorDesk = b.furn('desk', 7, 3, 'dark', { order: 0.46 });
+  b.seat('desk', 'office_chair', 7, 4, 'up', 'blue', { deskId: directorDesk, rank: 0, order: 0.48 });
+
   // sofá de costas para a câmera, de frente para a TV
   const sofa = b.furn('sofa', 3, 6, 'up', { order: 0.5 });
   for (let i = 0; i < 3; i++) b.seat('sofa', 'sofa', 3 + i, 6, 'up', 'up', { noFurniture: true, furnitureId: sofa });
@@ -245,4 +257,52 @@ export function layoutLounge(): AreaLayout {
   b.spot('watch', 10, 5, 'down', { group: 'watch:pingpong', dx: 2 });
   b.spot('watch', 12, 5, 'down', { group: 'watch:pingpong', dx: -2 });
   return b.build();
+}
+
+/** Sala fixa de um departamento. Não depende de snapshot nem de Habblaud World. */
+function layoutDepartment(id: string, col: number, side: 'north' | 'south', seed: number, wall: WallStyle): AreaLayout {
+  const b = new AreaBuilder(id, 'department', { x: col * COL_W, y: side === 'north' ? NORTH_Y : SOUTH_Y, w: COL_W, h: ROOM_H });
+  const north = side === 'north';
+  b.floor('marble', 0, 0, 16, 12, seed, '#dce4ec', '#c5d0dc');
+  b.rug(2, 3, 7, 5, wall.trim ?? wall.base, seed + 1);
+  if (north) b.face(0.5, 15, wall);
+  else b.face(0.5, 15, wall, [{ lx: DOOR_X, w: DOOR_W }]);
+  b.south(0.5, 15, 11, north ? { ...wall, exterior: true } : wall, north ? [{ lx: DOOR_X, w: DOOR_W }] : []);
+  b.cap(0, 0, 0.5, 12, wall);
+  b.cap(15.5, 0, 0.5, 12, wall);
+  b.walk(1, 2, 14, 9);
+  const door = north ? { x: b.px(DOOR_X), y: b.py(11), w: DOOR_W * TILE, h: TILE } : { x: b.px(DOOR_X), y: b.py(0), w: DOOR_W * TILE, h: TILE * 2 };
+  b.walk(door.x / TILE - b.x0, door.y / TILE - b.y0, door.w / TILE, door.h / TILE);
+  b.area.door = door;
+  b.wall('sign', north ? 4.5 : 10.5, undefined, { order: 0.95 });
+  b.wall('whiteboard', north ? 11 : 4.5, undefined, { order: 0.55 });
+  const desk = b.furn('desk', 3, 4, 'dark', { order: 0.48 });
+  b.seat('desk', 'office_chair', 3, 5, 'up', 'blue', { deskId: desk, rank: 0 });
+  const meeting = b.furn('meeting_table', 9, 5, undefined, { order: 0.5 });
+  b.seat('stool', 'cafe_chair', 9, 4, 'down', 'down', { furnitureId: meeting, rank: 1 });
+  b.seat('stool', 'cafe_chair', 10, 7, 'up', 'up', { furnitureId: meeting, rank: 2 });
+  b.furn('bookshelf', 1, 2, undefined, { order: 0.3 });
+  b.furn('plant_small', 14, 9, 'fern', { order: 0.3 });
+  b.furn('plant_tall', 14, 2, 'ficus', { order: 0.2 });
+  b.spot('switch', 13, north ? 9 : 2, north ? 'down' : 'up');
+  return b.build();
+}
+
+export function departmentAreas(): AreaLayout[] {
+  const palette = {
+    claude: { base: '#e8d8cc', trim: '#b77a53', pattern: 'plain' },
+    codex: { base: '#d9e5f2', trim: '#4f83b7', pattern: 'plain' },
+    gemini: { base: '#e4dfef', trim: '#8a71b1', pattern: 'plain' },
+    opencode: { base: '#d7e9de', trim: '#4d9970', pattern: 'plain' },
+    review: { base: '#eee4c9', trim: '#b28a36', pattern: 'plain' },
+    archive: { base: '#d9dce2', trim: '#6e7785', pattern: 'plain' },
+  } as const;
+  return [
+    layoutDepartment(CLAUDE_ID, 2, 'north', 501, palette.claude),
+    layoutDepartment(CODEX_ID, 2, 'south', 502, palette.codex),
+    layoutDepartment(GEMINI_ID, 3, 'north', 503, palette.gemini),
+    layoutDepartment(OPENCODE_ID, 3, 'south', 504, palette.opencode),
+    layoutDepartment(REVIEW_ID, 4, 'north', 505, palette.review),
+    layoutDepartment(ARCHIVE_ID, 4, 'south', 506, palette.archive),
+  ];
 }
