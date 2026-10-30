@@ -284,6 +284,9 @@ function layoutDepartment(id: string, col: number, side: 'north' | 'south', seed
   b.furn('bookshelf', 1, 2, undefined, { order: 0.3 });
   b.furn('plant_small', 14, 9, 'fern', { order: 0.3 });
   b.furn('plant_tall', 14, 2, 'ficus', { order: 0.2 });
+  // Điểm tỉ thí nhẫn thuật ngay trong phòng làm việc
+  b.spot('talk', 4, 8, 'right', { group: `talk:dept:${id}`, dx: -1 });
+  b.spot('talk', 5, 8, 'left', { group: `talk:dept:${id}`, dx: 1 });
   b.spot('switch', 13, north ? 9 : 2, north ? 'down' : 'up');
   return b.build();
 }

@@ -501,6 +501,7 @@ export class Renderer {
       }
     }
     this.drawPingPong(now);
+    this.drawNinjaDuelFx(now);
     // ---- espera de shell: teias de aranha, confete/pipoca/chuva (por cima das entidades)
     this.drawCobwebs(now);
     this.drainEffects(now);
@@ -1192,6 +1193,89 @@ export class Renderer {
       ctx.fillRect(Math.round(x) - 1, Math.round(baseY) + 1, 2, 1);
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(Math.round(x) - 1, Math.round(baseY - arc) - 1, 2, 2);
+    }
+  }
+
+  /**
+   * Hiệu ứng tỉ thí nhẫn thuật trực tiếp ngoài đời (hành lang / phòng làm việc):
+   * Rasengan, tia sét Chidori, Shuriken xoay tròn và khói Chakra bay giữa 2 nhẫn giả.
+   */
+  private drawNinjaDuelFx(now: number): void {
+    const { ctx } = this;
+    for (const g of this.sim.social.gatherings) {
+      if (g.kind !== 'rps' || g.phase !== 'run') continue;
+      let a: Character | undefined;
+      let b: Character | undefined;
+      for (const m of g.members) {
+        if (m.role !== 'player' || m.left) continue;
+        if (!a) a = this.sim.chars.get(m.id);
+        else b = this.sim.chars.get(m.id);
+      }
+      if (!a || !b) continue;
+      const left = a.x < b.x ? a : b;
+      const right = a.x < b.x ? b : a;
+      const midX = (left.x + right.x) / 2;
+      const midY = (left.y + right.y) / 2 - 8;
+
+      ctx.save();
+      if (g.step <= 2) {
+        // Giai đoạn kết ấn & tụ Chakra: vòng hào quang xoay quanh 2 nhẫn giả
+        const pulse = 2 + Math.sin(now / 100) * 1.5;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(left.x, left.y - 7, 7 + pulse, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(right.x, right.y - 7, 7 + pulse, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Tia Chakra nối giữa 2 người
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.setLineDash([2, 4]);
+        ctx.beginPath();
+        ctx.moveTo(left.x, left.y - 7);
+        ctx.lineTo(right.x, right.y - 7);
+        ctx.stroke();
+      } else {
+        // Giai đoạn tung chiêu & va chạm: Quả cầu Rasengan / Tia sét Chidori / Tia lửa bùng nổ ở giữa
+        const sparkPhase = (now % 200) / 200;
+        const rad = 4 + Math.sin(now / 50) * 2;
+
+        // Quả cầu Chakra Rasengan xanh lam
+        const grad = ctx.createRadialGradient(midX, midY, 1, midX, midY, 8);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.4, '#38bdf8');
+        grad.addColorStop(0.8, '#0284c7');
+        grad.addColorStop(1, 'rgba(2, 132, 199, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(midX, midY, 8 + rad, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tia Chidori / Lôi độn giật xung quanh
+        ctx.strokeStyle = '#e0f2fe';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 3; i++) {
+          const ang = (now / 120 + (i * Math.PI * 2) / 3) % (Math.PI * 2);
+          const px = midX + Math.cos(ang) * (6 + rad);
+          const py = midY + Math.sin(ang) * (6 + rad);
+          ctx.beginPath();
+          ctx.moveTo(midX, midY);
+          ctx.lineTo(px, py);
+          ctx.stroke();
+        }
+
+        // Shuriken / Hỏa cầu bay giáp chiến giữa 2 bên
+        const flyT = (now % 500) / 500;
+        const sx = left.x + (right.x - left.x) * flyT;
+        const sy = midY + Math.sin(flyT * Math.PI) * -6;
+        ctx.fillStyle = '#f97316';
+        ctx.fillRect(Math.round(sx) - 1, Math.round(sy) - 1, 3, 3);
+      }
+      ctx.restore();
     }
   }
 

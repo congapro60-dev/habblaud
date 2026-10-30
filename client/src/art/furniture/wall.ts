@@ -24,9 +24,18 @@ export function whiteboard(): BufFurniture {
   b.vline(x + w - 1, y, y + h - 1, frame.dk);
   b.hline(x, x + w - 1, y + h - 1, frame.dk);
   b.rect(x + 1, y + 1, w - 2, h - 2, '#fbfcfd');
+  // Bản đồ bí mật tác chiến nhẫn giả & ấn chú trên bảng
+  b.line(x + 6, y + 5, x + 20, y + 5, '#dc2626');
+  b.line(x + 12, y + 5, x + 12, y + 14, '#dc2626');
+  b.rect(x + 24, y + 4, 10, 8, '#2563eb');
+  b.line(x + 26, y + 6, x + 32, y + 10, '#ffffff');
+  b.line(x + 32, y + 6, x + 26, y + 10, '#ffffff');
+  // Ký tự nhẫn thuật (Nhẫn / Đạo)
+  b.set(x + 8, y + 9, '#1e293b');
+  b.set(x + 9, y + 8, '#1e293b');
+  b.set(x + 10, y + 9, '#1e293b');
   // Reflexo sutil.
-  b.line(x + 30, y + 1, x + 24, y + h - 2, 'rgba(210,225,240,0.5)');
-  b.line(x + 33, y + 1, x + 27, y + h - 2, 'rgba(210,225,240,0.35)');
+  b.line(x + 38, y + 1, x + 34, y + h - 2, 'rgba(210,225,240,0.5)');
   // Bandeja com pincéis e apagador.
   b.rect(x + 3, y + h, w - 6, 2, frame.base);
   b.hline(x + 3, x + w - 4, y + h, frame.lt);
@@ -199,18 +208,24 @@ export function painting(seed: number): BufFurniture {
   const ay = y + 2;
   const aw = w - 4;
   const ah = h - 4;
-  // Paisagem padrão: céu, sol, montanhas e lago.
+  // Cuộn tranh nhẫn giả / Tượng núi Hokage / Tranh bí thuật Ninja
   const r = rngOf(seed, 41);
   const warm = r() < 0.5;
-  for (let i = 0; i < ah; i++) b.hline(ax, ax + aw - 1, ay + i, shade(warm ? '#f6c48a' : '#9fd3f0', -i * 0.012));
-  b.ellipse(ax + 15, ay + 3, 2, 2, warm ? '#fff2c2' : '#fffbe6');
-  const mt = warm ? '#7a5a8a' : '#5a7fa8';
+  for (let i = 0; i < ah; i++) b.hline(ax, ax + aw - 1, ay + i, shade(warm ? '#fde047' : '#fed7aa', -i * 0.018));
+  // Vầng thái dương đỏ rực
+  b.ellipse(ax + 11, ay + 4, 3, 3, '#dc2626');
+  // Dãy tượng đá các Hokage khắc trên vách núi
+  const mt = '#854d0e';
   for (let i = 0; i < aw; i++) {
-    const hh = Math.round(3 + 2.5 * Math.sin(i * 0.55 + seed) + 1.5 * Math.sin(i * 1.3));
+    const hh = Math.round(5 + 3 * Math.sin(i * 0.7 + seed) + 2 * Math.cos(i * 1.1));
     b.vline(ax + i, ay + ah - 4 - hh, ay + ah - 4, mt);
-    b.set(ax + i, ay + ah - 4 - hh, shade(mt, 0.15));
+    b.set(ax + i, ay + ah - 4 - hh, '#ca8a04');
   }
-  b.rect(ax, ay + ah - 4, aw, 4, warm ? '#4f8a6a' : '#3f7fb0');
+  b.rect(ax, ay + ah - 4, aw, 4, '#15803d');
+  // Biểu tượng Làng Lá 🍃 nhỏ giữa tranh
+  b.set(ax + 11, ay + 10, '#166534');
+  b.set(ax + 10, ay + 11, '#166534');
+  b.set(ax + 12, ay + 11, '#166534');
   b.hline(ax + 3, ax + 9, ay + ah - 3, 'rgba(255,255,255,0.5)');
   b.outline();
   wallShadow(b, x - 1, y - 1, w + 2, h + 2);

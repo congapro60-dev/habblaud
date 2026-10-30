@@ -180,7 +180,7 @@ function rgba(c: string): RGBA {
   return parseColor(c);
 }
 
-const WOOD_TONES = ['#c99668', '#c48f61', '#cf9f72', '#c6925f'] as const;
+const WOOD_TONES = ['#8d633b', '#7a522e', '#9c6f44', '#6d4826'] as const;
 /** [tom][0 normal, 1 topo, 2 base, 3 veio, 4 emenda, 5 após emenda, 6 nó]. */
 const WOOD: readonly (readonly RGBA[])[] = WOOD_TONES.map((t) =>
   [t, shade(t, 0.03), shade(t, -0.075), shade(t, -0.03), shade(t, -0.1), shade(t, 0.03), shade(t, -0.12)].map(rgba),
@@ -212,10 +212,11 @@ function paintWood(b: PixelBuf, x0: number, y0: number, seed: number): void {
 }
 
 const LEVELS = 16;
-const CONCRETE: readonly RGBA[] = Array.from({ length: LEVELS }, (_, i) => rgba(mix('#d6d9dc', '#e4e6e8', i / (LEVELS - 1))));
+// Gạch đá cổ / sàn võ đường nhẫn giả (màu đá sẫm Làng Cát / Làng Lá)
+const CONCRETE: readonly RGBA[] = Array.from({ length: LEVELS }, (_, i) => rgba(mix('#a3907c', '#bfae9c', i / (LEVELS - 1))));
 const CONCRETE_EDGE: readonly RGBA[] = CONCRETE.map((c) => rgba(shade(`rgb(${c[0]},${c[1]},${c[2]})`, 0.02)));
-const CONCRETE_SEAM = rgba('#c8cdd2');
-const CONCRETE_SPECK = [rgba('#cdd1d5'), rgba('#eceeef')] as const;
+const CONCRETE_SEAM = rgba('#736252');
+const CONCRETE_SPECK = [rgba('#8a7664'), rgba('#d8c8b6')] as const;
 
 /** Cimento polido claro em placas de 2x2 tiles, com manchas suaves contínuas. */
 function paintConcrete(b: PixelBuf, x0: number, y0: number, seed: number): void {
