@@ -1669,7 +1669,240 @@ function drawNinja(dc: Dc, color: string, kageRole?: CharacterFrameRequest['kage
     return;
   }
 
-  // 7. AKATSUKI
+  // 7. JIRAIYA (ĐẠI TIÊN NHÂN CÓC)
+  if (n.includes('jiraiya')) {
+    // Áo Haori màu đỏ mận khoác ngoài áo lưới xanh
+    b.rect(5 + r.lean, torsoY, 14, 10, '#991b1b');
+    b.rect(7 + r.lean, torsoY + 1, 10, 7, '#15803d');
+    // Mái tóc trắng nhọn dài xù xuống tận gót chân
+    b.rect(x + 2, y - 2, 11, 7, '#f8fafc');
+    b.rect(x + 1, y + 4, 3, 10, '#f8fafc');
+    b.rect(x + 11, y + 4, 3, 10, '#f8fafc');
+    // Băng bảo hộ sừng trâu với chữ Dầu (油)
+    b.rect(x + 3, y + 4, 8, 3, '#71717a');
+    b.set(x + 7, y + 5, '#dc2626'); // chữ Dầu
+    // Hai vệt sơn đỏ dài từ khoé mắt xuống tận cằm
+    b.vline(x + 3, y + 8, y + 13, '#dc2626');
+    b.vline(x + 10, y + 8, y + 13, '#dc2626');
+    return;
+  }
+
+  // 8. OROCHIMARU (BẠCH XÀ)
+  if (n.includes('orochimaru')) {
+    // Làn da trắng bệch ma mị
+    b.rect(x + 2, y + 6, 10, 8, '#f1f5f9');
+    // Áo choàng xám trắng trùm hông và đai thừng tím khổng lồ sau lưng
+    b.rect(6 + r.lean, torsoY, 12, 10, '#e2e8f0');
+    b.rect(5 + r.lean, torsoY + 5, 14, 4, '#7c3aed');
+    b.ellipse(11 + r.lean, torsoY + 7, 4, 4, '#6d28d9'); // nút thắt dây thừng
+    // Tóc đen dài bóng mượt xõa 2 bên vai
+    b.rect(x + 1, y + 1, 3, 12, '#09090b');
+    b.rect(x + 11, y + 1, 3, 12, '#09090b');
+    b.rect(x + 3, y - 1, 8, 3, '#09090b');
+    // Viền mắt tím dài sắc nhọn như rắn
+    b.line(x + 2, y + 7, x + 5, y + 7, '#9333ea');
+    b.line(x + 9, y + 7, x + 12, y + 7, '#9333ea');
+    return;
+  }
+
+  // 9. TSUNADE (BÁCH HÀO)
+  if (n.includes('tsunade')) {
+    // Áo Haori màu xanh lá cây đặc trưng chữ Cược (賭) sau lưng
+    b.rect(5 + r.lean, torsoY, 14, 10, '#15803d');
+    b.rect(7 + r.lean, torsoY + 1, 10, 8, '#f1f5f9');
+    b.rect(9 + r.lean, torsoY + 2, 6, 4, '#0f172a'); // áo lót ngực
+    // Mái tóc vàng óng rẽ ngôi buộc hai chỏm thấp sau lưng
+    b.rect(x + 2, y, 10, 4, '#facc15');
+    b.rect(x + 1, y + 4, 3, 11, '#eab308');
+    b.rect(x + 11, y + 4, 3, 11, '#eab308');
+    // Ấn Bách Hào hình thoi màu tím giữa trán
+    b.rect(x + 6, y + 5, 2, 2, '#9333ea');
+    return;
+  }
+
+  // 10. ROCK LEE & MAITO GAI (BÁT MÔN ĐỘN GIÁP)
+  if (n.includes('lee') || n.includes('gai')) {
+    // Bộ đồ bó thể thao màu xanh lá cây liền thân
+    b.rect(6 + r.lean, torsoY, 12, 10, '#16a34a');
+    b.rect(7 + r.lean, torsoY + 1, 10, 8, '#22c55e');
+    // Áo giáp Chunin Konoha khoác ngoài (với Gai) hoặc đai thắt lưng đỏ (với Lee)
+    if (n.includes('gai')) {
+      b.rect(6 + r.lean, torsoY, 12, 6, '#2d5a32');
+    } else {
+      b.rect(6 + r.lean, torsoY + 5, 12, 2, '#dc2626');
+    }
+    // Tất ống chân giữ ấm màu cam sọc
+    b.rect(6 + r.lean, torsoY + 8, 4, 3, '#f97316');
+    b.rect(14 + r.lean, torsoY + 8, 4, 3, '#f97316');
+    // Tóc đầu nấm tròn xoe đen nhánh & Lông mày sâu róm rậm rạp
+    b.rect(x + 2, y - 2, 11, 6, '#09090b');
+    b.rect(x + 1, y + 2, 13, 3, '#09090b');
+    b.hline(x + 3, x + 5, y + 6, '#09090b'); // lông mày rậm
+    b.hline(x + 9, x + 11, y + 6, '#09090b');
+    // Băng bảo hộ trán đỏ đeo quanh eo
+    b.rect(7 + r.lean, torsoY + 5, 10, 2, '#dc2626');
+    b.rect(10 + r.lean, torsoY + 5, 4, 2, '#cbd5e1');
+    return;
+  }
+
+  // 11. HYUUGA NEJI & HINATA (BẠCH NHÃN)
+  if (n.includes('neji') || n.includes('hinata')) {
+    // Đôi mắt Bạch Nhãn (Byakugan) màu trắng sữa huyền thoại
+    if (r.view === 'down') {
+      b.rect(x + 3, y + 7, 3, 2, '#f8fafc');
+      b.rect(x + 8, y + 7, 3, 2, '#f8fafc');
+      b.set(x + 4, y + 7, '#cbd5e1');
+      b.set(x + 9, y + 7, '#cbd5e1');
+    }
+    if (n.includes('neji')) {
+      // Áo choàng trắng dài tay viền nâu
+      b.rect(6 + r.lean, torsoY, 12, 10, '#f8fafc');
+      // Mái tóc đen dài buộc hờ phía dưới đuôi tóc
+      b.rect(x + 2, y, 10, 4, '#171717');
+      b.rect(x + 1, y + 4, 3, 11, '#171717');
+      b.rect(x + 11, y + 4, 3, 11, '#171717');
+      // Băng bảo hộ Konoha đen
+      b.rect(x + 2, y + 4, 10, 3, '#1e293b');
+      b.rect(x + 5, y + 4, 4, 3, '#cbd5e1');
+    } else {
+      // Hinata: Áo khoác có mũ màu tím nhạt và kem
+      b.rect(6 + r.lean, torsoY, 12, 10, '#ddd6fe');
+      b.rect(8 + r.lean, torsoY + 2, 8, 7, '#fef08a');
+      // Tóc xanh tím than dài rẽ mái bằng
+      b.rect(x + 2, y, 10, 5, '#1e1b4b');
+      b.rect(x + 1, y + 5, 3, 9, '#1e1b4b');
+      b.rect(x + 11, y + 5, 3, 9, '#1e1b4b');
+      // Băng trán Konoha đeo quanh cổ
+      b.rect(x + 4, y + 12, 6, 2, '#1e293b');
+      b.rect(x + 6, y + 12, 2, 2, '#cbd5e1');
+    }
+    return;
+  }
+
+  // 12. UCHIHA ITACHI & MADARA
+  if (n.includes('itachi') || n.includes('madara')) {
+    if (n.includes('itachi')) {
+      // Áo choàng Akatsuki đen mây đỏ
+      b.rect(5 + r.lean, torsoY - 1, 14, 11, '#181820');
+      b.rect(6 + r.lean, torsoY, 12, 9, '#242430');
+      // 2 vệt rãnh sâu đặc trưng hai bên sống mũi
+      b.set(x + 4, y + 8, '#71717a');
+      b.set(x + 4, y + 9, '#71717a');
+      b.set(x + 10, y + 8, '#71717a');
+      b.set(x + 10, y + 9, '#71717a');
+      // Đôi mắt đỏ rực Sharingan
+      b.set(x + 4, y + 7, '#dc2626');
+      b.set(x + 9, y + 7, '#dc2626');
+      // Băng trán Konoha có vết gạch ngang Akatsuki
+      b.rect(x + 1, y + 5, 12, 3, '#181820');
+      b.rect(x + 4, y + 5, 6, 3, '#d8e2ed');
+      b.hline(x + 4, x + 9, y + 6, '#dc2626');
+      return;
+    } else {
+      // Madara: Bộ giáp samurai đỏ thắm thời chiến quốc
+      b.rect(5 + r.lean, torsoY, 14, 10, '#991b1b');
+      b.rect(6 + r.lean, torsoY + 2, 12, 2, '#450a0a');
+      b.rect(6 + r.lean, torsoY + 5, 12, 2, '#450a0a');
+      // Mái tóc đen gai nhọn khổng lồ xù dài phủ lưng
+      b.rect(x - 1, y - 2, 16, 7, '#09090b');
+      b.rect(x - 2, y + 4, 4, 11, '#09090b');
+      b.rect(x + 12, y + 4, 4, 11, '#09090b');
+      // Mắt Rinnegan tím lốc xoáy
+      b.set(x + 4, y + 7, '#9333ea');
+      b.set(x + 9, y + 7, '#9333ea');
+      return;
+    }
+  }
+
+  // 13. NAMIKAZE MINATO (TIA CHỚP VÀNG)
+  if (n.includes('minato')) {
+    // Áo Haori Hokage trắng cộc tay viền ngọn lửa đỏ
+    b.rect(5 + r.lean, torsoY, 14, 10, '#ffffff');
+    b.rect(5 + r.lean, torsoY + 8, 14, 2, '#dc2626');
+    b.set(6 + r.lean, torsoY + 7, '#dc2626');
+    b.set(8 + r.lean, torsoY + 7, '#dc2626');
+    b.set(10 + r.lean, torsoY + 7, '#dc2626');
+    b.set(12 + r.lean, torsoY + 7, '#dc2626');
+    // Mái tóc gai vàng nhọn hoắt chĩa hai bên tai
+    b.rect(x + 2, y - 2, 10, 6, '#eab308');
+    b.set(x - 1, y + 4, '#facc15');
+    b.set(x, y + 5, '#facc15');
+    b.set(x + 13, y + 4, '#facc15');
+    b.set(x + 14, y + 5, '#facc15');
+    // Băng trán Konoha xanh lam
+    b.rect(x + 2, y + 4, 10, 3, '#1e3a8a');
+    b.rect(x + 5, y + 4, 4, 3, '#cbd5e1');
+    return;
+  }
+
+  // 14. SENJU HASHIRAMA & TOBIRAMA
+  if (n.includes('hashirama') || n.includes('tobirama')) {
+    if (n.includes('hashirama')) {
+      // Giáp đỏ Samurai thời Chiến quốc
+      b.rect(5 + r.lean, torsoY, 14, 10, '#991b1b');
+      // Tóc đen dài rẽ ngôi thẳng mượt
+      b.rect(x + 2, y, 10, 4, '#09090b');
+      b.rect(x + 1, y + 4, 3, 10, '#09090b');
+      b.rect(x + 11, y + 4, 3, 10, '#09090b');
+      // Băng bảo hộ Konoha vải đỏ
+      b.rect(x + 2, y + 4, 10, 3, '#991b1b');
+      b.rect(x + 5, y + 4, 4, 3, '#cbd5e1');
+    } else {
+      // Tobirama: Giáp lam xám với bờm lông thú trắng tuyết quanh cổ
+      b.rect(5 + r.lean, torsoY, 14, 10, '#1e3a8a');
+      b.rect(4 + r.lean, torsoY - 1, 16, 4, '#f8fafc'); // bờm lông trắng
+      // Tóc bạc trắng nhọn xù
+      b.rect(x + 2, y - 2, 10, 6, '#f1f5f9');
+      // Giáp bảo hộ diện kim loại ôm trọn hai bên má
+      b.rect(x + 1, y + 4, 3, 8, '#cbd5e1');
+      b.rect(x + 11, y + 4, 3, 8, '#cbd5e1');
+      // 3 vệt sơn đỏ trên mặt: 2 vệt trên má, 1 vệt dưới cằm
+      b.set(x + 2, y + 7, '#dc2626');
+      b.set(x + 12, y + 7, '#dc2626');
+      b.set(x + 7, y + 11, '#dc2626');
+    }
+    return;
+  }
+
+  // 15. ZABUZA & HAKU
+  if (n.includes('zabuza') || n.includes('haku')) {
+    if (n.includes('zabuza')) {
+      // Thanh Đại Đao Kubikiribocho khổng lồ vắt sau lưng
+      b.rect(14 + r.lean, torsoY - 8, 4, 20, '#64748b');
+      b.set(15 + r.lean, torsoY - 5, '#0f172a'); // lỗ tròn đại đao
+      // Băng quấn vải trắng kín nửa dưới mặt và cổ
+      b.rect(x + 2, y + 8, 10, 5, '#f8fafc');
+      // Băng trán Làng Sương Mù đeo nghiêng
+      b.rect(x + 2, y + 4, 10, 3, '#334155');
+      b.rect(x + 5, y + 4, 4, 3, '#cbd5e1');
+    } else {
+      // Haku: Áo kimono xanh ngọc viền trắng và mặt nạ Anbu sát thủ Làng Sương
+      b.rect(6 + r.lean, torsoY, 12, 10, '#0d9488');
+      b.rect(8 + r.lean, torsoY + 2, 8, 8, '#f0fdfa');
+      // Tóc búi cao kiểu mỹ thiếu niên
+      b.rect(x + 3, y - 2, 8, 5, '#09090b');
+      b.rect(x + 6, y - 4, 2, 3, '#09090b');
+    }
+    return;
+  }
+
+  // 16. KILLER BEE (BÁT VĨ)
+  if (n.includes('bee')) {
+    // 7 thanh kiếm giắt sau lưng
+    for (let k = 0; k < 4; k++) {
+      b.line(5 + r.lean + k * 3, torsoY - 4, 7 + r.lean + k * 3, torsoY + 8, '#cbd5e1');
+    }
+    // Da ngăm đen, kính râm đen che mắt, râu cằm quai nón
+    b.rect(x + 3, y + 6, 8, 3, '#09090b'); // kính râm
+    b.rect(x + 5, y + 11, 4, 2, '#f8fafc'); // chòm râu bạc
+    // Hình xăm sừng trâu trên má phải
+    b.set(x + 3, y + 9, '#18181b');
+    // Khăn quàng cổ trắng đặc trưng Raikage
+    b.rect(x + 3, y + 12, 8, 3, '#f8fafc');
+    return;
+  }
+
+  // 17. PAIN & CÁC THÀNH VIÊN AKATSUKI KHÁC
   if (isAkatsuki) {
     b.rect(5 + r.lean, torsoY - 1, 14, 11, '#181820');
     b.rect(6 + r.lean, torsoY, 12, 9, '#242430');
@@ -1679,7 +1912,7 @@ function drawNinja(dc: Dc, color: string, kageRole?: CharacterFrameRequest['kage
     // Đám mây đỏ viền trắng Akatsuki
     b.rect(8 + r.lean, torsoY + 3, 5, 4, '#dc2626');
     b.rect(9 + r.lean, torsoY + 2, 3, 6, '#ef4444');
-    b.hline(x + 8, x + 13, torsoY + 2, '#ffffff');
+    b.hline(8 + r.lean, 13 + r.lean, torsoY + 2, '#ffffff');
     b.set(8 + r.lean, torsoY + 4, '#ffffff');
     b.set(13 + r.lean, torsoY + 5, '#ffffff');
 
@@ -1687,6 +1920,28 @@ function drawNinja(dc: Dc, color: string, kageRole?: CharacterFrameRequest['kage
     b.rect(x + 1, y + 5, 12, 3, '#181820');
     b.rect(x + 4, y + 5, 6, 3, '#d8e2ed');
     b.hline(x + 4, x + 9, y + 6, '#dc2626');
+
+    // Riêng Pain Thiên Đạo: Tóc cam nhọn, mắt Rinnegan tím xoáy tròn và đinh truyền Chakra đen trên mặt
+    if (n.includes('pain') || n.includes('tendo')) {
+      b.rect(x + 2, y - 2, 10, 6, '#ea580c');
+      b.set(x + 4, y + 7, '#9333ea');
+      b.set(x + 9, y + 7, '#9333ea');
+      b.set(x + 7, y + 8, '#09090b'); // đinh mũi
+      b.set(x + 3, y + 9, '#09090b'); // đinh má
+      b.set(x + 10, y + 9, '#09090b');
+    } else if (n.includes('konan')) {
+      // Konan: Tóc tím hoa cà có bông hoa giấy origami trắng cài bên tai
+      b.rect(x + 2, y - 1, 10, 6, '#6366f1');
+      b.rect(x + 2, y + 2, 3, 3, '#ffffff'); // hoa giấy
+    } else if (n.includes('kisame')) {
+      // Kisame: Da xanh biển quái vật cá mập, đao Samehada bọc vải trắng sau lưng
+      b.rect(14 + r.lean, torsoY - 6, 5, 18, '#f8fafc');
+      b.rect(x + 2, y + 6, 10, 7, '#0284c7');
+    } else if (n.includes('deidara')) {
+      // Deidara: Tóc vàng dài buộc lệch một bên che mắt trái
+      b.rect(x + 2, y - 2, 8, 7, '#facc15');
+      b.rect(x + 1, y + 3, 3, 7, '#facc15');
+    }
     return;
   }
 
