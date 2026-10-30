@@ -11178,35 +11178,68 @@ html.is-replay #world {
   display: none;
 }
 
-/* ── Đấu trường Chibi (battle-arena) ─────────────────────────────── */
-.ui-battle { width: min(430px, calc(100vw - 20px)); max-height: min(720px, calc(100vh - 84px)); overflow: auto; padding: 14px; }
+/* ── Đấu trường Ninja (battle-arena) — theme làng ninja ──────────── */
+.ui-battle {
+  width: min(470px, calc(100vw - 20px));
+  max-height: min(760px, calc(100vh - 84px));
+  overflow: auto;
+  padding: 16px;
+  color: #e8e3cf;
+  background:
+    radial-gradient(1200px 300px at 50% -80px, #24365c 0%, transparent 60%),
+    linear-gradient(180deg, #131c30 0%, #0d1424 100%);
+  border: 1px solid #3a4a6e;
+  box-shadow: 0 12px 40px #000000aa, inset 0 0 0 1px #00000055;
+}
 .ui-battle__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-.ui-battle__close { font-size: 20px; line-height: 1; }
-.ui-battle__hint, .ui-battle__status { color: var(--ui-muted); margin: 8px 0; }
+.ui-battle__head strong { color: #f0d78c; font: 700 14px var(--font-px); letter-spacing: .02em; text-shadow: 0 1px 0 #00000088; }
+.ui-battle__close { font-size: 20px; line-height: 1; color: #cfd8ea; background: transparent; border: 0; }
+.ui-battle__close:hover { color: #ffd23a; }
+.ui-battle__hint, .ui-battle__status { color: #aab8d4; margin: 8px 0; font-size: 12px; }
 .ui-battle__roster { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-.ui-battle__chip { border: 1px solid var(--ui-line, #dbe3f0); border-radius: 999px; padding: 3px 9px; font: 600 11px var(--font-px); background: var(--ui-accent-soft, #eef3ff); }
-.ui-battle__start { margin: 6px 0 10px; }
-.ui-battle__arena { display: grid; gap: 6px; margin-bottom: 8px; }
-.ui-battle__fighter { display: grid; grid-template-columns: 34px 1fr 46px; grid-template-rows: auto auto; align-items: center; gap: 2px 8px; padding: 6px 8px; border: 1px solid var(--ui-line, #dbe3f0); border-radius: 10px; transition: opacity .3s; }
-.ui-battle__sym { grid-row: span 2; display: grid; place-items: center; width: 34px; height: 34px; border: 2px solid var(--ui-accent); border-radius: 7px; background: var(--ui-accent-soft, #eef3ff); color: var(--ui-accent); font: 600 10px var(--font-px); }
-.ui-battle__bar { grid-column: 2; height: 8px; border-radius: 999px; background: var(--ui-line, #dbe3f0); overflow: hidden; }
-.ui-battle__bar-fill { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #4d9970, #7bc796); transition: width .45s; }
-.ui-battle__hp { grid-column: 3; font: 600 11px var(--font-px); text-align: right; }
-.ui-battle__fighter.is-hit .ui-battle__bar-fill { animation: ui-battle-hit .45s; }
-.ui-battle__fighter.is-down { opacity: .45; }
-.ui-battle__fighter.is-down .ui-battle__bar-fill { background: #b3474d; }
-.ui-battle__fighter.is-out { opacity: .35; }
-.ui-battle__fighter.is-champion { border-color: #d9a12e; box-shadow: 0 0 0 2px #d9a12e33; animation: ui-battle-win .9s ease-in-out 3; }
-@keyframes ui-battle-hit { 0% { transform: translateX(0); } 30% { transform: translateX(-3px); } 60% { transform: translateX(3px); } 100% { transform: translateX(0); } }
-@keyframes ui-battle-win { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
-.ui-battle__log { max-height: 180px; overflow: auto; border-top: 1px solid var(--ui-line, #dbe3f0); padding-top: 6px; display: grid; gap: 2px; }
-.ui-battle__round { font: 700 10px var(--font-px); text-transform: uppercase; letter-spacing: .08em; color: var(--ui-muted); margin: 6px 0 2px; }
-.ui-battle__line { margin: 0; font-size: 12px; }
-.ui-battle__champ { margin: 8px 0 0; font: 700 13px var(--font-px); color: #d9a12e; }
-.ui-battle__fighter { position: relative; }
-.ui-battle__dmg { position: absolute; right: 10px; top: -4px; font: 700 13px var(--font-px); color: #b3474d; pointer-events: none; animation: ui-battle-float .95s ease-out forwards; }
-.ui-battle__dmg--charge { color: #2f7fd1; animation-duration: .8s; }
-.ui-battle__dmg--ko { font-size: 15px; color: #8f1d24; }
-@keyframes ui-battle-float { 0% { opacity: 0; transform: translateY(6px) scale(.8); } 20% { opacity: 1; transform: translateY(0) scale(1.1); } 100% { opacity: 0; transform: translateY(-18px) scale(1); } }
+/* Chip nhẫn giả: dải băng đô màu làng ở mép trái, nền giấy tối. */
+.ui-battle__chip {
+  border: 1px solid #2a3854;
+  border-left: 4px solid var(--village-color, #4d9970);
+  border-radius: 6px;
+  padding: 4px 10px 4px 8px;
+  font: 600 11px var(--font-px);
+  color: #e8e3cf;
+  background: #18233c;
+  box-shadow: inset 0 1px 0 #ffffff0d;
+}
+.ui-battle__start {
+  margin: 6px 0 10px;
+  font: 700 13px var(--font-px);
+  color: #101a2e;
+  background: linear-gradient(180deg, #f4d98b, #d9a12e);
+  border: 1px solid #8a6a1e;
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+.ui-battle__start:hover:not(:disabled) { filter: brightness(1.08); }
+.ui-battle__start:disabled { opacity: .5; }
+.ui-battle__canvas-host { position: relative; margin: 8px 0; }
+.ui-battle__canvas {
+  width: 100%;
+  display: block;
+  image-rendering: pixelated;
+  border-radius: 10px;
+  border: 1px solid #2a3854;
+  box-shadow: 0 6px 24px #00000066, inset 0 0 0 1px #00000055;
+  background: #101a2e;
+}
+.ui-battle__log { max-height: 190px; overflow: auto; border-top: 1px solid #2a3854; padding-top: 8px; display: grid; gap: 2px; }
+.ui-battle__round {
+  font: 700 10px var(--font-px);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: #f0d78c;
+  margin: 8px 0 3px;
+}
+.ui-battle__round::before { content: '⚔ '; }
+.ui-battle__line { margin: 0; font-size: 12px; color: #cfd8ea; }
+.ui-battle__champ { margin: 10px 0 0; font: 700 14px var(--font-px); color: #ffd23a; text-shadow: 0 1px 0 #00000088; }
+.ui-battle__champ::before { content: '🏆 '; }
 .ui-battle__confetti { position: absolute; bottom: 10px; font-size: 16px; pointer-events: none; animation: ui-battle-confetti 2.4s ease-in forwards; }
 @keyframes ui-battle-confetti { 0% { opacity: 0; transform: translateY(0) rotate(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-150px) rotate(220deg); } }

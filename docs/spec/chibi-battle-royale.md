@@ -1,9 +1,22 @@
-# Plan: Chibi Battle Royale (chế độ đấu trường giải trí)
+# Plan: Chibi Battle Royale — Thế giới Ninja (phiên bản Naruto)
 
-Status: draft-for-build
-Version: 2026-10-29 / v0.1
+Status: approved-for-build
+Version: 2026-10-30 / v0.2
 Source of truth: README.md (Social life, Habblaud World), AGENTS.md (cảnh báo dữ liệu thật),
-CHANGELOG.md [1.3.0], `client/src/world/social/social.ts`, `shared/local-character-roster.ts`.
+CHANGELOG.md [1.3.0], `client/src/world/battle/core.ts`, `client/src/art/api.ts` (characterSprite).
+
+## 0. Thế giới ninja (yêu cầu của giám đốc, 2026-10-30)
+
+- Nhân vật là **nhẫn giả**; mỗi engine/provider là một **làng ninja**:
+  `claude` = Làng Lá 🍃 · `codex` = Làng Cát ⏳ · `opencode` = Làng Sương 🌫️ ·
+  `gemini-antigravity` = Làng Đá 🪨 · khác = Làng Cỏ 🌿.
+- Nhẫn giả **giao chiến tự do** khi gặp nhau lúc rảnh (giai đoạn sau: va chạm ngay trong văn phòng
+  theo khuôn hangout); hiện tại: trận đấu trong Đấu trường.
+- **Kỹ năng (jutsu) chuẩn Naruto:** Phi tiêu (shuriken), Hỏa Đạn (phun lửa + cháy dai),
+  Triệu Hồi (linh thú, có thể thất bại), Ảnh Phân Thân (đánh kép),
+  Thân Thế Thân (né + phản đòn), Tụ Chakra (đòn kế ×2). Kỹ năng khác thêm sau.
+- Nhẫn giả giữ **ngoại hình thật** của agent trong văn phòng (characterSprite theo seed/appearance),
+  đội băng đô màu làng.
 
 ## 1. Objective and outcome
 

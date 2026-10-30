@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AgentInfo } from '../../../shared/types';
 import { BattleRoyale } from '../world/battle/core';
-import { canFight, familyEmoji, hpTimeline, pickFighters, roundLabel } from './battle-view';
+import { canFight, hpTimeline, pickFighters, roundLabel, villageOf } from './battle-view';
 
 const agent = (id: string, name: string, status: AgentInfo['status'], engine?: AgentInfo['engine']): AgentInfo => ({
   id, name, kind: 'main', roomId: '/p', status, recent: [], tasks: [], startedAt: 0, lastEventAt: 0, statusSince: 0,
@@ -61,12 +61,13 @@ describe('hpTimeline', () => {
     const losers = result.fighters.filter((f) => f.id !== result.champion.id);
     expect(losers.some((f) => timeline[f.id].at(-1) === 0)).toBe(true);
   });
-  it('avatar chibi theo family: claude kiếm, codex ninja, mặc định võ phục', () => {
-    expect(familyEmoji('claude')).toBe('⚔️');
-    expect(familyEmoji('codex')).toBe('🥷');
-    expect(familyEmoji('opencode')).toBe('🧙');
-    expect(familyEmoji('gemini-antigravity')).toBe('✨');
-    expect(familyEmoji('unknown-engine')).toBe('🥋');
+  it('làng ninja theo engine: Làng Lá/Cát/Sương/Đá, mặc định Làng Cỏ', () => {
+    expect(villageOf('claude').name).toBe('Làng Lá');
+    expect(villageOf('codex').name).toBe('Làng Cát');
+    expect(villageOf('opencode').name).toBe('Làng Sương');
+    expect(villageOf('gemini-antigravity').name).toBe('Làng Đá');
+    expect(villageOf('unknown-engine').name).toBe('Làng Cỏ');
+    expect(villageOf('claude').emoji).toBe('🍃');
   });
 });
 

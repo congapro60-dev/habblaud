@@ -1,9 +1,12 @@
-// Cầu thuần giữa lõi đấu trường (world/battle/core.ts) và UI: chọn võ sĩ từ snapshot văn phòng
-// và dựng timeline máu theo vòng. Không DOM, không hẹn giờ — test được.
+// Cầu thuần giữa lõi đấu trường (world/battle/core.ts) và UI: chọn nhẫn giả từ snapshot văn phòng,
+// làng ninja theo engine, timeline máu theo vòng. Không DOM, không hẹn giờ — test được.
 import { hash32 } from '../../../shared/hash';
 import { tr } from '../../../shared/i18n';
 import type { AgentInfo } from '../../../shared/types';
-import type { BattleResult, Fighter } from '../world/battle/core';
+import { villageOf, type BattleResult, type Fighter } from '../world/battle/core';
+
+export { villageOf };
+export type { Village } from '../world/battle/core';
 
 const MAX_FIGHTERS = 8;
 const MIN_FIGHTERS = 3;
@@ -11,7 +14,7 @@ const MIN_FIGHTERS = 3;
 /** Máu còn lại của mỗi võ sĩ sau mỗi vòng (và máu khởi điểm ở phần tử -1). */
 export type HpTimeline = Readonly<Record<string, readonly number[]>>;
 
-/** Chọn võ sĩ từ agents: ưu tiên người đang rảnh; đủ 3..8 người thì mới đấu được. */
+/** Chọn nhẫn giả từ agents: ưu tiên người đang rảnh; đủ 3..8 người thì mới đấu được. */
 export function pickFighters(agents: readonly AgentInfo[]): Fighter[] {
   const idle = agents.filter((a) => a.status === 'idle');
   const present = agents.filter((a) => a.status !== 'offline');
@@ -20,8 +23,11 @@ export function pickFighters(agents: readonly AgentInfo[]): Fighter[] {
     id: a.id,
     name: a.name,
     symbol: a.name.slice(0, 2).toUpperCase(),
-    family: a.engine ?? 'agent',
+    // AgentInfo: engine có thể vắng (runtime opencode chỉ gán khi có); provider vắng = 'claude'.
+    family: a.engine ?? a.provider ?? 'claude',
     seed: hash32(a.id),
+    look: a.look,
+    parts: a.parts,
   }));
 }
 
@@ -46,15 +52,4 @@ export function hpTimeline(result: BattleResult): HpTimeline {
 /** Nhãn vòng đấu cho log UI (qua tr(), nguồn PT). */
 export function roundLabel(round: number, total: number): string {
   return tr('Rodada {0} de {1}', [String(round), String(total)]);
-}
-
-/** Avatar chibi theo family (emoji, không cần art mới). */
-export function familyEmoji(family: string): string {
-  switch (family) {
-    case 'claude': return '⚔️';
-    case 'codex': return '🥷';
-    case 'opencode': return '🧙';
-    case 'gemini-antigravity': return '✨';
-    default: return '🥋';
-  }
 }

@@ -1484,7 +1484,7 @@ function itemPos(dc: Dc): Pt | null {
 // ---------------------------------------------------------------- composição
 
 /** Usa o mesmo rig da cabeça para acompanhar quique, cochilo e poses sentadas. */
-function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume']): void {
+function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume'], color?: string): void {
   if (!costume) return;
   const { b, r } = dc;
   const x = HX + r.lean;
@@ -1510,10 +1510,52 @@ function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume']): void {
     b.vline(x + 4, y + 1, y + 4, '#f9ae48');
     b.vline(x + 8, y + 1, y + 4, '#f9ae48');
     b.hline(x + 2, x + 11, y + 5, '#8d4930');
+  } else if (costume === 'ninja') {
+    drawNinja(dc, color ?? '#3f7a3f');
   } else {
     // Gola da capa: rosto e crachá continuam visíveis.
     b.rect(x, y + 12, 2, 5, '#702743');
     b.rect(x + 12, y + 12, 2, 5, '#702743');
+  }
+}
+
+/**
+ * Nhẫn giả: faixa da aldeia na testa (pano + placa metálica + cauda de pano) e máscara
+ * cobrindo nariz/boca. Desenhado depois do cabelo para ficar por cima dele.
+ * Grade da cabeça: x 0..14, y 4..15 (11 linhas); olhos na linha 6-7, boca na 9.
+ */
+function drawNinja(dc: Dc, color: string): void {
+  const { b, r } = dc;
+  const x = HX + r.lean;
+  const y = HY + r.ub + r.hd;
+  const cloth = shade(color, -0.12);
+  const clothDk = shade(color, -0.32);
+  // Faixa: 2 px de pano na testa, de orelha a orelha.
+  b.rect(x, y + 2, 14, 2, color);
+  b.hline(x, x + 13, y + 2, cloth);
+  // Placa metálica no centro + brilho.
+  b.rect(x + 5, y + 2, 5, 2, '#c9d1dc');
+  b.set(x + 6, y + 2, '#eef2f8');
+  b.set(x + 8, y + 3, '#8b96a6');
+  // Cauda da faixa caindo atrás da cabeça (lado oposto ao olhar).
+  if (r.view === 'side') {
+    b.rect(x + 11, y + 4, 2, 1, color);
+    b.set(x + 12, y + 5, clothDk);
+  } else {
+    b.rect(x + 1, y + 4, 2, 1, color);
+    b.set(x, y + 5, clothDk);
+  }
+  // Máscara: cobre do nariz ao queixo (linhas 8-10), deixando olhos e bochechas.
+  if (r.view === 'down') {
+    b.rect(x + 3, y + 8, 9, 3, cloth);
+    b.hline(x + 3, x + 11, y + 10, clothDk);
+    b.set(x + 7, y + 8, color);
+  } else if (r.view === 'side') {
+    b.rect(x + 2, y + 8, 8, 3, cloth);
+    b.hline(x + 2, x + 9, y + 10, clothDk);
+  } else {
+    // De costas: só o nó da faixa, sem máscara.
+    b.rect(x + 6, y + 8, 3, 2, clothDk);
   }
 }
 
@@ -1544,7 +1586,7 @@ export function renderCharacter(req: CharacterFrameRequest): BufSprite {
     drawFacialHair(dc);
     drawHair(dc, 'front');
     drawAccessory(dc);
-    drawCostume(dc, req.costume);
+    drawCostume(dc, req.costume, req.costumeColor);
   };
 
   if (view !== 'side' && r.itemAt) {
@@ -1571,7 +1613,7 @@ export function renderCharacter(req: CharacterFrameRequest): BufSprite {
     drawFacialHair(dc);
     drawHair(dc, 'front');
     drawAccessory(dc);
-    drawCostume(dc, req.costume);
+    drawCostume(dc, req.costume, req.costumeColor);
     if (ip && !r.itemBehind) drawItem(dc, ip[0], ip[1]);
     drawArm(dc, r.armB, sr, sleeve, 0, true);
   } else {
@@ -1591,7 +1633,7 @@ export function renderCharacter(req: CharacterFrameRequest): BufSprite {
     drawFacialHair(dc);
     drawHair(dc, 'front');
     drawAccessory(dc);
-    drawCostume(dc, req.costume);
+    drawCostume(dc, req.costume, req.costumeColor);
     // Braços cruzados por cima do cabelo comprido que cai no peito (a mão que bate fica visível).
     if (r.crossFront !== null) drawCrossedArms(dc, sr, sleeve, r.crossFront === 1);
     if (ip && !r.itemBehind) {
