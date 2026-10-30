@@ -1399,21 +1399,58 @@ export class Renderer {
         // GIAI ĐOẠN 1: KẾT ẤN, PHÂN THÂN VÀ TRIỆU HỒI SUSANO'O / VĨ THÚ CHAKRA
         const pulse = 3 + Math.sin(now / 80) * 2.5;
 
-        // 1. Phân thân chi thuật (Kage Bunshin no Jutsu): 2 bóng phân thân mờ ảo đứng kèm sau lưng mỗi bên
-        ctx.globalAlpha = 0.55;
-        // Phân thân bên trái
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.arc(left.x - 14, left.y - 12, 6, 0, Math.PI * 2);
-        ctx.arc(left.x - 14, left.y - 4, 8, 0, Math.PI * 2);
-        ctx.fill();
-        // Phân thân bên phải
-        ctx.fillStyle = '#f59e0b';
-        ctx.beginPath();
-        ctx.arc(right.x + 14, right.y - 12, 6, 0, Math.PI * 2);
-        ctx.arc(right.x + 14, right.y - 4, 8, 0, Math.PI * 2);
-        ctx.fill();
+        // 1. ĐA TRỌNG ẢNH PHÂN THÂN CHI THUẬT (Tajuu Kage Bunshin no Jutsu - Naruto phân thân hàng chục người)
+        ctx.globalAlpha = 0.7;
+        if (hasNaruto) {
+          // Binh đoàn phân thân Naruto vàng cam bao vây toàn bộ sàn đấu (hơn 18 phân thân)
+          for (let k = 0; k < 18; k++) {
+            const kAngle = (k * Math.PI * 2) / 18 + Math.sin(now / 300) * 0.2;
+            const dist = 22 + (k % 3) * 14;
+            const bx = midX + Math.cos(kAngle) * dist;
+            const by = midY + Math.sin(kAngle) * (dist * 0.7);
+            // Thân áo cam & tóc vàng nhọn phân thân
+            ctx.fillStyle = '#ea580c';
+            ctx.fillRect(bx - 3, by - 4, 6, 8);
+            ctx.fillStyle = '#eab308';
+            ctx.fillRect(bx - 3, by - 8, 6, 4);
+            // Khói phân thân bùng nổ xung quanh
+            ctx.fillStyle = 'rgba(241, 245, 249, 0.4)';
+            ctx.beginPath();
+            ctx.arc(bx, by, 6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else {
+          // Phân thân chuẩn 4 bóng hai bên
+          for (let k = -2; k <= 2; k++) {
+            if (k === 0) continue;
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(left.x + k * 8, left.y - 10, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(right.x + k * 8, right.y - 10, 5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
         ctx.globalAlpha = 1;
+
+        // 1.1 MƯA PHI TIÊU & SHURIKEN (Shuriken Kage Bunshin no Jutsu - Phân thân hàng trăm phi tiêu bay lượn)
+        for (let sh = 0; sh < 9; sh++) {
+          const shProg = ((now * 1.5 + sh * 120) % 600) / 600;
+          const shX = left.x + (right.x - left.x) * shProg;
+          const shY = midY - 14 + Math.sin(shProg * Math.PI + sh) * 12;
+          const rot = (now / 40 + sh) % (Math.PI * 2);
+          ctx.save();
+          ctx.translate(shX, shY);
+          ctx.rotate(rot);
+          ctx.fillStyle = '#64748b';
+          ctx.fillRect(-4, -1, 8, 2);
+          ctx.fillRect(-1, -4, 2, 8);
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillRect(-1, -1, 2, 2);
+          ctx.restore();
+        }
 
         // 2. Triệu hồi Khung Giáp Susano'o Thần Thoại (màu tím/đỏ khổng lồ bao trùm phe Uchiha)
         if (hasUchiha) {
@@ -1504,21 +1541,54 @@ export class Renderer {
           ctx.fillRect(jChar.x - 34, jChar.y - 24, 8, 3); // tẩu thuốc Gamabunta
         }
 
-        // 5. MỘC ĐỘN MỘC LONG & MỘC THẦN (Senju Hashirama - Đệ Nhất)
+        // 5. TIÊN PHÁP MỘC ĐỘN: CHÂN SỐ THIÊN THỦ - THIÊN THỦ QUAN ÂM & MỘC LONG (Senju Hashirama - Đệ Nhất)
         if (hasHashirama) {
           const hChar = aName.includes('hashirama') ? a : b;
-          // Rồng Gỗ khổng lồ (Mokuryuu) quấn lượn
-          ctx.strokeStyle = '#15803d';
-          ctx.lineWidth = 4;
+          // Tượng Phật Mộc Thần Thiên Thủ Quan Âm khổng lồ (Shin Susenju)
+          // 1. Đài sen và thân tượng Phật gỗ uy nghi sau lưng Hashirama
+          ctx.fillStyle = '#854d0e';
           ctx.beginPath();
-          ctx.moveTo(hChar.x, hChar.y - 5);
-          ctx.bezierCurveTo(hChar.x - 20, hChar.y - 35, hChar.x + 20, hChar.y - 45, hChar.x, hChar.y - 55);
-          ctx.stroke();
-          // Hoa Mộc Độn nở rộ
-          ctx.fillStyle = '#ec4899';
-          ctx.beginPath();
-          ctx.arc(hChar.x, hChar.y - 55, 6, 0, Math.PI * 2);
+          ctx.ellipse(hChar.x, hChar.y - 32, 22, 28, 0, 0, Math.PI * 2);
           ctx.fill();
+          ctx.strokeStyle = '#ca8a04';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Khuôn mặt tượng Phật trang nghiêm với dấu ấn Tiên Nhân Thuật
+          ctx.fillStyle = '#a16207';
+          ctx.beginPath();
+          ctx.arc(hChar.x, hChar.y - 42, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(hChar.x - 2, hChar.y - 48, 4, 3); // Chấm chu sa đỏ giữa trán Phật
+
+          // 2. Vành đai ngàn cánh tay gỗ (Thiên Thủ) tỏa ra như vầng thái dương
+          ctx.strokeStyle = '#a16207';
+          ctx.lineWidth = 1.5;
+          const armCount = 20;
+          for (let aIdx = 0; aIdx < armCount; aIdx++) {
+            const angle = Math.PI + (aIdx * Math.PI) / (armCount - 1);
+            const reach = 38 + ((aIdx % 3) * 6) + Math.sin(now / 80 + aIdx) * 3;
+            const ax = hChar.x + Math.cos(angle) * reach;
+            const ay = (hChar.y - 32) + Math.sin(angle) * reach;
+            ctx.beginPath();
+            ctx.moveTo(hChar.x, hChar.y - 32);
+            ctx.lineTo(ax, ay);
+            ctx.stroke();
+            // Nắm đấm gỗ uy lực ở đầu mỗi cánh tay (Đỉnh Thượng Hóa Phật)
+            ctx.fillStyle = '#ca8a04';
+            ctx.beginPath();
+            ctx.arc(ax, ay, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // 3. Rồng Gỗ khổng lồ (Mokuryuu) quấn quanh tượng phật
+          ctx.strokeStyle = '#15803d';
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.moveTo(hChar.x - 18, hChar.y - 10);
+          ctx.bezierCurveTo(hChar.x - 35, hChar.y - 45, hChar.x + 35, hChar.y - 55, hChar.x + 12, hChar.y - 65);
+          ctx.stroke();
         }
 
         // 6. PHI LÔI THẦN THUẬT (Namikaze Minato - Đệ Tứ & Tobirama - Đệ Nhị)
@@ -1674,14 +1744,38 @@ export class Renderer {
           }
         }
 
-        // 8. ĐỆ TAM SARUTOBI HIRUZEN (THIÊN LÝ KHỈ ENMA & NGŨ HÀNH LIÊN HOÀN ĐỘN)
+        // 8. ĐỆ TAM SARUTOBI HIRUZEN (TRIỆU HỒI HẦU VƯƠNG ENMA & NGŨ HÀNH LIÊN HOÀN ĐỘN)
         if (hasHiruzen) {
-          // Kim Cang Bổng Enma đập xuống chiến trường
+          // Triệu Hồi Hầu Vương Enma (Vua Khỉ lông bạc giáp hổ xuất hiện)
+          ctx.fillStyle = '#f8fafc';
+          ctx.beginPath();
+          ctx.ellipse(midX - 25, midY - 24, 14, 18, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Mắt đỏ & Giáp hổ vàng đen của Hầu Vương
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(midX - 30, midY - 30, 4, 3);
+          ctx.fillRect(midX - 22, midY - 30, 4, 3);
+          ctx.fillStyle = '#eab308';
+          ctx.fillRect(midX - 32, midY - 20, 14, 8);
+
+          // Kim Cang Thiết Bổng Enma biến hóa đập thẳng xuống sàn
           ctx.fillStyle = '#78350f';
-          ctx.fillRect(midX - 25, midY - 35, 6, 45);
+          ctx.fillRect(midX - 12, midY - 42, 7, 52);
           ctx.fillStyle = '#fef08a';
-          ctx.fillRect(midX - 26, midY - 37, 8, 4);
-          ctx.fillRect(midX - 26, midY + 8, 8, 4);
+          ctx.fillRect(midX - 13, midY - 44, 9, 4);
+          ctx.fillRect(midX - 13, midY + 8, 9, 4);
+
+          // ĐA NHẪN THUẬT: NGŨ ĐỘN LIÊN HOÀN (Hỏa - Thủy - Thổ - Lôi - Phong bắn ra 5 hướng)
+          const jutsuColors = ['#ef4444', '#0284c7', '#78350f', '#facc15', '#22c55e'];
+          for (let e = 0; e < 5; e++) {
+            const eAngle = (e * Math.PI * 2) / 5 + now / 100;
+            const ex = midX + Math.cos(eAngle) * 36;
+            const ey = midY + Math.sin(eAngle) * 26;
+            ctx.fillStyle = jutsuColors[e];
+            ctx.beginPath();
+            ctx.arc(ex, ey, 6, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
       }
       ctx.restore();

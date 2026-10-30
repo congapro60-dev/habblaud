@@ -37,29 +37,56 @@ export const LOCAL_EMPLOYEE_NAMES: readonly PersonName[] = Object.freeze([
   { name: 'Orochimaru (Bạch Xà Quỷ Môn)', look: 'm' },
   { name: 'Tsunade (Bách Hào Chi Thuật)', look: 'f' },
 
-  // Tổ chức Akatsuki
+  // Tổ chức Akatsuki (Đầy đủ 10 thành viên chính & các thế hệ)
   { name: 'Pain Tendo (Thiên Đạo / Shinra Tensei)', look: 'm' },
   { name: 'Konan (Thiên Thần Giấy / Kami no Shisha)', look: 'f' },
+  { name: 'Uchiha Itachi (Tsukuyomi / Amaterasu)', look: 'm' },
   { name: 'Kisame Hoshigaki (Quái Vật Làng Sương)', look: 'm' },
   { name: 'Deidara (Bộc Độn C4 Nghệ Thuật)', look: 'm' },
   { name: 'Sasori (Xích Bí Kỹ Trăm Con Rối)', look: 'm' },
   { name: 'Hidan (Bất Tử Chú Thuật)', look: 'm' },
   { name: 'Kakuzu (Địa Oán Ngu 5 Trái Tim)', look: 'm' },
   { name: 'Zetsu Trắng Đen (Bào Tử Ký Sinh)', look: 'm' },
+  { name: 'Tobi Uchiha Obito (Mặt Nạ Xoắn Ốc)', look: 'm' },
+  { name: 'Orochimaru (Bạch Xà Akatsuki)', look: 'm' },
+  { name: 'Juzou Biwa (Thất Kiếm / Tiền Nhiệm Itachi)', look: 'm' },
+
+  // Lực lượng Anbu Konoha & Đội Cảnh Vệ Uchiha (Uchiha Police Force)
+  { name: 'Anbu Ám Bộ Konoha (Mặt Nạ Cáo Trắng)', look: 'm' },
+  { name: 'Anbu Itachi (Đội Trưởng Ám Bộ)', look: 'm' },
+  { name: 'Anbu Kakashi (Huyết Nhãn Sharingan)', look: 'm' },
+  { name: 'Uchiha Fugaku (Thủ Lĩnh Cảnh Vệ Konoha)', look: 'm' },
+  { name: 'Uchiha Shisui (Thuấn Thân / Kotoamatsukami)', look: 'm' },
+  { name: 'Cảnh Vệ Uchiha (Huy Hiệu Quạt Lửa Konoha)', look: 'm' },
+
+  // Jinchūriki của Toàn Bộ 9 Vĩ Thú
+  { name: 'Gaara (Jinchūriki Nhất Vĩ Shukaku)', look: 'm' },
+  { name: 'Yugito Nii (Jinchūriki Nhị Vĩ Matatabi)', look: 'f' },
+  { name: 'Yagura Karatachi (Jinchūriki Tam Vĩ Isobu)', look: 'm' },
+  { name: 'Roshi (Jinchūriki Tứ Vĩ Son Goku)', look: 'm' },
+  { name: 'Han (Jinchūriki Ngũ Vĩ Kokuo)', look: 'm' },
+  { name: 'Utakata (Jinchūriki Lục Vĩ Saiken)', look: 'm' },
+  { name: 'Fuu (Jinchūriki Thất Vĩ Chomei)', look: 'f' },
+  { name: 'Killer Bee (Jinchūriki Bát Vĩ Gyūki)', look: 'm' },
+  { name: 'Uzumaki Naruto (Jinchūriki Cửu Vĩ Kurama)', look: 'm' },
+
+  // Binh Đoàn Uế Thổ Chuyển Sinh (Edo Tensei)
+  { name: 'Edo Madara (Uế Thổ Susanoo Toàn Năng)', look: 'm' },
+  { name: 'Edo Hashirama (Uế Thổ Mộc Độn Chân Thần)', look: 'm' },
+  { name: 'Edo Tobirama (Uế Thổ Khởi Nguyên Phi Lôi)', look: 'm' },
+  { name: 'Edo Hiruzen (Uế Thổ Ngũ Hành Hầu Vương)', look: 'm' },
+  { name: 'Edo Minato (Uế Thổ Cửu Vĩ Kim Tiên)', look: 'm' },
+  { name: 'Edo Itachi (Uế Thổ Izanami Bất Diệt)', look: 'm' },
+  { name: 'Edo Nagato (Uế Thổ Lục Đạo Toàn Luân)', look: 'm' },
+  { name: 'Edo Mu (Tsuchikage Đệ Nhị Vô Ảnh)', look: 'm' },
+  { name: 'Edo Gengetsu (Mizukage Đệ Nhị Ảo Thuật)', look: 'm' },
+  { name: 'Edo Ay Đệ Tam (Lôi Giáp Bất Hoại)', look: 'm' },
+  { name: 'Edo Rasa (Kazekage Đệ Tứ Sa Kim)', look: 'm' },
 
   // Lục Đạo Tiên Nhân & Thần Tộc Otsutsuki
   { name: 'Hagoromo Otsutsuki (Lục Đạo Tiên Nhân)', look: 'm' },
   { name: 'Hamura Otsutsuki (Tiên Nhân Mặt Trăng)', look: 'm' },
   { name: 'Kaguya Otsutsuki (Thần Thụ Khởi Nguyên)', look: 'f' },
-
-  // Jinchūriki & Vĩ Thú Hộ Vệ
-  { name: 'Killer Bee (Bát Vĩ Gyūki / Thất Kiếm)', look: 'm' },
-  { name: 'Yugito Nii (Nhị Vĩ Matatabi)', look: 'f' },
-  { name: 'Yagura Karatachi (Mizukage Đệ Tứ / Tam Vĩ)', look: 'm' },
-  { name: 'Roshi (Tứ Vĩ Son Goku / Nham Độn)', look: 'm' },
-  { name: 'Han (Ngũ Vĩ Kokuo / Phản Lực Độn)', look: 'm' },
-  { name: 'Utakata (Lục Vĩ Saiken / Bong Bóng Độn)', look: 'm' },
-  { name: 'Fuu (Thất Vĩ Chomei / Lân Bột)', look: 'f' },
 
   // Danh nhẫn các Làng Ninja khác
   { name: 'Kankuro (Hắc Bí Kỹ Rối Sát Thủ)', look: 'm' },

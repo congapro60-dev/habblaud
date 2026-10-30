@@ -1941,7 +1941,87 @@ function drawNinja(dc: Dc, color: string, kageRole?: CharacterFrameRequest['kage
       // Deidara: Tóc vàng dài buộc lệch một bên che mắt trái
       b.rect(x + 2, y - 2, 8, 7, '#facc15');
       b.rect(x + 1, y + 3, 3, 7, '#facc15');
+    } else if (n.includes('sasori')) {
+      // Sasori: Tóc đỏ ngắn rối, ánh mắt sắc lạnh vô hồn của nghệ thuật rối
+      b.rect(x + 2, y - 1, 10, 5, '#dc2626');
+      b.rect(x + 1, y + 2, 12, 3, '#b91c1c');
+    } else if (n.includes('hidan')) {
+      // Hidan: Tóc vuốt ngược màu xám bạc, lưỡi hái 3 lưỡi đỏ cắm sau lưng
+      b.rect(x + 3, y - 2, 8, 5, '#94a3b8');
+      b.rect(14 + r.lean, torsoY - 8, 4, 20, '#dc2626'); // Lưỡi hái 3 tầng
+      b.rect(15 + r.lean, torsoY - 6, 4, 3, '#ef4444');
+      b.rect(15 + r.lean, torsoY - 2, 4, 3, '#ef4444');
+      b.rect(15 + r.lean, torsoY + 2, 4, 3, '#ef4444');
+    } else if (n.includes('kakuzu')) {
+      // Kakuzu: Trùm đầu trùm kín mặt chỉ chừa đôi mắt xanh lục quỷ dị
+      b.rect(x + 1, y + 2, 12, 11, '#1e293b');
+      b.set(x + 4, y + 7, '#22c55e'); // mắt xanh
+      b.set(x + 9, y + 7, '#22c55e');
+    } else if (n.includes('tobi') || n.includes('obito')) {
+      // Tobi / Obito: Mặt nạ màu cam có đường vân xoắn ốc tập trung vào mắt phải
+      b.ellipse(x + 7, y + 7, 5, 5, '#ea580c');
+      b.set(x + 8, y + 6, '#09090b'); // lỗ khoét mắt Sharingan
+      b.set(x + 6, y + 7, '#c2410c');
+      b.set(x + 8, y + 8, '#c2410c');
+    } else if (n.includes('zetsu')) {
+      // Zetsu: 2 nửa mặt đen và trắng, hai phiến lá cây ăn thịt khổng lồ kẹp quanh thân
+      b.rect(x + 1, y + 4, 6, 9, '#f8fafc'); // nửa trắng
+      b.rect(x + 7, y + 4, 6, 9, '#09090b'); // nửa đen
+      b.rect(3 + r.lean, torsoY - 4, 3, 14, '#15803d'); // lá cây ăn thịt
+      b.rect(16 + r.lean, torsoY - 4, 3, 14, '#15803d');
     }
+    return;
+  }
+
+  // 18. ANBU LÀNG LÁ (MẶT NẠ CÁO TRẮNG & KIẾM SAU LƯNG)
+  if (n.includes('anbu')) {
+    // Áo giáp Anbu màu xám bạc, hình xăm xoắn đỏ ở bắp tay trái
+    b.rect(6 + r.lean, torsoY, 12, 9, '#475569');
+    b.rect(7 + r.lean, torsoY + 1, 10, 7, '#64748b');
+    b.set(4 + r.lean, torsoY + 3, '#dc2626'); // xăm Anbu đỏ
+    // Thanh kiếm Ninja Katana đeo chéo lưng
+    b.line(14 + r.lean, torsoY - 6, 7 + r.lean, torsoY + 9, '#cbd5e1');
+    // Mặt nạ thú Anbu (Cáo / Mèo) màu trắng với vệt vẽ đỏ truyền thống
+    b.ellipse(x + 7, y + 7, 6, 6, '#f8fafc');
+    b.set(x + 4, y + 6, '#dc2626'); // nét vẽ mắt đỏ
+    b.set(x + 10, y + 6, '#dc2626');
+    b.set(x + 7, y + 9, '#09090b'); // mũi thú
+    b.set(x + 4, y + 3, '#f8fafc'); // tai cáo
+    b.set(x + 10, y + 3, '#f8fafc');
+    return;
+  }
+
+  // 19. ĐỘI CẢNH VỆ UCHIHA (UCHIHA POLICE FORCE)
+  if (n.includes('cảnh vệ') || n.includes('fugaku') || n.includes('shisui')) {
+    // Áo xám xanh đậm của Cảnh Vệ Konoha
+    b.rect(6 + r.lean, torsoY, 12, 9, '#1e293b');
+    b.rect(7 + r.lean, torsoY + 1, 10, 7, '#334155');
+    // Biểu tượng Quạt Uchiha trên tay áo và sau lưng
+    b.rect(4 + r.lean, torsoY + 2, 3, 2, '#dc2626');
+    b.rect(4 + r.lean, torsoY + 4, 3, 2, '#ffffff');
+    b.rect(10 + r.lean, torsoY + 2, 4, 2, '#dc2626');
+    b.rect(10 + r.lean, torsoY + 4, 4, 2, '#ffffff');
+    // Mắt Sharingan đỏ rực
+    b.set(x + 4, y + 7, '#dc2626');
+    b.set(x + 9, y + 7, '#dc2626');
+    // Băng trán Konoha chuẩn
+    b.rect(x + 1, y + 5, 12, 3, '#1e293b');
+    b.rect(x + 4, y + 5, 6, 3, '#cbd5e1');
+    return;
+  }
+
+  // 20. BINH ĐOÀN UẾ THỔ CHUYỂN SINH (EDO TENSEI)
+  if (n.includes('edo') || n.includes('uế thổ')) {
+    // Vết nứt nẻ rạn vỡ xám tro trên mặt của xác chết hồi sinh
+    b.rect(x + 2, y + 5, 10, 8, '#e2e8f0');
+    b.line(x + 3, y + 6, x + 5, y + 9, '#475569');
+    b.line(x + 9, y + 6, x + 7, y + 10, '#475569');
+    // Tròng mắt đen tuyền hắc ám đặc trưng của Edo Tensei
+    b.set(x + 4, y + 7, '#09090b');
+    b.set(x + 9, y + 7, '#09090b');
+    // Áo choàng màu mận sẫm thời đại Edo Tensei
+    b.rect(6 + r.lean, torsoY, 12, 10, '#4c0519');
+    b.rect(7 + r.lean, torsoY + 1, 10, 8, '#881337');
     return;
   }
 
