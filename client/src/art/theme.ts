@@ -3,16 +3,26 @@
 import type { RoomTheme } from './api';
 
 const THEMES: readonly RoomTheme[] = [
-  { carpet: '#c9d1dc', carpet2: '#bdc6d3', wall: { base: '#eef1f4', trim: '#9fb0c4', pattern: 'plain' }, accent: '#3f7fd8', deskVariant: 'white', chairVariant: 'blue' },
-  { carpet: '#dbcfba', carpet2: '#d0c2ab', wall: { base: '#f6f0e5', trim: '#b99f7a', pattern: 'stripes' }, accent: '#ec8a3c', deskVariant: 'wood', chairVariant: 'black' },
-  { carpet: '#c4cfbb', carpet2: '#b8c5af', wall: { base: '#f1f3ea', trim: '#93a487', pattern: 'wood_panel' }, accent: '#4cae6a', deskVariant: 'wood', chairVariant: 'green' },
-  { carpet: '#cdc8de', carpet2: '#c2bbd5', wall: { base: '#f3f1f8', trim: '#a59cc4', pattern: 'plain' }, accent: '#8d66cf', deskVariant: 'white', chairVariant: 'gray' },
-  { carpet: '#e4cdbe', carpet2: '#dbc1b0', wall: { base: '#f8f1eb', trim: '#c99a83', pattern: 'plain' }, accent: '#e2604f', deskVariant: 'wood', chairVariant: 'red' },
-  { carpet: '#bfd9d2', carpet2: '#b2cfc7', wall: { base: '#eef6f4', trim: '#7fb3a6', pattern: 'stripes' }, accent: '#36b0b0', deskVariant: 'white', chairVariant: 'green' },
-  { carpet: '#aab1bd', carpet2: '#9fa7b4', wall: { base: '#e8eaee', trim: '#6d7583', pattern: 'brick' }, accent: '#f2c14e', deskVariant: 'dark', chairVariant: 'black' },
-  { carpet: '#e0cad2', carpet2: '#d6bdc6', wall: { base: '#f9f2f4', trim: '#c08ea0', pattern: 'stripes' }, accent: '#e47aa8', deskVariant: 'white', chairVariant: 'black' },
-  { carpet: '#c0d2e7', carpet2: '#b3c7e0', wall: { base: '#eef4fa', trim: '#8aa6c8', pattern: 'wood_panel' }, accent: '#5b8fe0', deskVariant: 'wood', chairVariant: 'blue' },
-  { carpet: '#d1c5b8', carpet2: '#c5b8aa', wall: { base: '#f4efe8', trim: '#8a6a52', pattern: 'wood_panel' }, accent: '#c9713f', deskVariant: 'dark', chairVariant: 'gray' },
+  // Làng Lá (Konoha - Gỗ cổ, xanh lá mộc)
+  { carpet: '#607d56', carpet2: '#4e6945', wall: { base: '#d7c4b0', trim: '#7d5236', pattern: 'wood_panel' }, accent: '#2e7d32', deskVariant: 'wood', chairVariant: 'green' },
+  // Làng Cát (Sunagakure - Sa mạc vàng cát)
+  { carpet: '#c7a36c', carpet2: '#b89258', wall: { base: '#e2d3b8', trim: '#a1784c', pattern: 'brick' }, accent: '#b45309', deskVariant: 'dark', chairVariant: 'gray' },
+  // Làng Mây (Kumogakure - Sấm sét & mây lam)
+  { carpet: '#5b7692', carpet2: '#4a627a', wall: { base: '#cfdae6', trim: '#6a849f', pattern: 'wood_panel' }, accent: '#0284c7', deskVariant: 'wood', chairVariant: 'blue' },
+  // Akatsuki (Mây đỏ, áo choàng đen bí thuật)
+  { carpet: '#542629', carpet2: '#3d1c1e', wall: { base: '#3b3a42', trim: '#8c2424', pattern: 'brick' }, accent: '#dc2626', deskVariant: 'dark', chairVariant: 'black' },
+  // Làng Sương Mù (Kirigakure - Sương nước u tịch)
+  { carpet: '#4e6d72', carpet2: '#3d565b', wall: { base: '#cce2e6', trim: '#557e85', pattern: 'wood_panel' }, accent: '#0f766e', deskVariant: 'wood', chairVariant: 'gray' },
+  // Dinh Hokage (Hỏa Độn & Mộc diệp hoàng kim)
+  { carpet: '#854228', carpet2: '#6d351f', wall: { base: '#f0dfc8', trim: '#9e4624', pattern: 'wood_panel' }, accent: '#c2410c', deskVariant: 'wood', chairVariant: 'red' },
+  // Làng Đá (Iwagakure - Đá kiên cố)
+  { carpet: '#716e68', carpet2: '#5b5852', wall: { base: '#d6d1c9', trim: '#635e56', pattern: 'brick' }, accent: '#4b5563', deskVariant: 'dark', chairVariant: 'black' },
+  // Thư viện Cấm Thuật (Giấy cổ bí truyền)
+  { carpet: '#8a6e4d', carpet2: '#735939', wall: { base: '#e8dcce', trim: '#7a5a3a', pattern: 'wood_panel' }, accent: '#d97706', deskVariant: 'wood', chairVariant: 'gray' },
+  // Lôi Đài Thi Đấu Nhẫn Thuật
+  { carpet: '#5c483a', carpet2: '#473629', wall: { base: '#d8ccb8', trim: '#614d3b', pattern: 'brick' }, accent: '#7c2d12', deskVariant: 'wood', chairVariant: 'black' },
+  // Tiên Nhân Động (Myobokuzan - Cóc Tiên Phong)
+  { carpet: '#436850', carpet2: '#32503d', wall: { base: '#dfebd9', trim: '#4f755b', pattern: 'wood_panel' }, accent: '#15803d', deskVariant: 'wood', chairVariant: 'green' },
 ];
 
 export const THEME_COUNT = THEMES.length;

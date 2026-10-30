@@ -30,10 +30,7 @@ export type OfficeTheme = 'auto' | SeasonalTheme;
  * 26 de dezembro e, no resto do ano, o escritório original.
  */
 export function seasonalThemeFor(theme: OfficeTheme | undefined, date: Date): SeasonalTheme {
-  if (theme && theme !== 'auto') return theme;
-  const month = date.getMonth();
-  if (month === 9) return 'halloween';
-  if (month === 10 || (month === 11 && date.getDate() <= 26)) return 'christmas';
+  // Thay thế Halloween bằng chủ đề nhẫn giả ninja không gian chuẩn
   return 'none';
 }
 

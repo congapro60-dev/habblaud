@@ -57,35 +57,34 @@ export function wallFaceTile(style: WallStyle, variant: number, col: number): Pi
       break;
     }
     case 'wood_panel': {
-      // Lambri de madeira na metade de baixo com friso; metade de cima lisa.
-      const w = ramp(mix('#b98a5e', base, 0.15), 0.04);
-      const top = fy + Math.floor(fh * 0.45);
-      b.rect(0, top, TILE, fy + fh - top, w.base);
-      for (let x = 0; x < TILE; x += 4) {
-        b.vline(x, top, fy + fh - 1, w.dk);
-        b.vline(x + 1, top + 1, fy + fh - 1, w.lt);
+      // Vách gỗ nhà truyền thống kiểu Nhật (Thế giới Ninja / Tatami & Shoji)
+      const w = ramp('#8c5936', 0.05);
+      b.rect(0, fy, TILE, fh, '#d9b48f');
+      for (let x = 0; x < TILE; x += 8) {
+        b.vline(x, fy, fy + fh - 1, w.dk);
+        b.vline(x + 1, fy, fy + fh - 1, w.lt);
       }
-      b.hline(0, TILE - 1, top - 1, w.hi);
-      b.hline(0, TILE - 1, top, w.lt);
-      b.hline(0, TILE - 1, top + 1, w.dk);
+      b.hline(0, TILE - 1, fy, w.dk);
+      b.hline(0, TILE - 1, fy + Math.floor(fh * 0.5), w.dk);
+      b.hline(0, TILE - 1, fy + fh - 1, w.dd);
       break;
     }
     case 'brick': {
-      // Tijolos 8x4 (com argamassa) em fileiras desencontradas; tom por tijolo, aresta de cima clara.
-      const brick = ramp(base, 0.035);
-      const mortar = mix(base, '#e9e4dc', 0.5);
-      for (let row = 0; row * 4 < fh; row++) {
-        const y = fy + row * 4;
-        const off = row % 2 ? 4 : 0;
-        for (let bx = -8; bx < TILE; bx += 8) {
+      // Tường thành đá cổ Nhẫn Giả (Làng Đá / Làng Cát / Thành lũy Konoha)
+      const stone = ramp('#7d7065', 0.04);
+      const mortar = '#574d44';
+      for (let row = 0; row * 6 < fh; row++) {
+        const y = fy + row * 6;
+        const off = row % 2 ? 6 : 0;
+        for (let bx = -12; bx < TILE; bx += 12) {
           const x0 = bx + off;
-          const tone = [brick.lt, brick.base, brick.base, brick.dk][Math.floor(r() * 4)];
-          for (let x = Math.max(0, x0); x < Math.min(TILE, x0 + 7); x++) {
-            for (let yy = y; yy < Math.min(fy + fh, y + 3); yy++) b.set(x, yy, yy === y ? shade(tone, 0.03) : tone);
+          const tone = [stone.lt, stone.base, stone.dk][Math.floor(r() * 3)];
+          for (let x = Math.max(0, x0); x < Math.min(TILE, x0 + 11); x++) {
+            for (let yy = y; yy < Math.min(fy + fh, y + 5); yy++) b.set(x, yy, yy === y ? shade(tone, 0.04) : tone);
           }
-          if (x0 + 7 >= 0 && x0 + 7 < TILE) b.vline(x0 + 7, y, Math.min(fy + fh - 1, y + 2), mortar);
+          if (x0 + 11 >= 0 && x0 + 11 < TILE) b.vline(x0 + 11, y, Math.min(fy + fh - 1, y + 5), mortar);
         }
-        if (y + 3 < fy + fh) b.hline(0, TILE - 1, y + 3, mortar);
+        if (y + 5 < fy + fh) b.hline(0, TILE - 1, y + 5, mortar);
       }
       break;
     }

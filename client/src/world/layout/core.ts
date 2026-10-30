@@ -19,11 +19,11 @@ export const ARCHIVE_ID = 'core:archive';
 
 /** Paredes do núcleo: tons claros e neutros (frios), com acabamentos diferentes por ambiente. */
 export const CORE_WALLS = {
-  reception: { base: '#e9e5dc', trim: '#a88e6c', pattern: 'wood_panel' } satisfies WallStyle,
-  restroom: { base: '#dce8ee', trim: '#8fb0c0', pattern: 'tiles' } satisfies WallStyle,
-  cafe: { base: '#eef0ee', trim: '#9aa6ad', pattern: 'plain' } satisfies WallStyle,
-  cafeSplash: { base: '#d9dcdf', trim: '#8d969e', pattern: 'marble' } satisfies WallStyle,
-  lounge: { base: '#e6e2ea', trim: '#8f8aa3', pattern: 'plain' } satisfies WallStyle,
+  reception: { base: '#d7c4b0', trim: '#7d5236', pattern: 'wood_panel' } satisfies WallStyle,
+  restroom: { base: '#6d8a7d', trim: '#42584d', pattern: 'brick' } satisfies WallStyle, // Suối nước nóng
+  cafe: { base: '#c79d6e', trim: '#82562d', pattern: 'wood_panel' } satisfies WallStyle, // Quán mì Ichiraku
+  cafeSplash: { base: '#b08b60', trim: '#6b4522', pattern: 'wood_panel' } satisfies WallStyle,
+  lounge: { base: '#9c412b', trim: '#5c2214', pattern: 'wood_panel' } satisfies WallStyle, // Dinh Hokage
   glass: { base: '#cfe6f0', trim: '#9fb9c6', pattern: 'glass' } satisfies WallStyle,
 };
 
@@ -293,12 +293,12 @@ function layoutDepartment(id: string, col: number, side: 'north' | 'south', seed
 
 export function departmentAreas(): AreaLayout[] {
   const palette = {
-    claude: { base: '#e8d8cc', trim: '#b77a53', pattern: 'plain' },
-    codex: { base: '#d9e5f2', trim: '#4f83b7', pattern: 'plain' },
-    gemini: { base: '#e4dfef', trim: '#8a71b1', pattern: 'plain' },
-    opencode: { base: '#d7e9de', trim: '#4d9970', pattern: 'plain' },
-    review: { base: '#eee4c9', trim: '#b28a36', pattern: 'plain' },
-    archive: { base: '#d9dce2', trim: '#6e7785', pattern: 'plain' },
+    claude: { base: '#d7c4b0', trim: '#7d5236', pattern: 'wood_panel' }, // Làng Lá Konoha
+    codex: { base: '#e2d3b8', trim: '#a1784c', pattern: 'brick' },      // Làng Cát Sunagakure
+    gemini: { base: '#d6d1c9', trim: '#635e56', pattern: 'brick' },     // Làng Đá Iwagakure
+    opencode: { base: '#cce2e6', trim: '#557e85', pattern: 'wood_panel' }, // Làng Sương Mù Kirigakure
+    review: { base: '#cfdae6', trim: '#6a849f', pattern: 'wood_panel' }, // Làng Mây Kumogakure
+    archive: { base: '#e8dcce', trim: '#7a5a3a', pattern: 'wood_panel' }, // Thư viện Bí thuật
   } as const;
   return [
     layoutDepartment(CLAUDE_ID, 2, 'north', 501, palette.claude),
