@@ -63,13 +63,13 @@ function getCoreNames(): Record<string, string> {
 
 /** Trưởng phòng gắn với phòng vật lý. Luôn render biểu tượng; không phụ thuộc task đang chạy. */
 export const CORE_HEADS: Readonly<Record<string, { name: string; symbol: string; color: string }>> = {
-  'core:lounge': { name: 'Vũ Việt Cường (Hokage)', symbol: 'HK', color: '#cf6b43' },
-  'core:claude': { name: 'Hokage Tsunade (Tam Nin)', symbol: 'TS', color: '#b77a53' },
-  'core:codex': { name: 'Kazekage Gaara (Sa Mạc)', symbol: 'GR', color: '#4f83b7' },
-  'core:gemini': { name: 'Tsuchikage Ohnoki (Trần Độn)', symbol: 'ON', color: '#8a71b1' },
-  'core:opencode': { name: 'Mizukage Mei Terumi (Dung Độn)', symbol: 'ME', color: '#4d9970' },
-  'core:review': { name: 'Raikage Ay (Lôi Độn)', symbol: 'AY', color: '#b28a36' },
-  'core:archive': { name: 'Tiên Nhân Jiraiya (Hiền Nhân Cóc)', symbol: 'JR', color: '#6e7785' },
+  'core:lounge': { name: 'Vũ Việt Cường (Hokage)', symbol: '🔥', color: '#dc2626' }, // Hỏa ảnh
+  'core:claude': { name: 'Hokage Tsunade (Tam Nin)', symbol: '🍃', color: '#16a34a' }, // Làng Lá Konoha
+  'core:codex': { name: 'Kazekage Gaara (Sa Mạc)', symbol: '⏳', color: '#d97706' }, // Làng Cát Sunagakure
+  'core:gemini': { name: 'Tsuchikage Ohnoki (Trần Độn)', symbol: '🪨', color: '#78716c' }, // Làng Đá Iwagakure
+  'core:opencode': { name: 'Mizukage Mei Terumi (Dung Độn)', symbol: '🌫️', color: '#0891b2' }, // Làng Sương Kirigakure
+  'core:review': { name: 'Raikage Ay (Lôi Độn)', symbol: '⚡', color: '#eab308' }, // Làng Mây Kumogakure
+  'core:archive': { name: 'Tiên Nhân Jiraiya (Hiền Nhân Cóc)', symbol: '📜', color: '#475569' },
 };
 
 /** 'shell' = espera de shell: balão escuro de terminal com texto verde. 'say' = fala das rodas (papo, torcida, apostas). */

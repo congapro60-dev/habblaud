@@ -1484,7 +1484,7 @@ function itemPos(dc: Dc): Pt | null {
 // ---------------------------------------------------------------- composição
 
 /** Usa o mesmo rig da cabeça para acompanhar quique, cochilo e poses sentadas. */
-function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume'], color?: string): void {
+function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume'], color?: string, kageRole?: CharacterFrameRequest['kageRole']): void {
   if (!costume) return;
   const { b, r } = dc;
   const x = HX + r.lean;
@@ -1510,8 +1510,8 @@ function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume'], color?: 
     b.vline(x + 4, y + 1, y + 4, '#f9ae48');
     b.vline(x + 8, y + 1, y + 4, '#f9ae48');
     b.hline(x + 2, x + 11, y + 5, '#8d4930');
-  } else if (costume === 'ninja') {
-    drawNinja(dc, color ?? '#3f7a3f');
+  } else if (costume === 'ninja' || costume === 'kage') {
+    drawNinja(dc, color ?? '#3f7a3f', kageRole);
   } else {
     // Gola da capa: rosto e crachá continuam visíveis.
     b.rect(x, y + 12, 2, 5, '#702743');
@@ -1520,22 +1520,59 @@ function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume'], color?: 
 }
 
 /**
- * Nhẫn giả: faixa da aldeia na testa (pano + placa metálica + cauda de pano) e máscara
- * cobrindo nariz/boca. Desenhado depois do cabelo para ficar por cima dele.
- * Grade da cabeça: x 0..14, y 4..15 (11 linhas); olhos na linha 6-7, boca na 9.
+ * Nhẫn giả & Kage:
+ * - Hokage / Kazekage / Mizukage / Raikage / Tsuchikage: Mũ Kage chóp rộng truyền thống, Áo choàng Haori Kage trắng viền đỏ/vàng/xanh, Hán tự Kage sau lưng.
+ * - Akatsuki: Áo choàng mây đỏ cổ cao.
+ * - Jonin/Chunin: Áo giáp rêu, băng đô Hitai-ate.
  */
-function drawNinja(dc: Dc, color: string): void {
+function drawNinja(dc: Dc, color: string, kageRole?: CharacterFrameRequest['kageRole']): void {
   const { b, r } = dc;
   const x = HX + r.lean;
   const y = HY + r.ub + r.hd;
   const cloth = shade(color, -0.12);
   const clothDk = shade(color, -0.32);
   const isAkatsuki = color === '#a61c1c';
-
-  // 1. Áo choàng / Quần áo Ninja (Áo Flak Vest Chunin xanh rêu hoặc Áo choàng Akatsuki đen mây đỏ)
   const torsoY = 17 + r.ub;
+
+  if (kageRole) {
+    // === ĐỒNG PHỤC KAGE CHUẨN NGUYÊN MẪU TRUYỆN NARUTO ===
+    // 1. Áo choàng Haori Kage màu trắng trùm vai, viền gấu áo theo ngũ hành
+    b.rect(5 + r.lean, torsoY, 14, 11, '#ffffff'); // Áo choàng trắng
+    b.rect(6 + r.lean, torsoY + 1, 12, 9, '#f8fafc');
+
+    // Viền lửa/sóng gấu áo Haori đặc trưng
+    const trimColor = kageRole === 'hokage' ? '#dc2626' : kageRole === 'kazekage' ? '#d97706' : kageRole === 'mizukage' ? '#0284c7' : kageRole === 'raikage' ? '#ca8a04' : '#57534e';
+    b.rect(5 + r.lean, torsoY + 9, 14, 2, trimColor);
+    b.set(6 + r.lean, torsoY + 8, trimColor);
+    b.set(8 + r.lean, torsoY + 8, trimColor);
+    b.set(10 + r.lean, torsoY + 8, trimColor);
+    b.set(12 + r.lean, torsoY + 8, trimColor);
+    b.set(14 + r.lean, torsoY + 8, trimColor);
+
+    // Dải thắt lưng đỏ trước ngực
+    b.rect(10 + r.lean, torsoY + 3, 4, 2, '#b91c1c');
+
+    // 2. MŨ KAGE TRUYỀN THỐNG (Chóp rộng hình tam giác & dải vải buông dài hai bên che gáy)
+    // Chóp mũ Kage (Hỏa = Đỏ, Phong = Xanh lá/vàng, Thủy = Xanh lam, Lôi = Vàng, Thổ = Nâu)
+    const hatColor = trimColor;
+    b.rect(x - 2, y + 2, 18, 3, '#ffffff'); // Vành mũ rộng trắng
+    b.rect(x + 1, y - 2, 12, 4, hatColor);  // Thân mũ Kage màu biểu trưng
+    b.rect(x + 4, y - 5, 6, 3, hatColor);   // Đỉnh chóp nón
+    b.rect(x + 6, y - 7, 2, 2, '#ffffff');  // Đỉnh nón nhọn màu trắng
+
+    // Biểu tượng tròn đính trước nón Kage
+    b.ellipse(x + 7, y - 1, 3, 3, '#ffffff');
+    b.set(x + 7, y - 1, hatColor); // Hán tự tâm mũ
+
+    // Dải vải trắng của mũ Kage rủ xuống 2 bên tai
+    b.rect(x - 1, y + 5, 2, 7, '#ffffff');
+    b.rect(x + 13, y + 5, 2, 7, '#ffffff');
+    return;
+  }
+
+  // 1. Áo choàng / Quần áo Ninja thường (Chunin xanh rêu hoặc Akatsuki mây đỏ)
   if (isAkatsuki) {
-    // Áo choàng đen Akatsuki trùm thân
+    // Áo choàng đen Akatsuki cổ cao trùm thân
     b.rect(6 + r.lean, torsoY, 12, 10, '#181820');
     b.rect(7 + r.lean, torsoY + 1, 10, 8, '#242430');
     // Họa tiết mây đỏ Akatsuki
@@ -1551,7 +1588,7 @@ function drawNinja(dc: Dc, color: string): void {
     b.rect(13 + r.lean, torsoY + 3, 2, 3, '#1f3824');
   }
 
-  // 2. Băng đô bảo hộ trán (Hitai-ate) - đặt ở đường viền trán phía trên chân mày (y + 5..7)
+  // 2. Băng đô bảo hộ trán (Hitai-ate)
   b.rect(x + 1, y + 5, 12, 3, color);
   b.hline(x + 1, x + 12, y + 5, cloth);
   // Tấm kim loại hộ trán sáng loáng ở giữa trán
@@ -1581,7 +1618,6 @@ function drawNinja(dc: Dc, color: string): void {
     b.rect(x + 2, y + 9, 7, 4, cloth);
     b.hline(x + 2, x + 8, y + 12, clothDk);
   } else {
-    // Đằng sau gáy: nút thắt băng đô
     b.rect(x + 5, y + 6, 4, 3, clothDk);
   }
 }
@@ -1613,7 +1649,7 @@ export function renderCharacter(req: CharacterFrameRequest): BufSprite {
     drawFacialHair(dc);
     drawHair(dc, 'front');
     drawAccessory(dc);
-    drawCostume(dc, req.costume, req.costumeColor);
+    drawCostume(dc, req.costume, req.costumeColor, req.kageRole);
   };
 
   if (view !== 'side' && r.itemAt) {
@@ -1640,7 +1676,7 @@ export function renderCharacter(req: CharacterFrameRequest): BufSprite {
     drawFacialHair(dc);
     drawHair(dc, 'front');
     drawAccessory(dc);
-    drawCostume(dc, req.costume, req.costumeColor);
+    drawCostume(dc, req.costume, req.costumeColor, req.kageRole);
     if (ip && !r.itemBehind) drawItem(dc, ip[0], ip[1]);
     drawArm(dc, r.armB, sr, sleeve, 0, true);
   } else {
@@ -1660,7 +1696,7 @@ export function renderCharacter(req: CharacterFrameRequest): BufSprite {
     drawFacialHair(dc);
     drawHair(dc, 'front');
     drawAccessory(dc);
-    drawCostume(dc, req.costume, req.costumeColor);
+    drawCostume(dc, req.costume, req.costumeColor, req.kageRole);
     // Braços cruzados por cima do cabelo comprido que cai no peito (a mão que bate fica visível).
     if (r.crossFront !== null) drawCrossedArms(dc, sr, sleeve, r.crossFront === 1);
     if (ip && !r.itemBehind) {

@@ -5,7 +5,7 @@ import { TILE, type ArtModule, type CharacterFrameRequest, type IconName, type S
 import type { SeasonalTheme, WorldOptions } from '../api';
 import type { WorldAssets } from '../assets';
 import type { Camera } from '../camera';
-import { BUILDING_H, COL_W, CORE_COLS, CORRIDOR_Y } from '../constants';
+import { BUILDING_H, COL_W, CORE_COLS, CORRIDOR_Y, EXT_EAST, EXT_NORTH, EXT_WEST } from '../constants';
 import { layoutExterior, slotShell, type ExteriorLayout, type SlotShell } from '../layout/exterior';
 import { slotAt } from '../layout/geometry';
 import type { ExteriorProp } from '../layout/types';
@@ -327,6 +327,109 @@ export class Renderer {
     ctx.fillRect(-1.75 * TILE + 2, my + 2, 1.5 * TILE - 4, 2.5 * TILE - 4);
     ctx.fillStyle = '#4b525f';
     for (let y = my + 4; y < my + 2.5 * TILE - 4; y += 3) ctx.fillRect(-1.75 * TILE + 3, y, 1.5 * TILE - 6, 1);
+
+    // Vách núi đá khắc khuôn mặt các Hokage (Hokage Rock / Ải Núi Hokage) ở sườn phía Bắc
+    this.drawHokageRockMonument(ctx, cols);
+
+    ctx.restore();
+  }
+
+  /** Vẽ dãy tượng đá khổng lồ các Hokage khắc trên núi đá phía sau Konoha */
+  private drawHokageRockMonument(ctx: CanvasRenderingContext2D, cols: number): void {
+    const totalW = cols * COL_W * TILE;
+    const rockY = -EXT_NORTH * TILE;
+    const rockH = 75;
+
+    ctx.save();
+    // 1. Dãy vách núi đá khổng lồ màu nâu xám đặc trưng
+    const grad = ctx.createLinearGradient(0, rockY, 0, rockY + rockH);
+    grad.addColorStop(0, '#5a4632');
+    grad.addColorStop(0.5, '#7c654d');
+    grad.addColorStop(1, '#947d63');
+    ctx.fillStyle = grad;
+    ctx.fillRect(-EXT_WEST * TILE, rockY, totalW + (EXT_WEST + EXT_EAST) * TILE, rockH);
+
+    // Đường gờ viền đỉnh núi lởm chởm
+    ctx.fillStyle = '#453424';
+    for (let x = -EXT_WEST * TILE; x < totalW + EXT_EAST * TILE; x += 12) {
+      const crag = ((x * 13) % 9) - 4;
+      ctx.fillRect(x, rockY + rockH - 4 + crag, 12, 4 - crag);
+    }
+
+    // 2. Chạm khắc 5 gương mặt Hokage vĩ đại:
+    // Đệ Nhất (Hashirama), Đệ Nhị (Tobirama), Đệ Tam (Hiruzen), Đệ Tứ (Minato), Đệ Ngũ (Tsunade)
+    const faces = [
+      { name: 'Hashirama (Đệ Nhất)', title: '初代', hair: '#1c1917', mark: 'band' },
+      { name: 'Tobirama (Đệ Nhị)', title: '二代', hair: '#e2e8f0', mark: 'plate' },
+      { name: 'Hiruzen (Đệ Tam)', title: '三代', hair: '#78716c', mark: 'hat' },
+      { name: 'Minato (Đệ Tứ)', title: '四代', hair: '#eab308', mark: 'spiky' },
+      { name: 'Tsunade (Đệ Ngũ)', title: '五代', hair: '#fef08a', mark: 'diamond' },
+    ];
+
+    const startX = Math.max(30, (totalW - faces.length * 68) / 2);
+    faces.forEach((f, i) => {
+      const fx = startX + i * 68;
+      const fy = rockY + 12;
+
+      // Hốc đá bóng đổ bao quanh khuôn mặt
+      ctx.fillStyle = 'rgba(40, 28, 18, 0.65)';
+      ctx.beginPath();
+      ctx.ellipse(fx + 24, fy + 26, 26, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Khuôn mặt tạc từ khối đá
+      ctx.fillStyle = '#bda78e';
+      ctx.beginPath();
+      ctx.ellipse(fx + 24, fy + 26, 20, 24, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tóc khắc đá có màu sắc biểu trưng
+      ctx.fillStyle = f.hair;
+      ctx.beginPath();
+      ctx.ellipse(fx + 24, fy + 12, 22, 12, 0, Math.PI, 0);
+      ctx.fill();
+
+      // Mũi, lông mày và chi tiết mắt tạc đá
+      ctx.fillStyle = '#6e5641';
+      ctx.fillRect(fx + 16, fy + 22, 5, 3); // Mắt trái
+      ctx.fillRect(fx + 27, fy + 22, 5, 3); // Mắt phải
+      ctx.fillRect(fx + 23, fy + 23, 3, 10); // Sống mũi cao
+      ctx.fillRect(fx + 20, fy + 36, 9, 3);  // Miệng cương nghị
+
+      // Điểm nhấn riêng từng Hokage
+      if (f.mark === 'diamond') {
+        // Ấn bách hào hình thoi màu tím của Tsunade
+        ctx.fillStyle = '#9333ea';
+        ctx.fillRect(fx + 23, fy + 17, 3, 3);
+      } else if (f.mark === 'plate') {
+        // Giáp hộ diện kim loại bảo vệ má của Tobirama
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(fx + 10, fy + 24, 3, 14);
+        ctx.fillRect(fx + 35, fy + 24, 3, 14);
+        // Vết sẹo đỏ đặc trưng
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(fx + 11, fy + 28, 2, 4);
+        ctx.fillRect(fx + 35, fy + 28, 2, 4);
+      } else if (f.mark === 'hat') {
+        // Nốt ruồi và nếp nhăn Đệ Tam
+        ctx.fillStyle = '#453424';
+        ctx.fillRect(fx + 17, fy + 27, 2, 2);
+      } else if (f.mark === 'spiky') {
+        // Tóc tia chớp vàng Minato
+        ctx.fillStyle = '#ca8a04';
+        ctx.fillRect(fx + 7, fy + 10, 5, 8);
+        ctx.fillRect(fx + 36, fy + 10, 5, 8);
+      }
+
+      // Biển khắc Hán tự thứ tự Hokage dưới mỗi tượng đá
+      ctx.fillStyle = '#1c1917';
+      ctx.fillRect(fx + 12, fy + 48, 24, 10);
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(f.title, fx + 24, fy + 56);
+    });
+
     ctx.restore();
   }
 
@@ -858,8 +961,23 @@ export class Renderer {
     req.pose = ch.pose;
     req.held = ch.held;
     req.seated = ch.seated;
-    req.costume = 'ninja';
-    req.costumeColor = villageColorFor(ch.info.engine ?? ch.info.provider ?? 'claude');
+    const nameLower = (ch.info.name ?? '').toLowerCase();
+    const isAkatsuki = nameLower.includes('pain') || nameLower.includes('konan') || nameLower.includes('itachi') || nameLower.includes('kisame') || nameLower.includes('deidara') || nameLower.includes('sasori') || nameLower.includes('hidan') || nameLower.includes('kakuzu') || nameLower.includes('tobi') || nameLower.includes('orochimaru');
+    const isHokage = nameLower.includes('hokage') || nameLower.includes('tsunade') || nameLower.includes('hashirama') || nameLower.includes('tobirama') || nameLower.includes('hiruzen') || nameLower.includes('minato') || nameLower.includes('kakashi') || nameLower.includes('cường');
+    const isKazekage = nameLower.includes('kazekage') || nameLower.includes('gaara') || nameLower.includes('rasa');
+    const isMizukage = nameLower.includes('mizukage') || nameLower.includes('mei') || nameLower.includes('yagura') || nameLower.includes('zabuza');
+    const isRaikage = nameLower.includes('raikage') || nameLower.includes('ay') || nameLower.includes('darui');
+    const isTsuchikage = nameLower.includes('tsuchikage') || nameLower.includes('ohnoki') || nameLower.includes('mu');
+
+    if (isHokage || isKazekage || isMizukage || isRaikage || isTsuchikage) {
+      req.costume = 'kage';
+      req.kageRole = isHokage ? 'hokage' : isKazekage ? 'kazekage' : isMizukage ? 'mizukage' : isRaikage ? 'raikage' : 'tsuchikage';
+      req.costumeColor = isHokage ? '#dc2626' : isKazekage ? '#d97706' : isMizukage ? '#0284c7' : isRaikage ? '#ca8a04' : '#57534e';
+    } else {
+      req.costume = 'ninja';
+      req.kageRole = undefined;
+      req.costumeColor = isAkatsuki ? '#a61c1c' : villageColorFor(ch.info.engine ?? ch.info.provider ?? 'claude');
+    }
     try {
       sprite = this.charSprite(req, ch.animT);
     } catch {

@@ -118,71 +118,67 @@ export function poster(variant: string | undefined): BufFurniture {
   const ih = h - 2;
   switch (variant ?? 'code') {
     case 'coffee': {
-      b.rect(ix, iy, iw, ih, '#f2d7b0');
-      b.rect(ix, iy + ih - 4, iw, 4, '#c98a52');
-      mug(b, ix + 3, iy + 5, '#e2604f');
-      b.set(ix + 4, iy + 3, '#ffffff');
-      b.set(ix + 5, iy + 2, '#ffffff');
-      b.set(ix + 4, iy + 1, '#ffffff');
-      b.hline(ix + 2, ix + 7, iy + ih - 2, '#f4efe2');
+      // Huy hiệu Konoha (Biểu tượng Làng Lá 🍃)
+      b.rect(ix, iy, iw, ih, '#22c55e');
+      b.rect(ix + 1, iy + 1, iw - 2, ih - 2, '#15803d');
+      // Xoáy lá Konoha
+      b.rect(ix + 3, iy + 4, 4, 4, '#fef08a');
+      b.set(ix + 5, iy + 3, '#fef08a');
+      b.set(ix + 7, iy + 5, '#fef08a');
+      b.set(ix + 5, iy + 7, '#fef08a');
+      b.set(ix + 3, iy + 5, '#15803d');
+      b.set(ix + 4, iy + 4, '#15803d');
+      b.line(ix + 5, iy + 7, ix + 7, iy + 9, '#fef08a');
       break;
     }
     case 'rocket': {
-      b.rect(ix, iy, iw, ih, '#24325a');
-      for (const [px, py] of [[1, 2], [8, 1], [6, 5], [2, 9], [9, 8]] as const) b.set(ix + px, iy + py, '#f7e7a1');
-      b.rect(ix + 4, iy + 3, 2, 6, '#f4f2ee');
-      b.set(ix + 4, iy + 2, '#e05a5a');
-      b.set(ix + 5, iy + 2, '#e05a5a');
-      b.set(ix + 4, iy + 5, '#5bc0de');
-      b.set(ix + 3, iy + 8, '#e05a5a');
-      b.set(ix + 6, iy + 8, '#e05a5a');
-      b.rect(ix + 4, iy + 9, 2, 2, '#f2a03d');
-      b.set(ix + 4, iy + 11, '#f7d154');
-      b.hline(ix, ix + iw - 1, iy + ih - 1, '#3b4a7a');
+      // Huy hiệu Làng Cát (Sunagakure ⏳)
+      b.rect(ix, iy, iw, ih, '#f59e0b');
+      b.rect(ix + 1, iy + 1, iw - 2, ih - 2, '#b45309');
+      // Hình hồ lô cát / đồng hồ cát
+      b.rect(ix + 3, iy + 3, 4, 3, '#fef3c7');
+      b.rect(ix + 4, iy + 6, 2, 2, '#fef3c7');
+      b.rect(ix + 3, iy + 8, 4, 4, '#fef3c7');
       break;
     }
     case 'cat': {
-      b.rect(ix, iy, iw, ih, '#f7c9d4');
-      const c = '#3a3f4b';
-      b.set(ix + 2, iy + 4, c);
-      b.set(ix + 7, iy + 4, c);
-      b.rect(ix + 2, iy + 5, 6, 5, c);
-      b.set(ix + 3, iy + 7, '#f7d154');
-      b.set(ix + 6, iy + 7, '#f7d154');
-      b.set(ix + 4, iy + 8, '#e47aa8');
-      b.set(ix + 5, iy + 8, '#e47aa8');
-      b.hline(ix + 1, ix + 8, iy + ih - 2, '#e47aa8');
+      // Huy hiệu Làng Mây (Kumogakure ⚡)
+      b.rect(ix, iy, iw, ih, '#38bdf8');
+      b.rect(ix + 1, iy + 1, iw - 2, ih - 2, '#0369a1');
+      // Đám mây & tia lôi
+      b.rect(ix + 2, iy + 5, 6, 3, '#ffffff');
+      b.rect(ix + 4, iy + 4, 3, 2, '#ffffff');
+      b.line(ix + 4, iy + 8, ix + 6, iy + 11, '#fde047');
       break;
     }
     case 'bug': {
-      b.rect(ix, iy, iw, ih, '#f7d154');
-      const c = '#3a3f4b';
-      b.rect(ix + 3, iy + 5, 4, 5, '#4cae6a');
-      b.vline(ix + 5, iy + 5, iy + 9, c);
-      b.rect(ix + 4, iy + 3, 2, 2, c);
-      for (const dy of [5, 7, 9]) {
-        b.set(ix + 2, iy + dy, c);
-        b.set(ix + 7, iy + dy, c);
+      // Huy hiệu Làng Sương Mù (Kirigakure 🌫️)
+      b.rect(ix, iy, iw, ih, '#06b6d4');
+      b.rect(ix + 1, iy + 1, iw - 2, ih - 2, '#0e7490');
+      // 4 gợn sóng sương mù
+      for (let i = 0; i < 4; i++) {
+        b.hline(ix + 2, ix + 7, iy + 3 + i * 2, '#ecfeff');
       }
-      b.line(ix + 1, iy + 1, ix + 8, iy + 12, '#e05a5a');
       break;
     }
     case 'ship_it': {
-      b.rect(ix, iy, iw, ih, '#bfe3f2');
-      b.rect(ix, iy + 9, iw, 5, '#3f7fd8');
-      b.hline(ix, ix + iw - 1, iy + 9, '#8fc8f0');
-      b.rect(ix + 2, iy + 7, 6, 2, '#e05a5a');
-      b.hline(ix + 3, ix + 6, iy + 9, '#a83232');
-      b.vline(ix + 5, iy + 1, iy + 6, '#6b4a32');
-      b.rect(ix + 6, iy + 2, 3, 2, '#f4f2ee');
-      b.set(ix + 1, iy + 2, '#f7d154');
+      // Huy hiệu Làng Đá (Iwagakure 🪨)
+      b.rect(ix, iy, iw, ih, '#78716c');
+      b.rect(ix + 1, iy + 1, iw - 2, ih - 2, '#44403c');
+      // Hai tảng đá xếp chồng
+      b.rect(ix + 3, iy + 4, 4, 3, '#d6d3d1');
+      b.rect(ix + 2, iy + 7, 6, 4, '#a8a29e');
       break;
     }
     default: {
-      // code: editor escuro com linhas coloridas e "</>".
-      b.rect(ix, iy, iw, ih, '#1f2433');
-      const cols = ['#ff79c6', '#8be9fd', '#f1fa8c', '#50fa7b', '#bd93f9'];
-      for (let i = 0; i < 6; i++) b.hline(ix + 1 + (i % 3), ix + 2 + ((i * 3) % 5) + 2, iy + 1 + i * 2, cols[i % cols.length]);
+      // Biểu tượng Akatsuki mây đỏ nền đen
+      b.rect(ix, iy, iw, ih, '#18181b');
+      b.rect(ix + 2, iy + 5, 6, 4, '#dc2626');
+      b.rect(ix + 3, iy + 4, 4, 6, '#dc2626');
+      b.rect(ix + 1, iy + 6, 8, 2, '#ef4444');
+      b.hline(ix + 2, ix + 7, iy + 3, '#ffffff');
+      b.set(ix + 1, iy + 5, '#ffffff');
+      b.set(ix + 8, iy + 7, '#ffffff');
       break;
     }
   }

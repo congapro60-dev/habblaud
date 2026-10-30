@@ -134,9 +134,11 @@ export interface CharacterFrameRequest {
   /** Para poses que podem ser em pé ou sentado (raise_hand, read, talk). */
   seated?: boolean;
   /** Acessório sazonal; ausente mantém a aparência original. */
-  costume?: 'santa' | 'witch' | 'pumpkin' | 'vampire' | 'ninja';
+  costume?: 'santa' | 'witch' | 'pumpkin' | 'vampire' | 'ninja' | 'kage';
   /** Cor da faixa do `costume: 'ninja'` (cor da aldeia). Ausente = verde-folha. */
   costumeColor?: string;
+  /** Danh hiệu Kage: 'hokage' | 'kazekage' | 'mizukage' | 'raikage' | 'tsuchikage' */
+  kageRole?: 'hokage' | 'kazekage' | 'mizukage' | 'raikage' | 'tsuchikage';
 }
 
 export type FurnitureKind =
