@@ -61,14 +61,14 @@ export const PINGPONG = {
 };
 
 export const RPS = {
-  count: [tr('Jo…'), tr('Ken…'), tr('Pô!')],
-  tie: [tr('Empate! De novo!'), tr('Pensamos igual 😂'), tr('De novo!')],
-  win: [tr('Ganhei! 💰'), tr('Hoje é meu dia!'), tr('Passa o 🪙!'), tr('Mole demais 😎'), tr('Sabia!')],
-  winHonor: [tr('Ganhei! 😎'), tr('Sabia!'), tr('Hoje é meu dia!')],
-  lose: [tr('Não valeu!'), tr('Sorte sua…'), tr('Meu dinheiro… 😭'), tr('Tá, tá…'), tr('Era pra ser pedra!')],
-  rematch: [tr('Revanche!'), tr('Melhor de três!'), tr('De novo, valendo!')],
-  stalemate: [tr('Deixa quieto 😅'), tr('Empatamos, então.')],
-  watch: ['KKKKK', tr('Uou!'), tr('Eita!'), tr('Paga!')],
+  count: ['Kết ấn… 🌀', 'Tụ Chakra… ⚡', 'Nhẫn Thuật Ra Chiêu! 💥'],
+  tie: ['Cùng thế đòn! Đấu lại! 🌀', 'Nhẫn thuật bất phân thắng bại!', 'Lại một hiệp nữa!'],
+  win: ['Rasengan trúng đích! 🌀', 'Chidori xuyên phá! ⚡', 'Thắng tuyệt đối! 🏆', 'Nhẫn thuật của ta trên cơ! 😎', 'Hỏa Độn thiêu rụi! 🔥'],
+  winHonor: ['Đỡ đòn tốt đấy! 🥋', 'Thắng một chiêu nhé! 😎', 'Tuyệt kỹ danh bất hư truyền!'],
+  lose: ['Dính ảo thuật rồi… 😵', 'Khí tức chưa kịp tụ… 😭', 'Lần sau ta dùng Susanoo! 🛡️', 'Khá lắm nhẫn giả!'],
+  rematch: ['Tỉ thí tiếp! 🔥', 'Đấu lại một trận nhẫn thuật! ⚔️', 'Lần này ta xuất chiêu thật!'],
+  stalemate: ['Chakra đã cạn, hoà trận! 🤝', 'Đều là cao thủ nhẫn giả.'],
+  watch: ['Hay lắm! 👏', 'Chiêu đó ảo thật! 🌀', 'Tuyệt đỉnh nhẫn thuật! ⚡', 'Đại chiến nhẫn giả!'],
 };
 
 export const MIRROR = {

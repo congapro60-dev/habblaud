@@ -1530,32 +1530,59 @@ function drawNinja(dc: Dc, color: string): void {
   const y = HY + r.ub + r.hd;
   const cloth = shade(color, -0.12);
   const clothDk = shade(color, -0.32);
-  // Faixa: 2 px de pano na testa, de orelha a orelha.
-  b.rect(x, y + 2, 14, 2, color);
-  b.hline(x, x + 13, y + 2, cloth);
-  // Placa metálica no centro + brilho.
-  b.rect(x + 5, y + 2, 5, 2, '#c9d1dc');
-  b.set(x + 6, y + 2, '#eef2f8');
-  b.set(x + 8, y + 3, '#8b96a6');
-  // Cauda da faixa caindo atrás da cabeça (lado oposto ao olhar).
-  if (r.view === 'side') {
-    b.rect(x + 11, y + 4, 2, 1, color);
-    b.set(x + 12, y + 5, clothDk);
+  const isAkatsuki = color === '#a61c1c';
+
+  // 1. Áo choàng / Quần áo Ninja (Áo Flak Vest Chunin xanh rêu hoặc Áo choàng Akatsuki đen mây đỏ)
+  const torsoY = 17 + r.ub;
+  if (isAkatsuki) {
+    // Áo choàng đen Akatsuki trùm thân
+    b.rect(6 + r.lean, torsoY, 12, 10, '#181820');
+    b.rect(7 + r.lean, torsoY + 1, 10, 8, '#242430');
+    // Họa tiết mây đỏ Akatsuki
+    b.rect(9 + r.lean, torsoY + 3, 4, 3, '#d42222');
+    b.rect(10 + r.lean, torsoY + 2, 2, 5, '#e03030');
+    b.set(8 + r.lean, torsoY + 4, '#ffffff'); // viền mây trắng
   } else {
-    b.rect(x + 1, y + 4, 2, 1, color);
-    b.set(x, y + 5, clothDk);
+    // Áo giáp Jonin/Chunin màu rêu đặc trưng Naruto
+    b.rect(6 + r.lean, torsoY, 12, 7, '#2b4d32');
+    b.rect(7 + r.lean, torsoY + 1, 10, 5, '#3b6643');
+    // 2 túi nhẫn cụ trước ngực
+    b.rect(7 + r.lean, torsoY + 3, 2, 3, '#1f3824');
+    b.rect(13 + r.lean, torsoY + 3, 2, 3, '#1f3824');
   }
-  // Máscara: cobre do nariz ao queixo (linhas 8-10), deixando olhos e bochechas.
-  if (r.view === 'down') {
-    b.rect(x + 3, y + 8, 9, 3, cloth);
-    b.hline(x + 3, x + 11, y + 10, clothDk);
-    b.set(x + 7, y + 8, color);
-  } else if (r.view === 'side') {
-    b.rect(x + 2, y + 8, 8, 3, cloth);
-    b.hline(x + 2, x + 9, y + 10, clothDk);
+
+  // 2. Băng đô bảo hộ trán (Hitai-ate) - đặt ở đường viền trán phía trên chân mày (y + 5..7)
+  b.rect(x + 1, y + 5, 12, 3, color);
+  b.hline(x + 1, x + 12, y + 5, cloth);
+  // Tấm kim loại hộ trán sáng loáng ở giữa trán
+  b.rect(x + 4, y + 5, 6, 3, '#d8e2ed');
+  b.set(x + 5, y + 5, '#ffffff');
+  b.set(x + 7, y + 7, '#748094');
+  if (isAkatsuki) {
+    // Vết gạch ngang phản bội làng của Akatsuki
+    b.hline(x + 4, x + 9, y + 6, '#a61c1c');
+  }
+
+  // Cauda/Dải vải bay phía sau
+  if (r.view === 'side') {
+    b.rect(x + 11, y + 6, 3, 2, color);
+    b.rect(x + 13, y + 8, 2, 3, clothDk);
   } else {
-    // De costas: só o nó da faixa, sem máscara.
-    b.rect(x + 6, y + 8, 3, 2, clothDk);
+    b.rect(x - 1, y + 6, 2, 2, color);
+    b.rect(x - 2, y + 8, 2, 3, clothDk);
+  }
+
+  // 3. Khẩu trang Ninja che mặt từ mũi xuống cằm
+  if (r.view === 'down') {
+    b.rect(x + 3, y + 9, 8, 4, cloth);
+    b.hline(x + 3, x + 10, y + 12, clothDk);
+    b.set(x + 6, y + 10, color);
+  } else if (r.view === 'side') {
+    b.rect(x + 2, y + 9, 7, 4, cloth);
+    b.hline(x + 2, x + 8, y + 12, clothDk);
+  } else {
+    // Đằng sau gáy: nút thắt băng đô
+    b.rect(x + 5, y + 6, 4, 3, clothDk);
   }
 }
 

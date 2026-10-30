@@ -73,10 +73,7 @@ function detect(): Locale {
     } catch {
       // localStorage bloqueado (modo privado, iframe): segue para os idiomas do navegador.
     }
-    for (const l of g.navigator?.languages ?? [g.navigator?.language ?? '']) {
-      const n = normalizeLocale(l);
-      if (n) return n;
-    }
+    // Mặc định luôn ưu tiên tiếng Việt cho Habblaud Việt Nam/Naruto
     return 'vi';
   }
   const env = g.process?.env ?? {};

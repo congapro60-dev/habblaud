@@ -46,18 +46,20 @@ export const TINY_ZOOM = 0.6;
 const OVERVIEW_PER_ROOM = 1;
 const OVERVIEW_TOTAL = 4;
 
-const CORE_NAMES: Record<string, string> = {
-  'core:recepcao': tr('Recepção'),
-  'core:banheiros': tr('Banheiros'),
-  'core:copa': tr('Copa'),
-  'core:lounge': tr('Phòng giám đốc'),
-  'core:claude': tr('Phòng Claude'),
-  'core:codex': tr('Phòng Codex'),
-  'core:gemini': tr('Phòng Gemini / Antigravity'),
-  'core:opencode': tr('Phòng OpenCode / 9Router'),
-  'core:review': tr('Phòng Review'),
-  'core:archive': tr('Kho lưu trữ'),
-};
+function getCoreNames(): Record<string, string> {
+  return {
+    'core:recepcao': 'Cổng Làng (Konoha Gate) ⛩️',
+    'core:banheiros': 'Khu Suối Nước Nóng ♨️',
+    'core:copa': 'Quán Mì Ichiraku 🍜',
+    'core:lounge': 'Dinh Hokage (Tổng bộ) ⛩️',
+    'core:claude': 'Làng Lá (Konoha) 🍃',
+    'core:codex': 'Làng Cát (Sunagakure) ⏳',
+    'core:gemini': 'Làng Đá (Iwagakure) 🪨',
+    'core:opencode': 'Làng Sương (Kirigakure) 🌫️',
+    'core:review': 'Làng Mây (Kumogakure) ⚡',
+    'core:archive': 'Thư viện Bí thuật 📜',
+  };
+}
 
 /** Trưởng phòng gắn với phòng vật lý. Luôn render biểu tượng; không phụ thuộc task đang chạy. */
 export const CORE_HEADS: Readonly<Record<string, { name: string; symbol: string; color: string }>> = {
@@ -455,13 +457,14 @@ export class Overlay {
     const vh = camera.viewH;
     // largura de uma coluna na tela: as pílulas não podem invadir a vizinha
     const colW = COL_W * TILE * zoom;
+    const coreNames = getCoreNames();
     for (const vis of this.renderer.areas.values()) {
       const room = vis.room;
       const r = vis.layout.rect;
       const anim = room ? buildAnim(room.phase, room.progress(now)) : null;
       // texto da placa quando ela fica grande o bastante para ler; senão, o nome flutuante
       const rect = this.renderer.signRect(vis);
-      const text = room ? room.info.name : CORE_NAMES[vis.id] ?? (vis.id === 'core:recepcao' ? 'Habblaud' : null);
+      const text = room ? room.info.name : coreNames[vis.id] ?? (vis.id === 'core:recepcao' ? 'Habblaud' : null);
       const readable = !!rect && rect.h * zoom >= SIGN_MIN_PX;
       if (readable && rect && text && (!anim || anim.sign >= 1)) {
         const ax = this.sx(rect.x);
@@ -483,8 +486,8 @@ export class Overlay {
         // endereço antigo de uma mudança: o nome já está na sala nova
         if (!room.present || room.ghost || (anim && anim.walls < 0.6)) continue;
         this.drawRoomPill(room.info.name, cx, cy, colW - 8, room.accounts, this.countIn(room.id), room.theme.accent, room.lightOn);
-      } else if (CORE_NAMES[vis.id]) {
-        this.drawCorePill(CORE_NAMES[vis.id], cx, cy, colW - 8);
+      } else if (coreNames[vis.id]) {
+        this.drawCorePill(coreNames[vis.id], cx, cy, colW - 8);
       }
     }
     this.drawHeadTravels(now);

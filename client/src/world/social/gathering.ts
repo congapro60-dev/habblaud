@@ -34,7 +34,7 @@ export const KINDS: Readonly<Record<GatherKind, KindInfo>> = {
   pingpong: { label: tr('Jogando pingue-pongue'), emoji: '🏓', min: 2, max: 4, match: true },
   kitchen: { label: tr('Papo na copa'), emoji: '☕', min: 2, max: 4 },
   talk: { label: tr('Conversando'), emoji: '💬', min: 2, max: 2 },
-  rps: { label: tr('Jokenpô'), emoji: '✊', min: 2, max: 4, match: true },
+  rps: { label: 'Tỉ Thí Nhẫn Thuật', emoji: '⚔️', min: 2, max: 4, match: true },
   mirror: { label: tr('Se arrumando no espelho'), emoji: '💄', min: 1, max: 2, solo: true },
 };
 
@@ -110,13 +110,13 @@ export function active(g: Gathering): Member[] {
 // ---------------------------------------------------------------- escolha da atividade
 
 const BASE: Readonly<Record<GatherKind, number>> = {
-  tv: 10,
-  videogame: 9,
-  arcade: 5,
-  pingpong: 9,
-  kitchen: 12,
-  talk: 8,
-  rps: 8,
+  tv: 5,
+  videogame: 6,
+  arcade: 4,
+  pingpong: 6,
+  kitchen: 8,
+  talk: 6,
+  rps: 28, // Ưu tiên hàng đầu cho các nhẫn giả tỉ thí nhẫn thuật ngoài hành lang và văn phòng
   mirror: 2,
 };
 

@@ -1050,8 +1050,9 @@ export class Social {
       g.gestures = [ga, gb];
       this.act(a, 'rps', ga, 2_200, now);
       this.act(b, 'rps', gb, 2_200, now);
-      ca.setIcon(GESTURE_ICON[ga], 2_200, now);
-      cb.setIcon(GESTURE_ICON[gb], 2_200, now);
+      // Hiển thị tia sét / tia lôi độn hoặc ngôi sao chiêu thức
+      ca.setIcon(ga === 'rock' ? 'lightning' : ga === 'scissors' ? 'star' : 'idea', 2_200, now);
+      cb.setIcon(gb === 'rock' ? 'lightning' : gb === 'scissors' ? 'star' : 'idea', 2_200, now);
       g.step = 4;
       g.nextAt = now + 1_500;
       return;

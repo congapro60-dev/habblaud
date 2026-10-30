@@ -1765,7 +1765,20 @@ export class Sim {
       case 'stretch': {
         const home = ch.homeSpot;
         if (!home) return false;
-        steps.push({ t: 'exit' }, { t: 'act', pose: 'stretch', ms: 2600 }, { t: 'enter', spot: home });
+        // Nhẫn giả đứng dậy kết ấn luyện Chakra hoặc biểu diễn chiêu thức
+        const isNinjaJutsu = rng() < 0.65;
+        if (isNinjaJutsu) {
+          const jutsuIcons: Array<'lightning' | 'star' | 'idea'> = ['lightning', 'star', 'idea'];
+          const icon = jutsuIcons[Math.floor(rng() * jutsuIcons.length)];
+          steps.push(
+            { t: 'exit' },
+            { t: 'act', pose: 'rps', held: 'none', ms: 1400 }, // Kết ấn tay
+            { t: 'act', pose: 'cheer', ms: 1600, icon },       // Bộc phát Chakra
+            { t: 'enter', spot: home },
+          );
+        } else {
+          steps.push({ t: 'exit' }, { t: 'act', pose: 'stretch', ms: 2600 }, { t: 'enter', spot: home });
+        }
         steps.push({ t: 'do', fn: () => (ch.nextOutingAt = this.now + idleSitMs(ch.rng, this.options().liveliness)) });
         ch.queue.push(...steps);
         return true;
