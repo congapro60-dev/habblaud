@@ -11251,3 +11251,370 @@ html.is-replay #world {
 .ui-battle__champ::before { content: '🏆 '; }
 .ui-battle__confetti { position: absolute; bottom: 10px; font-size: 16px; pointer-events: none; animation: ui-battle-confetti 2.4s ease-in forwards; }
 @keyframes ui-battle-confetti { 0% { opacity: 0; transform: translateY(0) rotate(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-150px) rotate(220deg); } }
+
+/* ── HUD Điều Khiển Nhẫn Giả (Player Ninja Control HUD) ──────────── */
+.ui-btn--ninja-control {
+  border-color: rgba(255, 181, 71, 0.45);
+  background: rgba(255, 181, 71, 0.1);
+  color: #ffd79a;
+  font-weight: 600;
+}
+
+.ui-btn--ninja-control:hover {
+  background: rgba(255, 181, 71, 0.22);
+  border-color: rgba(255, 181, 71, 0.75);
+}
+
+.ui-btn--ninja-control.is-on {
+  background: linear-gradient(135deg, rgba(255, 136, 0, 0.35), rgba(255, 181, 71, 0.45));
+  border-color: #ffaa00;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(255, 170, 0, 0.4);
+}
+
+.ui-ninja-hud {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 55;
+  pointer-events: auto;
+  user-select: none;
+  animation: ui-ninja-hud-in 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.ui-ninja-hud[hidden] {
+  display: none !important;
+}
+
+@keyframes ui-ninja-hud-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.ui-ninja-hud__inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(840px, calc(100vw - 24px));
+  padding: 8px 14px 8px 10px;
+  border-radius: 14px;
+  background: rgba(14, 18, 28, 0.94);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 181, 71, 0.35);
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.ui-ninja-hud.is-controlling .ui-ninja-hud__inner {
+  border-color: #ff9d00;
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.75),
+    0 0 20px rgba(255, 157, 0, 0.28),
+    inset 0 1px 0 rgba(255, 200, 100, 0.2);
+}
+
+.ui-ninja-hud__avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 181, 71, 0.5);
+  background: #111726;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.ui-ninja-hud__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.ui-ninja-hud__avatar-fallback {
+  font-size: 22px;
+}
+
+.ui-ninja-hud__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 380px;
+}
+
+.ui-ninja-hud__title {
+  font: 700 13px/1.2 var(--font-px);
+  color: #ffd79a;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ui-ninja-hud__hint {
+  font: 500 11px/1.3 var(--font-ui);
+  color: #a4b2c9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ui-ninja-hud__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.ui-ninja-hud__btn-challenge {
+  min-height: 36px;
+  padding: 0 14px;
+  font: 700 12px/1 var(--font-px);
+  letter-spacing: 0.03em;
+  color: #121824;
+  background: linear-gradient(180deg, #ffdc73, #f5a623);
+  border: 1px solid #d48b11;
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.35);
+}
+
+.ui-ninja-hud__btn-challenge:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.ui-ninja-hud__btn-challenge.can-duel {
+  animation: ui-btn-duel-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ui-btn-duel-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 170, 0, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 170, 0, 0);
+  }
+}
+
+.ui-ninja-hud__btn-control {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 12px;
+  border-color: rgba(255, 181, 71, 0.4);
+  color: #ffd79a;
+}
+
+.ui-ninja-hud__btn-exit {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #ff9b9b;
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
+.ui-ninja-hud__btn-exit:hover {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.6);
+}
+
+@media (max-width: 760px) {
+  .ui-ninja-hud {
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    width: calc(100vw - 16px);
+  }
+
+  .ui-ninja-hud__inner {
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .ui-ninja-hud__info {
+    max-width: calc(100% - 60px);
+  }
+
+  .ui-ninja-hud__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .ui-ninja-hud__btn-challenge {
+    flex: 1;
+    min-height: 40px;
+  }
+}
+
+/* ── Banner Màn Thi Đấu Team & Đại Chiến Nhẫn Giả Kinh Điển ──────── */
+.ui-ninja-war {
+  position: fixed;
+  top: calc(54px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  pointer-events: auto;
+  user-select: none;
+  transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.ui-ninja-war__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 320px;
+  max-width: min(860px, calc(100vw - 24px));
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: rgba(14, 20, 32, 0.92);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 181, 71, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+  text-align: center;
+}
+
+.ui-ninja-war.is-idle .ui-ninja-war__inner {
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 12px;
+  background: rgba(14, 20, 32, 0.85);
+  border-color: rgba(255, 181, 71, 0.25);
+}
+
+.ui-ninja-war.is-idle .ui-ninja-war__title {
+  font: 700 12px/1.2 var(--font-px);
+  color: #f6c876;
+  white-space: nowrap;
+}
+
+.ui-ninja-war.is-idle .ui-ninja-war__subtitle {
+  display: none;
+}
+
+.ui-ninja-war.is-active .ui-ninja-war__inner {
+  padding: 10px 18px;
+  border-color: #ff9900;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.8),
+    0 0 24px rgba(255, 153, 0, 0.35),
+    inset 0 1px 0 rgba(255, 220, 120, 0.3);
+  animation: ui-ninja-war-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ui-ninja-war-pulse {
+  0%, 100% {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 153, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(255, 153, 0, 0.55);
+  }
+}
+
+.ui-ninja-war__title {
+  font: 700 14px/1.2 var(--font-px);
+  color: #ffd79a;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.ui-ninja-war__subtitle {
+  font: 500 11.5px/1.3 var(--font-ui);
+  color: #c7d5ec;
+}
+
+.ui-ninja-war__teams {
+  font: 600 12px/1.3 var(--font-ui);
+  color: #ffd27a;
+  margin-top: 2px;
+}
+
+.ui-ninja-war__bar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 4px;
+}
+
+.ui-ninja-war__bar-a {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #2563eb);
+  transition: width 0.3s ease;
+}
+
+.ui-ninja-war__bar-b {
+  height: 100%;
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  transition: width 0.3s ease;
+}
+
+.ui-ninja-war__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ui-ninja-war__timer {
+  font: 600 11.5px/1 var(--font-px);
+  color: #ffd79a;
+  white-space: nowrap;
+}
+
+.ui-ninja-war__btn-trigger {
+  min-height: 28px;
+  padding: 0 10px;
+  font: 700 11px/1 var(--font-px);
+  letter-spacing: 0.02em;
+  color: #111726;
+  background: linear-gradient(180deg, #ffdd75, #f5a623);
+  border: 1px solid #d48b11;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(245, 166, 35, 0.3);
+  cursor: pointer;
+}
+
+.ui-ninja-war__btn-trigger:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 3px 12px rgba(245, 166, 35, 0.5);
+}
+
+@media (max-width: 760px) {
+  .ui-ninja-war {
+    top: calc(48px + env(safe-area-inset-top, 0px));
+    width: calc(100vw - 16px);
+  }
+
+  .ui-ninja-war__inner {
+    min-width: 0;
+    max-width: 100%;
+    padding: 6px 10px;
+  }
+
+  .ui-ninja-war.is-idle .ui-ninja-war__inner {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ui-ninja-war__title {
+    font-size: 12px;
+  }
+
+  .ui-ninja-war__subtitle {
+    font-size: 10.5px;
+  }
+}

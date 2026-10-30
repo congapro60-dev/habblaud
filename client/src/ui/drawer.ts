@@ -213,6 +213,7 @@ class AgentView {
   private dot: HTMLElement;
   private statusText: HTMLElement;
   private statusSince: HTMLElement;
+  private controlBtn: HTMLButtonElement;
   private followBtn: HTMLButtonElement;
   private termBtn: HTMLButtonElement;
   private termLabel: HTMLElement;
@@ -293,6 +294,14 @@ class AgentView {
     this.dot = createStatusDot();
     this.statusText = h('span', { class: 'ui-status__text' });
     this.statusSince = h('span', { class: 'ui-status__since' });
+    this.controlBtn = h('button', {
+      class: 'ui-btn ui-btn--ninja-control',
+      type: 'button',
+      attrs: { 'aria-pressed': 'false' },
+      title: tr('Điều khiển nhẫn giả di chuyển và khiêu chiến (C)'),
+      on: { click: () => this.toggleControl() },
+    });
+    this.controlBtn.append(h('span', { text: '🎮 Điều khiển (C)' }));
     this.followBtn = h('button', { class: 'ui-btn', type: 'button', attrs: { 'aria-pressed': 'false' }, title: tr('Câmera acompanha o agente (F)'), on: { click: () => this.toggleFollow() } });
     this.followBtn.innerHTML = ICONS.follow;
     this.followBtn.append(h('span', { text: tr('Seguir') }));
@@ -303,7 +312,7 @@ class AgentView {
       'div',
       { class: 'ui-status' },
       h('span', { class: 'ui-status__label' }, this.dot, this.statusText, this.statusSince),
-      h('span', { class: 'ui-status__actions' }, this.followBtn, centerBtn),
+      h('span', { class: 'ui-status__actions' }, this.controlBtn, this.followBtn, centerBtn),
     );
 
     // Terminal: a conversa da sessão como o Claude Code mostra, ao vivo (só com acesso local).
@@ -513,6 +522,17 @@ class AgentView {
     this.ctx.invalidate();
   }
 
+  toggleControl(): void {
+    if (!this.id) return;
+    const current = this.ctx.world.getControlledAgent?.();
+    if (current === this.id) {
+      this.ctx.world.controlAgent?.(null);
+    } else {
+      this.ctx.world.controlAgent?.(this.id);
+    }
+    this.ctx.invalidate();
+  }
+
   toggleFollow(): void {
     const follow = !this.ctx.world.getOptions().followSelected;
     this.ctx.world.setOptions({ followSelected: follow });
@@ -566,6 +586,10 @@ class AgentView {
     const following = this.ctx.world.getOptions().followSelected;
     setAttr(this.followBtn, 'aria-pressed', String(following));
     this.followBtn.classList.toggle('is-on', following);
+    const isControlled = this.ctx.world.getControlledAgent?.() === a.id;
+    setAttr(this.controlBtn, 'aria-pressed', String(isControlled));
+    this.controlBtn.classList.toggle('is-on', isControlled);
+    setText(this.controlBtn, isControlled ? '🎮 Đang lái (C)' : '🎮 Điều khiển (C)');
     this.renderTerminalButton(!!live);
 
     // Alerta.
@@ -998,6 +1022,10 @@ export class Drawer implements UiComponent {
   /** Solta do lugar (arrastada pela barra). */
   get floating(): boolean {
     return this.movable.floating;
+  }
+
+  toggleControl(): void {
+    if (this.mode === 'agent') this.agentView.toggleControl();
   }
 
   toggleFollow(): void {

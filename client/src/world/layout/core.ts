@@ -198,7 +198,7 @@ export function layoutLounge(): AreaLayout {
   const b = new AreaBuilder(LOUNGE_ID, 'lounge', { x: COL_W, y: SOUTH_Y, w: COL_W, h: ROOM_H });
   const wall = CORE_WALLS.lounge;
   b.floor('wood', 0, 0, 16, 12, 401);
-  b.rug(1.5, 3.2, 7, 5.2, '#4f8a5b', 402);
+  b.rug(1.5, 3.2, 7, 5.2, '#4f8a5b', 5); // Gia tộc Uchiha / Hỏa Độn (Quạt Uchiwa)
   b.rug(9.2, 4.6, 5.6, 4.4, '#d7c8a8', 403);
   // parede com TV a oeste; vidro a leste; passagem larga no meio
   b.face(0.5, 6.5, wall);
@@ -284,9 +284,6 @@ function layoutDepartment(id: string, col: number, side: 'north' | 'south', seed
   b.furn('bookshelf', 1, 2, undefined, { order: 0.3 });
   b.furn('plant_small', 14, 9, 'fern', { order: 0.3 });
   b.furn('plant_tall', 14, 2, 'ficus', { order: 0.2 });
-  // Điểm tỉ thí nhẫn thuật ngay trong phòng làm việc
-  b.spot('talk', 4, 8, 'right', { group: `talk:dept:${id}`, dx: -1 });
-  b.spot('talk', 5, 8, 'left', { group: `talk:dept:${id}`, dx: 1 });
   b.spot('switch', 13, north ? 9 : 2, north ? 'down' : 'up');
   return b.build();
 }
@@ -301,11 +298,11 @@ export function departmentAreas(): AreaLayout[] {
     archive: { base: '#e8dcce', trim: '#7a5a3a', pattern: 'wood_panel' }, // Thư viện Bí thuật
   } as const;
   return [
-    layoutDepartment(CLAUDE_ID, 2, 'north', 501, palette.claude),
-    layoutDepartment(CODEX_ID, 2, 'south', 502, palette.codex),
-    layoutDepartment(GEMINI_ID, 3, 'north', 503, palette.gemini),
-    layoutDepartment(OPENCODE_ID, 3, 'south', 504, palette.opencode),
-    layoutDepartment(REVIEW_ID, 4, 'north', 505, palette.review),
-    layoutDepartment(ARCHIVE_ID, 4, 'south', 506, palette.archive),
+    layoutDepartment(CLAUDE_ID, 2, 'north', 0, palette.claude), // Làng Lá Konoha (🍃 Mộc Diệp)
+    layoutDepartment(CODEX_ID, 2, 'south', 1, palette.codex),   // Làng Cát Sunagakure (⏳ Sa Mạc)
+    layoutDepartment(GEMINI_ID, 3, 'north', 6, palette.gemini),  // Làng Đá Iwagakure (🪨 Thạch Khảm)
+    layoutDepartment(OPENCODE_ID, 3, 'south', 4, palette.opencode), // Làng Sương Mù Kirigakure (🌫️ Thủy Ba)
+    layoutDepartment(REVIEW_ID, 4, 'north', 2, palette.review),  // Làng Mây Kumogakure (⚡ Lôi Vân)
+    layoutDepartment(ARCHIVE_ID, 4, 'south', 9, palette.archive), // Tiên Nhân Động Diệu Mộc Sơn (🐸 Chữ Dầu 油)
   ];
 }

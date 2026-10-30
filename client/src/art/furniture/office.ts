@@ -72,142 +72,124 @@ function deskBody(s: BufSprite, m: DeskMats, seed: number, back: boolean): void 
   b.set(0, 6, m.edge.lt);
 }
 
-/** Objetos sobre a mesa (Bãi tập ném phi tiêu, bia Shuriken, cuộn bí kíp nhẫn thuật, giá kiếm Katana & bùa nổ). */
+/** Bãi tập nhẫn thuật, bia Shuriken, cọc mộc nhân thể thuật, cuộn bí kíp nhẫn thuật, giá gác Katana & bùa nổ. */
 function deskTop(s: BufSprite, seed: number, tone: DeskItemTone): { screen: Box; screen2?: Box } {
   const b = s.buf;
-  const r = rngOf(seed, 11);
-  const v = seed % 6;
-  const mugC = pick(r, MUG_COLORS);
+  const v = seed % 4;
   let screen: Box;
   let screen2: Box | undefined;
-  switch (v) {
-    case 1: {
-      screen = monitorFront(b, 2, -17, 16, 11);
-      screen2 = monitorFront(b, 18, -16, 13, 10);
-      staticScreen(b, screen2, 'sheet', seed);
-      keyboard(b, 6, -1, 11, tone);
-      mouse(b, 20, 0, tone);
-      mug(b, 26, -2, mugC);
-      break;
-    }
-    case 2: {
-      screen = monitorFront(b, 5, -17, 16, 11);
-      b.rect(22, -9, 9, 6, '#3a404d');
-      b.hline(22, 30, -9, '#4d5464');
-      screen2 = { x: 23, y: -8, w: 7, h: 4 };
-      staticScreen(b, screen2, 'ide', seed);
-      b.rect(21, -3, 11, 2, '#c9ced6');
-      b.hline(21, 31, -2, '#9aa1ad');
-      b.hline(22, 31, -1, tone === 'onLight' ? 'rgba(40,46,70,0.3)' : 'rgba(60,40,40,0.2)');
-      keyboard(b, 8, -1, 10, tone);
-      smallSucculent(b, 1, -3);
-      break;
-    }
-    case 3: {
-      screen = monitorFront(b, 8, -17, 16, 11);
-      b.rect(22, -15, 2, 2, '#f7d154');
-      b.rect(9, -15, 2, 2, '#ff9fb2');
-      keyboard(b, 11, -1, 10, tone);
-      mouse(b, 23, 0, tone);
-      photoFrame(b, 2, -5);
-      papers(b, 24, -4, 6, 4, tone);
-      mug(b, 3, 0, mugC);
-      break;
-    }
-    case 4: {
-      screen = monitorFront(b, 4, -17, 15, 11);
-      screen2 = monitorFront(b, 19, -17, 12, 10);
-      staticScreen(b, screen2, 'chart', seed);
-      keyboard(b, 7, -1, 11, tone);
-      mouse(b, 21, 0, tone);
-      papers(b, 1, -2, 5, 4, tone);
-      break;
-    }
-    case 5: {
-      screen = monitorFront(b, 8, -17, 16, 11);
-      keyboard(b, 11, -1, 10, tone);
-      mouse(b, 23, 0, tone);
-      b.hline(2, 6, -4, '#3a3f4b');
-      b.set(1, -3, '#3a3f4b');
-      b.set(7, -3, '#3a3f4b');
-      b.rect(1, -2, 2, 2, '#e2604f');
-      b.rect(6, -2, 2, 2, '#e2604f');
-      mug(b, 26, -3, mugC);
-      pencilCup(b, 28, 2);
-      break;
-    }
-    default: {
-      screen = monitorFront(b, 8, -17, 16, 11);
-      keyboard(b, 11, -1, 10, tone);
-      mouse(b, 23, 0, tone);
-      mug(b, 3, -2, mugC);
-      papers(b, 25, -4, 6, 4, tone);
-      smallSucculent(b, 26, 2);
-      break;
-    }
+
+  if (v === 0) {
+    // 1. BIA TẬP NÉM PHI TIÊU SHURIKEN GỖ SỒI
+    screen = { x: 7, y: -18, w: 18, h: 12 };
+    const scx = screen.x;
+    const scy = screen.y;
+    const scw = screen.w;
+    const sch = screen.h;
+
+    // Chân giá đỡ gỗ chữ A
+    b.line(scx + 2, scy + sch, scx + 5, scy + sch + 4, '#78350f');
+    b.line(scx + scw - 3, scy + sch, scx + scw - 6, scy + sch + 4, '#78350f');
+
+    // Tấm bia gỗ sồi dày dặn
+    b.rect(scx, scy, scw, sch, '#854d0e');
+    b.rect(scx + 1, scy + 1, scw - 2, sch - 2, '#a16207');
+    // Vòng tròn đồng tâm tập ném (trắng - đỏ - vàng)
+    const tcx = scx + Math.floor(scw / 2);
+    const tcy = scy + Math.floor(sch / 2);
+    b.ellipse(tcx, tcy, 6, 4, '#f8fafc');
+    b.ellipse(tcx, tcy, 4, 2.5, '#dc2626');
+    b.set(tcx, tcy, '#fde047'); // Hồng tâm vàng
+
+    // Phi tiêu Shuriken 4 cánh bằng thép sắc bén cắm ngập vào hồng tâm
+    b.set(tcx - 2, tcy - 1, '#cbd5e1');
+    b.set(tcx - 3, tcy - 1, '#475569');
+    b.set(tcx - 1, tcy - 1, '#475569');
+    b.set(tcx - 2, tcy - 2, '#475569');
+    b.set(tcx - 2, tcy, '#475569');
+
+    // Dao găm Kunai cắm chéo vào góc trên bia
+    b.line(tcx + 3, tcy - 3, tcx + 6, tcy - 5, '#cbd5e1');
+    b.set(tcx + 7, tcy - 6, '#ef4444'); // Dây nơ đỏ đuôi Kunai
+
+  } else if (v === 1) {
+    // 2. CỌC GỖ MỘC NHÂN VÕ QUÁN LUYỆN THỂ THUẬT (WOODEN DUMMY)
+    screen = { x: 10, y: -20, w: 12, h: 14 };
+    const cx = 16;
+    // Thân trụ gỗ mộc nhân
+    b.rect(cx - 3, -19, 7, 16, '#78350f');
+    b.vline(cx - 3, -19, -4, '#9a3412');
+    b.vline(cx + 3, -19, -4, '#451a03');
+    // 3 Cánh tay gỗ mộc nhân chĩa ra 2 bên để luyện quyền cước
+    b.rect(cx - 7, -15, 4, 2, '#a16207'); // Tay trái trên
+    b.rect(cx + 4, -13, 4, 2, '#a16207'); // Tay phải giữa
+    b.rect(cx - 6, -9, 4, 2, '#a16207');  // Chân gỗ dưới
+    // Vòng dây thừng bện cuốn quanh thân cọc chịu đòn
+    b.hline(cx - 3, cx + 3, -11, '#ca8a04');
+    b.hline(cx - 3, cx + 3, -7, '#ca8a04');
+
+  } else if (v === 2) {
+    // 3. ĐÔI BIA PHI TIÊU SHURIKEN ĐÔI & TẤM TRE TREO PHÙ CHÚ
+    screen = { x: 3, y: -17, w: 14, h: 11 };
+    screen2 = { x: 19, y: -16, w: 11, h: 10 };
+    // Bia 1 (bên trái)
+    b.rect(3, -17, 14, 11, '#854d0e');
+    b.ellipse(10, -12, 4.5, 3, '#f8fafc');
+    b.ellipse(10, -12, 2.5, 1.8, '#dc2626');
+    b.set(10, -12, '#fde047');
+    // Phi tiêu cắm
+    b.set(12, -13, '#94a3b8');
+    b.set(13, -13, '#cbd5e1');
+
+    // Tấm thẻ gỗ bùa chú phong ấn (bên phải)
+    b.rect(19, -16, 11, 10, '#451a03');
+    b.rect(20, -15, 9, 8, '#fef9c3'); // Bùa giấy vàng
+    b.set(24, -12, '#dc2626'); // Ký tự phong ấn đỏ
+    b.set(24, -10, '#09090b');
+
+  } else {
+    // 4. BÃI LUYỆN NHẪN THUẬT VỚI BIA GỖ & GIÁ KATANA BẢO KIẾM
+    screen = { x: 8, y: -18, w: 16, h: 12 };
+    b.rect(8, -18, 16, 12, '#854d0e');
+    b.rect(9, -17, 14, 10, '#a16207');
+    b.ellipse(16, -12, 5, 3.5, '#f8fafc');
+    b.ellipse(16, -12, 3, 2, '#dc2626');
+    b.set(16, -12, '#fde047');
+    // 2 mũi Kunai cắm
+    b.set(14, -13, '#cbd5e1');
+    b.set(18, -11, '#cbd5e1');
   }
 
-  // BIẾN THÀNH BÃI TẬP NÉM PHI TIÊU & BIA LUYỆN VÕ NINJA (SHURIKEN TARGET & SHINOBI WEAPON STATION)
-  const scx = screen.x;
-  const scy = screen.y;
-  const scw = screen.w;
-  const sch = screen.h;
-
-  // 1. Bia tập ném phi tiêu bằng gỗ (Shuriken Target) phủ lên khung
-  // Vành bia gỗ sồi dày dặn
-  b.rect(scx, scy, scw, sch, '#854d0e');
-  b.rect(scx + 1, scy + 1, scw - 2, sch - 2, '#a16207');
-  // Vòng tròn đồng tâm hồng tâm tập ném phi tiêu (trắng - đỏ - vàng)
-  const tcx = scx + Math.floor(scw / 2);
-  const tcy = scy + Math.floor(sch / 2);
-  b.ellipse(tcx, tcy, 5, 3.5, '#f8fafc');
-  b.ellipse(tcx, tcy, 3, 2, '#dc2626');
-  b.set(tcx, tcy, '#fde047'); // Hồng tâm vàng
-
-  // 2. Phi tiêu Shuriken 4 cánh bằng thép sắc bén cắm ngập vào bia
-  b.set(tcx - 3, tcy - 1, '#cbd5e1'); // tâm phi tiêu
-  b.set(tcx - 4, tcy - 1, '#64748b'); // 4 cánh sắt
-  b.set(tcx - 2, tcy - 1, '#64748b');
-  b.set(tcx - 3, tcy - 2, '#64748b');
-  b.set(tcx - 3, tcy, '#64748b');
-
-  // Dao găm Kunai cắm chéo vào góc bia gỗ
-  b.line(tcx + 2, tcy - 2, tcx + 5, tcy - 4, '#cbd5e1');
-  b.set(tcx + 6, tcy - 5, '#ef4444'); // dây đỏ đuôi Kunai
-
-  // 3. Cuộn Bí Kíp Nhẫn Thuật (Shinobi Jutsu Scroll) trải trên mặt bàn
-  b.rect(3, -2, 11, 4, '#fef08a'); // giấy da cổ
-  b.hline(3, 13, -2, '#ca8a04'); // mép cuộn trục
+  // CÁC VẬT PHẨM TRÊN BÀN TẬP: CUỘN BÍ KÍP, GIÁ KIẾM KATANA, BÙA NỔ, HỒ LÔ VÕ QUÁN
+  // 1. Cuộn Bí Kíp Nhẫn Thuật (Shinobi Scroll) trải rộng trên bàn
+  b.rect(3, -2, 11, 4, '#fef08a');
+  b.hline(3, 13, -2, '#ca8a04');
   b.hline(3, 13, 1, '#ca8a04');
-  b.vline(3, -2, 1, '#78350f'); // trục gỗ hai bên
+  b.vline(3, -2, 1, '#78350f');
   b.vline(13, -2, 1, '#78350f');
-  // Phù chú ký tự phong ấn màu đỏ/đen
   b.set(5, -1, '#dc2626');
   b.set(7, -1, '#09090b');
   b.set(9, -1, '#dc2626');
   b.set(11, -1, '#09090b');
 
-  // 4. Giá gác kiếm Katana Ninja hoặc Bùa Nổ (Kibaku Fuda)
+  // 2. Giá gác bảo kiếm Katana sơn mài hoặc Bùa nổ Kibaku Fuda
   if (v % 2 === 0) {
-    // Giá gác bảo kiếm Katana/Tanto sơn mài đen
     b.rect(17, -3, 11, 2, '#18181b');
-    b.set(18, -4, '#18181b'); // mấu gác kiếm
+    b.set(18, -4, '#18181b');
     b.set(26, -4, '#18181b');
-    // Thanh kiếm Katana vỏ đen tuyền chuôi quấn băng trắng
     b.hline(16, 27, -5, '#09090b');
-    b.hline(16, 19, -5, '#f8fafc'); // chuôi kiếm
-    b.set(20, -5, '#f59e0b'); // tsuba kiếm vàng
+    b.hline(16, 19, -5, '#f8fafc'); // chuôi quấn băng trắng
+    b.set(20, -5, '#f59e0b');       // tsuba vàng
   } else {
-    // Bùa nổ Kibaku Fuda (Explosive Tag)
     b.rect(19, -3, 6, 4, '#fef9c3');
     b.rect(20, -2, 4, 2, '#dc2626');
-    b.set(21, -2, '#fef9c3'); // chữ "Bộc" (爆)
+    b.set(21, -2, '#fef9c3');
     b.set(22, -1, '#fef9c3');
   }
 
-  // 5. Hồ Lô thuốc võ đạo (Gourd) đựng tiên dược hồi phục Chakra
+  // 3. Hồ Lô thuốc võ đạo đựng nước thần Chakra
   b.ellipse(28, -2, 2, 2.5, '#78350f');
-  b.set(28, -5, '#dc2626'); // nút thắt đỏ
+  b.set(28, -5, '#dc2626');
 
   return { screen, screen2 };
 }
@@ -234,35 +216,34 @@ export function deskBack(variant: string | undefined, seed: number): BufFurnitur
   const m = deskMats(variant);
   const b = s.buf;
   deskBody(s, m, seed, true);
-  const r = rngOf(seed, 12);
   const v = seed % 4;
-  const mugC = pick(r, MUG_COLORS);
-  const tone = itemTone(variant);
-  // Verso em plástico claro / gỗ mộc sáng đảm bảo độ sáng
-  const plastic = variant === 'dark' ? 'mid' : 'light';
+
+  // MẶT SAU BÃI TẬP VÕ NINJA: KHUNG ĐỠ BIA PHI TIÊU GỖ CHỮ A & CỌC MỘC NHÂN
   if (v === 1) {
-    monitorBack(b, 2, -7, 15, 10, plastic);
-    monitorBack(b, 17, -6, 13, 9, plastic);
+    // Mặt sau cọc gỗ mộc nhân
+    b.rect(13, -19, 7, 16, '#78350f');
+    b.vline(13, -19, -4, '#9a3412');
+    b.vline(19, -19, -4, '#451a03');
+    // Chân chống và dây thừng buộc sau
+    b.line(16, 2, 16, -10, '#5c3d28');
+    b.hline(13, 19, -11, '#ca8a04');
   } else {
-    monitorBack(b, 8, -7, 16, 10, plastic);
-    if (v === 2) smallSucculent(b, 26, 0);
-    else papers(b, 25, -1, 6, 4, tone);
-    if (v === 3) photoFrame(b, 2, -3);
-    else mug(b, 2, 0, mugC);
+    // Khung gỗ mặt sau của bia tập ném phi tiêu
+    b.rect(7, -17, 18, 12, '#78350f');
+    b.rect(8, -16, 16, 10, '#5c3d28');
+    // 2 chân chống chữ A bằng gỗ đỡ mặt sau bia
+    b.line(9, 2, 11, -5, '#451a03');
+    b.line(22, 2, 20, -5, '#451a03');
+    // Mũi phi tiêu Shuriken và Kunai cắm xuyên thủng qua lưng bia
+    b.set(15, -12, '#94a3b8');
+    b.set(16, -12, '#cbd5e1');
+    b.set(18, -10, '#94a3b8');
   }
 
-  // KHUNG ĐỠ BIA PHI TIÊU GỖ & CỌC TẬP VÕ NINJA TỪ PHÍA SAU
-  // 1. Chân chống chữ A bằng gỗ đỡ mặt sau bia
-  b.line(9, 2, 11, -5, '#78350f');
-  b.line(22, 2, 20, -5, '#78350f');
-  // 2. Mũi phi tiêu Shuriken cắm xuyên thủng qua lưng bia
-  b.set(15, -4, '#94a3b8');
-  b.set(16, -4, '#cbd5e1');
-  b.set(18, -2, '#94a3b8');
-  // 3. Ống tre cắm phi tiêu Shuriken rèn luyện
+  // Ống tre cắm phi tiêu Shuriken rèn luyện
   b.rect(2, 0, 3, 4, '#15803d');
   b.set(3, -1, '#94a3b8');
-  // 4. Cuộn bí kíp đã cuộn tròn buộc dây đỏ
+  // Cuộn bí kíp đã cuộn tròn buộc dây đỏ
   b.rect(25, 0, 6, 2, '#fef08a');
   b.set(27, 0, '#dc2626');
 

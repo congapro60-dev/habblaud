@@ -49,11 +49,6 @@ export function layoutCorridor(cols: number): AreaLayout {
     if (!last && c % 2 === 1) b.furn('plant_tall', x + 15, 4, TALL[(c + 1) % TALL.length], { order: 0.5 });
     // passadeira estreita (um trecho por coluna), centrada no corredor
     b.rug(x + 2, 1.95, COL_W - 4, 1.1, RUNNERS[c % RUNNERS.length], 502 + c);
-    // Điểm tỉ thí nhẫn thuật và giao lưu dày đặc ngoài hành lang
-    b.spot('talk', x + 4, 2, 'right', { group: `talk:corredor:${c}:a`, dx: -1 });
-    b.spot('talk', x + 5, 2, 'left', { group: `talk:corredor:${c}:a`, dx: 1 });
-    b.spot('talk', x + 10, 2, 'right', { group: `talk:corredor:${c}:b`, dx: -1 });
-    b.spot('talk', x + 11, 2, 'left', { group: `talk:corredor:${c}:b`, dx: 1 });
   }
   return b.build();
 }

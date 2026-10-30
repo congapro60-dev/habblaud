@@ -162,10 +162,16 @@ function paintTile(b: PixelBuf, kind: FloorKind, tx: number, ty: number, o: Floo
       break;
     }
     case 'street': {
-      const n = noise(tx * TILE, ty * TILE, 64, o.seed + 9);
-      const col = mix('#4b4f58', '#565a63', n);
+      // Đường đất nện sỏi Làng Lá (Konoha Earth Path)
+      const n = noise(tx * TILE, ty * TILE, 48, o.seed + 9);
+      const col = mix('#855d36', '#9c7247', n);
       b.rect(0, 0, TILE, TILE, col);
-      for (let i = 0; i < 14; i++) b.set(Math.floor(r(i) * TILE), Math.floor(r(i + 30) * TILE), r(i + 60) < 0.5 ? '#5f636c' : '#43464e');
+      for (let i = 0; i < 16; i++) {
+        const sx = Math.floor(r(i) * TILE);
+        const sy = Math.floor(r(i + 30) * TILE);
+        const pebble = r(i + 60) < 0.4 ? '#684522' : r(i + 60) < 0.75 ? '#b88d5e' : '#573c24';
+        b.set(sx, sy, pebble);
+      }
       break;
     }
     default:
@@ -268,11 +274,11 @@ function paintMarble(b: PixelBuf, x0: number, y0: number, seed: number): void {
   }
 }
 
-const WALK_TONES = ['#d3cdc2', '#cfc8bc', '#d8d2c8'] as const;
-/** [tom][0 normal, 1 junta, 2 borda clara, 3 mancha]. */
-const WALK: readonly (readonly RGBA[])[] = WALK_TONES.map((t) => [t, '#b8b1a5', shade(t, 0.03), shade(t, -0.05)].map(rgba));
+const WALK_TONES = ['#9ca3af', '#6b7280', '#cbd5e1'] as const;
+/** [tom][0 normal, 1 vết rãnh đá, 2 rêu xanh phong rêu, 3 đá cuội sáng]. */
+const WALK: readonly (readonly RGBA[])[] = WALK_TONES.map((t) => [t, '#475569', '#3f6212', shade(t, 0.08)].map(rgba));
 
-/** Calçada de placas 16x8 em fileiras desencontradas. */
+/** Lối đi lát đá Tobishi rêu phong tự nhiên kiểu vườn đá Ninja Nhật Bản. */
 function paintSidewalk(b: PixelBuf, x0: number, y0: number, seed: number): void {
   for (let py = 0; py < CHUNK_PX; py++) {
     for (let px = 0; px < CHUNK_PX; px++) {
@@ -285,8 +291,8 @@ function paintSidewalk(b: PixelBuf, x0: number, y0: number, seed: number): void 
       const t = WALK[h3((wx + off) >> 4, row, 5, seed) % WALK.length];
       let k = 0;
       if (iy === 7 || ix === 15) k = 1;
-      else if (iy === 0 || ix === 0) k = 2;
-      else if (h3(wx, wy, 6, seed) % 41 === 0) k = 3;
+      else if ((ix === 0 || iy === 0) && h3(wx, wy, 8, seed) % 3 === 0) k = 2; // Rêu xanh
+      else if (h3(wx, wy, 6, seed) % 29 === 0) k = 3;
       b.put(px, py, t[k]);
     }
   }

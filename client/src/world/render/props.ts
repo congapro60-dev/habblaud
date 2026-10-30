@@ -197,40 +197,51 @@ function hedgeSprite(seed: number): PropSprite {
   return { canvas: c, ax: 17, ay: 14 };
 }
 
+/** Đèn lồng đá Tōrō truyền thống Nhật Bản của Làng Ninja. */
 function lampSprite(): PropSprite {
-  const [c, ctx] = makeCanvas(10, 36);
-  shadowEllipse(ctx, 5, 34, 4, 1, 0.25);
-  ctx.fillStyle = '#2e3648';
-  ctx.fillRect(4, 6, 2, 28);
-  ctx.fillStyle = '#4a5468';
-  ctx.fillRect(4, 6, 1, 28);
-  ctx.fillStyle = '#2e3648';
-  ctx.fillRect(1, 2, 8, 5);
-  ctx.fillStyle = '#ffe9a8';
-  ctx.fillRect(2, 4, 6, 2);
-  ctx.fillStyle = '#fff6d6';
-  ctx.fillRect(3, 4, 2, 1);
-  ctx.fillStyle = '#3a4152';
-  ctx.fillRect(3, 32, 4, 2);
-  return { canvas: c, ax: 5, ay: 34 };
+  const [c, ctx] = makeCanvas(14, 36);
+  shadowEllipse(ctx, 7, 34, 5, 2, 0.3);
+  // Cột trụ đá
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(5, 12, 4, 20);
+  ctx.fillStyle = '#64748b';
+  ctx.fillRect(5, 12, 2, 20);
+  // Bệ đỡ đá dưới chân
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(3, 30, 8, 4);
+  // Buồng đèn lồng đá phát sáng vàng ấm
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(3, 8, 8, 6);
+  ctx.fillStyle = '#fde047';
+  ctx.fillRect(4, 9, 6, 4);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(5, 10, 2, 2);
+  // Mái ngói đá cong vút đỉnh Tōrō
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(1, 6, 12, 3);
+  ctx.fillRect(3, 4, 8, 2);
+  ctx.fillRect(5, 2, 4, 2);
+  ctx.fillStyle = '#64748b';
+  ctx.fillRect(6, 1, 2, 2); // Chóp ngọn
+  return { canvas: c, ax: 7, ay: 34 };
 }
 
+/** Ghế dài gỗ ninja mộc mạc. */
 function benchSprite(): PropSprite {
   const [c, ctx] = makeCanvas(26, 14);
   shadowEllipse(ctx, 13, 12, 11, 2, 0.22);
-  ctx.fillStyle = '#2e3648';
-  ctx.fillRect(3, 8, 2, 4);
-  ctx.fillRect(21, 8, 2, 4);
-  // encosto e assento em ripas
-  ctx.fillStyle = '#7a5232';
+  ctx.fillStyle = '#451a03';
+  ctx.fillRect(3, 8, 3, 4);
+  ctx.fillRect(20, 8, 3, 4);
+  // Nan gỗ mộc đậm chất làng ninja
+  ctx.fillStyle = '#78350f';
   ctx.fillRect(1, 1, 24, 3);
   ctx.fillRect(1, 6, 24, 3);
-  ctx.fillStyle = '#a0703f';
+  ctx.fillStyle = '#b45309';
   ctx.fillRect(1, 1, 24, 1);
   ctx.fillRect(1, 6, 24, 1);
-  ctx.fillStyle = '#5b3c25';
+  ctx.fillStyle = '#92400e';
   ctx.fillRect(1, 8, 24, 1);
-  ctx.fillRect(1, 3, 24, 1);
   return { canvas: c, ax: 13, ay: 12 };
 }
 
@@ -293,32 +304,28 @@ function parasolSprite(seed: number): PropSprite {
   return { canvas: c, ax: 16, ay: 29 };
 }
 
-/** Totem da entrada com a marca (azul-marinho e laranja, como a placa da recepção). */
+/** Cổng Torii / Cột mốc Làng Lá Konohagakure tại lối vào chính. */
 function totemSprite(): PropSprite {
-  const [c, ctx] = makeCanvas(14, 34);
-  shadowEllipse(ctx, 7, 32, 6, 1.5, 0.25);
-  ctx.fillStyle = '#141b30';
-  ctx.fillRect(2, 2, 10, 30);
-  ctx.fillStyle = '#1c2541';
-  ctx.fillRect(3, 3, 8, 28);
-  ctx.fillStyle = '#2a355a';
-  ctx.fillRect(3, 3, 1, 28);
-  // faixa laranja no topo, "H" claro e "b" laranja (as cores de "Hab" e "blaud" na placa)
-  ctx.fillStyle = '#f2a33a';
-  ctx.fillRect(3, 5, 8, 2);
-  ctx.fillStyle = '#f5f1e6';
-  ctx.fillRect(4, 11, 1, 6);
-  ctx.fillRect(8, 11, 1, 6);
-  ctx.fillRect(5, 13, 3, 1);
-  ctx.fillStyle = '#f2a33a';
-  ctx.fillRect(5, 19, 1, 6);
-  ctx.fillRect(6, 21, 2, 1);
-  ctx.fillRect(8, 22, 1, 2);
-  ctx.fillRect(6, 24, 2, 1);
-  // base
-  ctx.fillStyle = '#8d96a3';
-  ctx.fillRect(1, 31, 12, 2);
-  return { canvas: c, ax: 7, ay: 32 };
+  const [c, ctx] = makeCanvas(16, 36);
+  shadowEllipse(ctx, 8, 33, 7, 2, 0.3);
+  // Trụ cổng đỏ son thần đạo
+  ctx.fillStyle = '#dc2626';
+  ctx.fillRect(2, 6, 3, 26);
+  ctx.fillRect(11, 6, 3, 26);
+  // Xà ngang Torii cong màu đen/đỏ son
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(0, 4, 16, 3);
+  ctx.fillRect(1, 10, 14, 2);
+  // Biểu tượng Làng Lá 🍃 mạ vàng ở giữa cổng
+  ctx.fillStyle = '#fde047';
+  ctx.fillRect(7, 8, 2, 2);
+  ctx.fillStyle = '#15803d';
+  ctx.fillRect(7, 7, 2, 1);
+  // Chân đế đá
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(1, 30, 5, 3);
+  ctx.fillRect(10, 30, 5, 3);
+  return { canvas: c, ax: 8, ay: 32 };
 }
 
 export function propSprite(prop: ExteriorProp): PropSprite {
@@ -364,61 +371,65 @@ export function propSprite(prop: ExteriorProp): PropSprite {
   return s;
 }
 
-const CAR_COLORS: [string, string, string][] = [
-  ['#d9534a', '#a83a33', '#f08a80'],
-  ['#3f7fd8', '#2c5ea6', '#7fb0f0'],
-  ['#f2f2ee', '#c4c6c8', '#ffffff'],
-  ['#f2b33d', '#c88a1f', '#ffd889'],
-  ['#2fb3a3', '#1f8579', '#79dccf'],
-  ['#4a5468', '#323a4a', '#76819a'],
+const NINJA_SPRINT_STYLES: [string, string, string, string][] = [
+  ['#ea580c', '#1e293b', '#facc15', '#f8fafc'], // Naruto (Cam / Lam / Tóc vàng / Băng trán)
+  ['#1e293b', '#475569', '#171412', '#93c5fd'], // Sasuke (Áo chàm / Tóc đen / Chidori)
+  ['#15803d', '#166534', '#171412', '#22c55e'], // Gai / Lee (Đồ bó xanh lá Mộc Diệp)
+  ['#dc2626', '#171412', '#cbd5e1', '#ef4444'], // Akatsuki (Áo choàng đen mây đỏ)
+  ['#0284c7', '#0369a1', '#e2e8f0', '#38bdf8'], // Ninja Làng Mây / Kirigakure
+  ['#78350f', '#451a03', '#ca8a04', '#fed7aa'], // Ninja Làng Cát / Làng Đá
 ];
 
-/** Carro visto de lado (3/4), virado para a direita; `flip` desenha para a esquerda. */
+/** Nhẫn giả phi thân Naruto run (cúi thấp người, hai tay duỗi thẳng ra sau phóng như bay dọc đường). */
 export function carSprite(variant: number, flip: boolean): PropSprite {
-  const key = `car:${variant % CAR_COLORS.length}:${flip ? 1 : 0}`;
+  const key = `car:${variant % NINJA_SPRINT_STYLES.length}:${flip ? 1 : 0}`;
   const hit = cache.get(key);
   if (hit) return hit;
-  const [body, dark, light] = CAR_COLORS[variant % CAR_COLORS.length];
+  const [topCol, botCol, hairCol, fxCol] = NINJA_SPRINT_STYLES[variant % NINJA_SPRINT_STYLES.length];
   const [c, ctx] = makeCanvas(36, 20);
   if (flip) {
     ctx.translate(36, 0);
     ctx.scale(-1, 1);
   }
-  shadowEllipse(ctx, 18, 17, 16, 2, 0.3);
-  const o = '#2e3648';
-  // carroceria
-  ctx.fillStyle = o;
-  ctx.fillRect(2, 8, 32, 8);
-  ctx.fillRect(8, 3, 18, 6);
-  ctx.fillStyle = body;
-  ctx.fillRect(3, 9, 30, 6);
-  ctx.fillRect(9, 4, 16, 5);
-  ctx.fillStyle = light;
-  ctx.fillRect(3, 9, 30, 1);
-  ctx.fillRect(9, 4, 16, 1);
-  ctx.fillStyle = dark;
-  ctx.fillRect(3, 13, 30, 2);
-  // vidros
-  ctx.fillStyle = '#3a5f86';
-  ctx.fillRect(10, 5, 6, 3);
-  ctx.fillRect(18, 5, 6, 3);
-  ctx.fillStyle = '#9cc7ec';
-  ctx.fillRect(10, 5, 2, 1);
-  ctx.fillRect(18, 5, 2, 1);
-  // farol e lanterna
-  ctx.fillStyle = '#fff3c4';
-  ctx.fillRect(32, 10, 2, 2);
-  ctx.fillStyle = '#e04a3a';
-  ctx.fillRect(2, 10, 1, 2);
-  // rodas
-  for (const wx of [7, 25]) {
-    ctx.fillStyle = o;
-    ctx.fillRect(wx, 13, 5, 5);
-    ctx.fillStyle = '#6b7385';
-    ctx.fillRect(wx + 1, 14, 3, 3);
-    ctx.fillStyle = '#9aa3b5';
-    ctx.fillRect(wx + 2, 15, 1, 1);
-  }
+  // Vệt bóng mờ phi thân trên mặt đất
+  shadowEllipse(ctx, 18, 17, 14, 2, 0.25);
+
+  // 1. Luồng gió / Khói bụi lướt gió sau gót chân
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.fillRect(4, 15, 6, 2);
+  ctx.fillRect(2, 13, 5, 2);
+
+  // 2. Hai cánh tay duỗi thẳng song song ra sau lưng (Naruto Run đặc trưng)
+  ctx.fillStyle = topCol;
+  ctx.fillRect(6, 9, 12, 3);
+  ctx.fillStyle = '#fed7aa'; // Bàn tay
+  ctx.fillRect(4, 9, 3, 2);
+
+  // 3. Đôi chân sải bước thần tốc
+  ctx.fillStyle = botCol;
+  ctx.fillRect(13, 13, 8, 4); // Chân sau
+  ctx.fillRect(23, 14, 7, 4); // Chân trước
+  ctx.fillStyle = '#1e293b';  // Sandal ninja
+  ctx.fillRect(28, 16, 4, 2);
+
+  // 4. Thân mình cúi gập song song mặt đất phóng về phía trước
+  ctx.fillStyle = topCol;
+  ctx.fillRect(16, 7, 13, 7);
+
+  // 5. Đầu & Tóc nhọn bay theo chiều gió
+  ctx.fillStyle = '#fed7aa'; // Mặt
+  ctx.fillRect(26, 5, 6, 6);
+  ctx.fillStyle = hairCol;   // Mái tóc
+  ctx.fillRect(23, 3, 8, 4);
+  ctx.fillRect(20, 4, 4, 3); // Tóc vuốt ngược ra sau
+
+  // 6. Băng bảo hộ trán ninja kim loại lấp lánh & Dải ruy băng bay phấp phới
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillRect(28, 5, 4, 2);
+  ctx.fillStyle = fxCol;     // Ruy băng bay ra sau
+  ctx.fillRect(19, 6, 5, 1);
+  ctx.fillRect(15, 7, 4, 1);
+
   const s = { canvas: c, ax: 18, ay: 17 };
   cache.set(key, s);
   return s;

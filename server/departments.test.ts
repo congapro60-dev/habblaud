@@ -19,7 +19,7 @@ describe('department registry', () => {
       { departmentId: 'claude', status: 'VERIFIED' },
     ]);
     expect(rooms).toHaveLength(7);
-    expect(rooms.find((room) => room.id === 'claude')).toMatchObject({ roomId: 'core:claude', headId: 'head:claude', headName: 'Đặng Tuệ Minh', headSymbol: 'CL', activeWorkOrders: 1 });
+    expect(rooms.find((room) => room.id === 'claude')).toMatchObject({ roomId: 'core:claude', headId: 'head:claude', headName: 'Hokage Tsunade (Tam Nin)', headSymbol: '🍃', activeWorkOrders: 1 });
     expect(new Set(rooms.map((room) => room.roomId)).size).toBe(rooms.length);
     expect(new Set(rooms.map((room) => room.headId)).size).toBe(rooms.length);
   });

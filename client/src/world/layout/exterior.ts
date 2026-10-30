@@ -42,26 +42,33 @@ export function layoutExterior(cols: number): ExteriorLayout {
   const south = BUILDING_H;
   floors.push({ kind: 'sidewalk', x: px(bounds.x), y: px(south + 2), w: px(bounds.w), h: px(2), seed: 12 });
   floors.push({ kind: 'street', x: px(bounds.x), y: px(south + 4), w: px(bounds.w), h: px(5), seed: 13 });
-  floors.push({ kind: 'sidewalk', x: px(bounds.x), y: px(south + 9), w: px(bounds.w), h: px(2), seed: 14 });
-  // caminho de pedra até a calçada, na frente da recepção
-  floors.push({ kind: 'sidewalk', x: px(-3), y: px(CORRIDOR_Y), w: px(3), h: px(5), seed: 15 });
-  floors.push({ kind: 'sidewalk', x: px(-3), y: px(CORRIDOR_Y + 5), w: px(2), h: px(south + 2 - CORRIDOR_Y - 5), seed: 16 });
+    floors.push({ kind: 'sidewalk', x: px(bounds.x), y: px(south + 2), w: px(bounds.w), h: px(2), seed: 12 });
+    floors.push({ kind: 'street', x: px(bounds.x), y: px(south + 4), w: px(bounds.w), h: px(5), seed: 13 });
+    floors.push({ kind: 'sidewalk', x: px(bounds.x), y: px(south + 9), w: px(bounds.w), h: px(2), seed: 14 });
+    // Đường đá cuội ninja dẫn lối vào Làng Lá phía Tây
+    floors.push({ kind: 'sidewalk', x: px(-3), y: px(CORRIDOR_Y), w: px(3), h: px(5), seed: 15 });
+    floors.push({ kind: 'sidewalk', x: px(-3), y: px(CORRIDOR_Y + 5), w: px(2), h: px(south + 2 - CORRIDOR_Y - 5), seed: 16 });
 
-  // árvores ao norte (fileira com variação) e a oeste/leste
-  for (let x = bounds.x + 1; x < bounds.x + bounds.w - 1; x += 4 + Math.floor(rng() * 3)) {
-    props.push({ kind: rng() < 0.25 ? 'pine' : 'tree', x: px(x) + Math.floor(rng() * 8), y: px(-3) - Math.floor(rng() * 20), seed: Math.floor(rng() * 1e9) });
-    if (rng() < 0.6) props.push({ kind: 'bush', x: px(x + 2), y: px(-1) - 2, seed: Math.floor(rng() * 1e9) });
-  }
-  // bosque ao norte: fileiras irregulares cada vez mais esparsas
-  for (const [row, gap] of [
-    [-6, 5],
-    [-10, 6],
-    [-14, 8],
-  ] as const) {
-    for (let x = bounds.x + 2; x < bounds.x + bounds.w - 1; x += gap + Math.floor(rng() * 4)) {
-      props.push({ kind: rng() < 0.3 ? 'pine' : 'tree', x: px(x) + Math.floor(rng() * 8), y: px(row) - Math.floor(rng() * 12), seed: Math.floor(rng() * 1e9) });
+    // RỪNG MỘC DIỆP (KONOHA FOREST): Dành riêng khoảng không gian phía Bắc cho Tượng đá Hokage (y: -13 đến -4),
+    // bố trí cây đại thụ và thông ninja cổ thụ viền quanh hai bên và chân vách núi
+    for (let x = bounds.x + 1; x < bounds.x + bounds.w - 1; x += 5 + Math.floor(rng() * 4)) {
+      props.push({ kind: rng() < 0.35 ? 'pine' : 'tree', x: px(x) + Math.floor(rng() * 8), y: px(-3) - Math.floor(rng() * 10), seed: Math.floor(rng() * 1e9) });
+      if (rng() < 0.6) props.push({ kind: 'bush', x: px(x + 2), y: px(-1) - 2, seed: Math.floor(rng() * 1e9) });
     }
-  }
+    // Rừng cây bọc sườn Đông & Tây vách núi Hokage
+    for (const [row, gap] of [
+      [-6, 6],
+      [-10, 7],
+      [-14, 8],
+    ] as const) {
+      for (const side of [-1, 1]) {
+        const start = side < 0 ? bounds.x + 2 : bounds.x + bounds.w - 12;
+        const end = side < 0 ? bounds.x + 10 : bounds.x + bounds.w - 1;
+        for (let x = start; x < end; x += gap + Math.floor(rng() * 3)) {
+          props.push({ kind: rng() < 0.4 ? 'pine' : 'tree', x: px(x) + Math.floor(rng() * 6), y: px(row) - Math.floor(rng() * 8), seed: Math.floor(rng() * 1e9) });
+        }
+      }
+    }
   for (const side of [-1, 1]) {
     for (const band of [0, 7, 13]) {
       const baseX = side < 0 ? -6 - band : w + 4 + band;

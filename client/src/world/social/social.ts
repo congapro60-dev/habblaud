@@ -62,7 +62,7 @@ const COIN_COLOR = '#ffd34d';
 const LOSS_COLOR = '#ff8a8a';
 
 const KIND_LIST = Object.keys(KINDS) as GatherKind[];
-const PLACES: Readonly<Record<string, string>> = { [LOUNGE_ID]: tr('Phòng giám đốc'), [CAFE_ID]: tr('Copa'), [RECEPTION_ID]: tr('Recepção'), [RESTROOM_ID]: tr('Banheiros') };
+const PLACES: Readonly<Record<string, string>> = { [LOUNGE_ID]: tr('Lounge'), [CAFE_ID]: tr('Copa'), [RECEPTION_ID]: tr('Recepção'), [RESTROOM_ID]: tr('Banheiros') };
 /** O que se perde/ganha em cada jogo (texto do extrato: "Perdeu no jokenpô para Rafaela"). */
 const MATCH_WHAT: Partial<Record<GatherKind, string>> = {
   rps: tr('no jokenpô'),
@@ -106,8 +106,7 @@ export class Social {
    */
   canJoin(c: Character, now: number): boolean {
     if (c.gone || c.leaving || c.arriving || c.inside || c.gathering) return false;
-    // Cho phép cả agent đang rảnh (idle), chờ shell, hoặc đang ngồi làm việc (work) tham gia tỉ thí
-    if (c.mode !== 'idle' && c.mode !== 'shell' && c.mode !== 'work') return false;
+    if (c.mode !== 'idle' && c.mode !== 'shell') return false;
     if (c.step || c.queue.length) return false;
     if (!c.homeSpot || c.atSpot !== c.homeSpot) return false;
     if (now < c.reactUntil) return false;
@@ -162,6 +161,62 @@ export class Social {
   }
 
   /** Força uma roda (depuração). Usa `ids` (se vierem) como participantes. */
+  /** Bắt đầu tỉ thí nhẫn thuật trực tiếp ngay lập tức giữa hai ninja (dành cho chế độ người chơi điều khiển). */
+  startInstantDuel(a: Character, b: Character, now: number): boolean {
+    if (a.gone || b.gone || a.leaving || b.leaving) return false;
+    if (a.gathering) this.sim.clearPlan(a);
+    if (b.gathering) this.sim.clearPlan(b);
+    a.queue.length = 0;
+    a.step = null;
+    b.queue.length = 0;
+    b.step = null;
+
+    if (a.x < b.x) {
+      a.dir = 'right';
+      b.dir = 'left';
+    } else {
+      a.dir = 'left';
+      b.dir = 'right';
+    }
+
+    const id = this.seq++;
+    const g: Gathering = {
+      id,
+      kind: 'rps',
+      host: a.id,
+      members: [
+        { id: a.id, role: 'player', spot: null, arrived: true, left: false, pose: 'stand', held: 'none', actPose: null, actHeld: 'none', actUntil: 0, carry: 'none' },
+        { id: b.id, role: 'player', spot: null, arrived: true, left: false, pose: 'stand', held: 'none', actPose: null, actHeld: 'none', actUntil: 0, carry: 'none' },
+      ],
+      phase: 'run',
+      createdAt: now,
+      startAt: now,
+      until: now + 14_000,
+      nextAt: now + 350,
+      step: 0,
+      seed: (a.info.seed ^ Math.imul(id, 0x9e3779b1)) >>> 0,
+      rng: mulberry32((a.info.seed ^ Math.imul(id, 0x85ebca6b)) >>> 0),
+      program: null,
+      bet: 10,
+      score: [0, 0],
+      gestures: null,
+      ties: 0,
+      rematches: 0,
+      winner: null,
+      loser: null,
+      pool: [],
+      lastLine: null,
+      lastSpeaker: null,
+      pending: [],
+    };
+    a.gathering = g;
+    b.gathering = g;
+    this.gatherings.add(g);
+    this.say(a, 'Lên đi! Tỉ thí nhẫn thuật!', now, 1_200);
+    this.say(b, 'Tiếp chiêu!', now + 200, 1_200);
+    return true;
+  }
+
   force(kind: GatherKind, now: number, ids?: string[]): string[] | null {
     const pool = ids?.length ? ids.map((id) => this.sim.chars.get(id)).filter((c): c is Character => !!c) : [...this.sim.chars.values()];
     for (const c of pool) {

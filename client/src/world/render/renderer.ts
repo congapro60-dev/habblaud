@@ -5,7 +5,7 @@ import { TILE, type ArtModule, type CharacterFrameRequest, type IconName, type S
 import type { SeasonalTheme, WorldOptions } from '../api';
 import type { WorldAssets } from '../assets';
 import type { Camera } from '../camera';
-import { resolveNinjaAvatarUrl } from '../../ui/avatar';
+import { resolveNinjaAvatarUrl } from '../../../../shared/local-character-roster';
 import { BUILDING_H, COL_W, CORE_COLS, CORRIDOR_Y, EXT_EAST, EXT_NORTH, EXT_WEST } from '../constants';
 import { layoutExterior, slotShell, type ExteriorLayout, type SlotShell } from '../layout/exterior';
 import { slotAt } from '../layout/geometry';
@@ -202,10 +202,13 @@ export class Renderer {
     ctx.imageSmoothingEnabled = false;
     ctx.translate(-this.baseX, -this.baseY);
     paintShell(this.art, ctx, this.exterior.floors, []);
-    // faixas da rua
+    // Đường đất Làng Lá tự nhiên: gờ đất và đá sỏi rải rác (không dùng vạch sơn vàng xe hơi hiện đại)
     const ly = this.exterior.streetY + Math.round(this.exterior.streetH / 2) - 1;
-    ctx.fillStyle = 'rgba(255,236,170,0.75)';
-    for (let x = this.baseX + 4; x < this.baseX + c.width; x += 24) ctx.fillRect(x, ly, 12, 2);
+    ctx.fillStyle = 'rgba(120, 80, 40, 0.45)';
+    for (let x = this.baseX + 4; x < this.baseX + c.width; x += 18) {
+      const stoneOffset = ((x * 19) % 7) - 3;
+      ctx.fillRect(x, ly + stoneOffset, 6, 2);
+    }
     this.shells = [];
     this.shellWindows = [];
     for (let col = CORE_COLS; col < cols; col++) {
@@ -339,97 +342,136 @@ export class Renderer {
   /** Vẽ dãy tượng đá khổng lồ các Hokage khắc trên núi đá phía sau Konoha */
   private drawHokageRockMonument(ctx: CanvasRenderingContext2D, cols: number): void {
     const totalW = cols * COL_W * TILE;
-    const rockY = -EXT_NORTH * TILE;
-    const rockH = 75;
+    // Đẩy vách núi Hokage về gần sát bờ tường phía Bắc để lọt trọn vào tầm mắt người chơi (-120px đến -10px)
+    const rockY = -120;
+    const rockH = 110;
 
     ctx.save();
-    // 1. Dãy vách núi đá khổng lồ màu nâu xám đặc trưng
+    // 1. Dãy vách núi đá khổng lồ màu nâu xám đặc trưng của Hỏa Quốc
     const grad = ctx.createLinearGradient(0, rockY, 0, rockY + rockH);
-    grad.addColorStop(0, '#5a4632');
-    grad.addColorStop(0.5, '#7c654d');
-    grad.addColorStop(1, '#947d63');
+    grad.addColorStop(0, '#423326');
+    grad.addColorStop(0.3, '#6e5641');
+    grad.addColorStop(0.7, '#8a7258');
+    grad.addColorStop(1, '#a68f76');
     ctx.fillStyle = grad;
     ctx.fillRect(-EXT_WEST * TILE, rockY, totalW + (EXT_WEST + EXT_EAST) * TILE, rockH);
 
-    // Đường gờ viền đỉnh núi lởm chởm
-    ctx.fillStyle = '#453424';
-    for (let x = -EXT_WEST * TILE; x < totalW + EXT_EAST * TILE; x += 12) {
-      const crag = ((x * 13) % 9) - 4;
-      ctx.fillRect(x, rockY + rockH - 4 + crag, 12, 4 - crag);
+    // Đường gờ viền đá chân núi và đỉnh núi lởm chởm rêu phong phong trần
+    ctx.fillStyle = '#302419';
+    for (let x = -EXT_WEST * TILE; x < totalW + EXT_EAST * TILE; x += 10) {
+      const crag = ((x * 17) % 11) - 5;
+      ctx.fillRect(x, rockY + rockH - 8 + crag, 10, 8 - crag);
+      ctx.fillStyle = ((x * 7) % 3 === 0) ? '#2d4a22' : '#302419'; // Đốm rêu xanh bám chân núi
     }
 
-    // 2. Chạm khắc 5 gương mặt Hokage vĩ đại:
-    // Đệ Nhất (Hashirama), Đệ Nhị (Tobirama), Đệ Tam (Hiruzen), Đệ Tứ (Minato), Đệ Ngũ (Tsunade)
+    // 2. Chạm khắc 6 gương mặt Hokage vĩ đại sắc nét và bề thế:
+    // 1: Hashirama (Đệ Nhất) | 2: Tobirama (Đệ Nhị) | 3: Hiruzen (Đệ Tam)
+    // 4: Minato (Đệ Tứ) | 5: Tsunade (Đệ Ngũ) | 6: Kakashi (Đệ Lục)
     const faces = [
-      { name: 'Hashirama (Đệ Nhất)', title: '初代', hair: '#1c1917', mark: 'band' },
-      { name: 'Tobirama (Đệ Nhị)', title: '二代', hair: '#e2e8f0', mark: 'plate' },
-      { name: 'Hiruzen (Đệ Tam)', title: '三代', hair: '#78716c', mark: 'hat' },
-      { name: 'Minato (Đệ Tứ)', title: '四代', hair: '#eab308', mark: 'spiky' },
-      { name: 'Tsunade (Đệ Ngũ)', title: '五代', hair: '#fef08a', mark: 'diamond' },
+      { name: 'Hashirama', title: '初代', hair: '#171412', mark: 'hashirama' },
+      { name: 'Tobirama', title: '二代', hair: '#f1f5f9', mark: 'tobirama' },
+      { name: 'Hiruzen', title: '三代', hair: '#57534e', mark: 'hiruzen' },
+      { name: 'Minato', title: '四代', hair: '#eab308', mark: 'minato' },
+      { name: 'Tsunade', title: '五代', hair: '#fde047', mark: 'tsunade' },
+      { name: 'Kakashi', title: '六代', hair: '#cbd5e1', mark: 'kakashi' },
     ];
 
-    const startX = Math.max(30, (totalW - faces.length * 68) / 2);
+    const faceSpacing = 72;
+    const startX = Math.max(20, (totalW - faces.length * faceSpacing) / 2);
+
     faces.forEach((f, i) => {
-      const fx = startX + i * 68;
-      const fy = rockY + 12;
+      const fx = startX + i * faceSpacing;
+      const fy = rockY + 16;
 
-      // Hốc đá bóng đổ bao quanh khuôn mặt
-      ctx.fillStyle = 'rgba(40, 28, 18, 0.65)';
+      // Hốc đá bóng đổ sâu thẳm bao quanh
+      ctx.fillStyle = 'rgba(28, 20, 14, 0.72)';
       ctx.beginPath();
-      ctx.ellipse(fx + 24, fy + 26, 26, 30, 0, 0, Math.PI * 2);
+      ctx.ellipse(fx + 26, fy + 32, 30, 36, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Khuôn mặt tạc từ khối đá
-      ctx.fillStyle = '#bda78e';
+      // Khối đá khuôn mặt Hokage hùng vĩ
+      ctx.fillStyle = '#c2ae97';
       ctx.beginPath();
-      ctx.ellipse(fx + 24, fy + 26, 20, 24, 0, 0, Math.PI * 2);
+      ctx.ellipse(fx + 26, fy + 32, 23, 29, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Tóc khắc đá có màu sắc biểu trưng
+      // Mảng gờ sáng nổi bật
+      ctx.fillStyle = '#dbcaa8';
+      ctx.beginPath();
+      ctx.ellipse(fx + 24, fy + 30, 19, 25, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tóc khắc đá biểu trưng
       ctx.fillStyle = f.hair;
       ctx.beginPath();
-      ctx.ellipse(fx + 24, fy + 12, 22, 12, 0, Math.PI, 0);
+      ctx.ellipse(fx + 26, fy + 14, 25, 15, 0, Math.PI, 0);
       ctx.fill();
 
-      // Mũi, lông mày và chi tiết mắt tạc đá
-      ctx.fillStyle = '#6e5641';
-      ctx.fillRect(fx + 16, fy + 22, 5, 3); // Mắt trái
-      ctx.fillRect(fx + 27, fy + 22, 5, 3); // Mắt phải
-      ctx.fillRect(fx + 23, fy + 23, 3, 10); // Sống mũi cao
-      ctx.fillRect(fx + 20, fy + 36, 9, 3);  // Miệng cương nghị
+      // Chi tiết khuôn mặt: Hốc mắt, sống mũi cao, cằm vuông cương trực
+      ctx.fillStyle = '#5c4533';
+      ctx.fillRect(fx + 16, fy + 26, 6, 4); // Mắt trái
+      ctx.fillRect(fx + 30, fy + 26, 6, 4); // Mắt phải
+      ctx.fillRect(fx + 25, fy + 27, 3, 14); // Sống mũi tạc đá
+      ctx.fillRect(fx + 21, fy + 44, 11, 4);  // Miệng
 
-      // Điểm nhấn riêng từng Hokage
-      if (f.mark === 'diamond') {
-        // Ấn bách hào hình thoi màu tím của Tsunade
-        ctx.fillStyle = '#9333ea';
-        ctx.fillRect(fx + 23, fy + 17, 3, 3);
-      } else if (f.mark === 'plate') {
-        // Giáp hộ diện kim loại bảo vệ má của Tobirama
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(fx + 10, fy + 24, 3, 14);
-        ctx.fillRect(fx + 35, fy + 24, 3, 14);
-        // Vết sẹo đỏ đặc trưng
+      // CHI TIẾT NHẬN DIỆN TỪNG ĐỜI HOKAGE:
+      if (f.mark === 'hashirama') {
+        // Tóc dài buông xõa hai bên vai & Băng bảo hộ trán
+        ctx.fillStyle = '#171412';
+        ctx.fillRect(fx + 3, fy + 18, 6, 32);
+        ctx.fillRect(fx + 43, fy + 18, 6, 32);
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(fx + 14, fy + 17, 24, 5); // Băng trán ninja
+      } else if (f.mark === 'tobirama') {
+        // Giáp Happuri bạc bảo vệ má + Vệt sẹo đỏ chiến binh
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(fx + 9, fy + 25, 5, 20);
+        ctx.fillRect(fx + 38, fy + 25, 5, 20);
         ctx.fillStyle = '#dc2626';
-        ctx.fillRect(fx + 11, fy + 28, 2, 4);
-        ctx.fillRect(fx + 35, fy + 28, 2, 4);
-      } else if (f.mark === 'hat') {
-        // Nốt ruồi và nếp nhăn Đệ Tam
-        ctx.fillStyle = '#453424';
-        ctx.fillRect(fx + 17, fy + 27, 2, 2);
-      } else if (f.mark === 'spiky') {
-        // Tóc tia chớp vàng Minato
-        ctx.fillStyle = '#ca8a04';
-        ctx.fillRect(fx + 7, fy + 10, 5, 8);
-        ctx.fillRect(fx + 36, fy + 10, 5, 8);
+        ctx.fillRect(fx + 11, fy + 32, 2, 8); // Vệt đỏ má trái
+        ctx.fillRect(fx + 39, fy + 32, 2, 8); // Vệt đỏ má phải
+        ctx.fillRect(fx + 25, fy + 48, 3, 5); // Vệt đỏ ở cằm
+      } else if (f.mark === 'hiruzen') {
+        // Mũ Hokage trùm đầu & Nếp nhăn hiền từ
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(fx + 12, fy + 4, 28, 8);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(fx + 22, fy + 5, 8, 6);
+        ctx.fillStyle = '#3e2c1c';
+        ctx.fillRect(fx + 18, fy + 33, 3, 2); // Nốt ruồi đặc trưng
+      } else if (f.mark === 'minato') {
+        // Tóc gai nhọn tia chớp vàng Minato chìa rộng hai bên
+        ctx.fillStyle = '#eab308';
+        ctx.fillRect(fx + 3, fy + 10, 8, 12);
+        ctx.fillRect(fx + 41, fy + 10, 8, 12);
+        ctx.fillRect(fx + 22, fy + 2, 8, 8);
+      } else if (f.mark === 'tsunade') {
+        // Ấn Bách Hào Thuật màu tím giữa trán & Tóc vàng rẽ ngôi
+        ctx.fillStyle = '#9333ea';
+        ctx.beginPath();
+        ctx.moveTo(fx + 26, fy + 18);
+        ctx.lineTo(fx + 29, fy + 22);
+        ctx.lineTo(fx + 26, fy + 26);
+        ctx.lineTo(fx + 23, fy + 22);
+        ctx.closePath();
+        ctx.fill();
+      } else if (f.mark === 'kakashi') {
+        // Khăn bịt mặt ninja che nửa dưới khuôn mặt + Băng đeo trán xéo che một mắt
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(fx + 15, fy + 36, 22, 16); // Mặt nạ vải che miệng & cằm
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(fx + 14, fy + 20, 10, 12); // Băng trán kéo chéo che mắt trái
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(fx + 18, fy + 23, 2, 6); // Vệt sẹo Sharingan
       }
 
-      // Biển khắc Hán tự thứ tự Hokage dưới mỗi tượng đá
+      // Khối bệ đá khắc Hán tự tôn vinh từng đời Hokage
       ctx.fillStyle = '#1c1917';
-      ctx.fillRect(fx + 12, fy + 48, 24, 10);
-      ctx.fillStyle = '#fef08a';
-      ctx.font = 'bold 9px sans-serif';
+      ctx.fillRect(fx + 13, fy + 58, 26, 12);
+      ctx.fillStyle = '#fde047';
+      ctx.font = 'bold 10px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(f.title, fx + 24, fy + 56);
+      ctx.fillText(f.title, fx + 26, fy + 68);
     });
 
     ctx.restore();
@@ -607,6 +649,7 @@ export class Renderer {
     }
     this.drawPingPong(now);
     this.drawNinjaDuelFx(now);
+    this.drawNinjaTeamBattleFx(now);
     // ---- espera de shell: teias de aranha, confete/pipoca/chuva (por cima das entidades)
     this.drawCobwebs(now);
     this.drainEffects(now);
@@ -1355,10 +1398,20 @@ export class Renderer {
 
   /**
    * Hiệu ứng đại chiến nhẫn thuật tối thượng (Super Ultimate Jutsu FX):
-   * - Địa Bộc Thiên Tinh (Chibaku Tensei) & Thần La Thiên Chinh (Shinra Tensei) của Pain Akatsuki
-   * - Susano'o khổng lồ của Uchiha (Itachi/Madara/Sasuke)
-   * - Vĩ Thú Hình (Cửu Vĩ Kyuubi / Nhất Vĩ Shukaku) & Vĩ Thú Ngọc bùng nổ
-   * - Thuật Phân Thân Chi Thuật (Kage Bunshin) & Chưởng lực diện rộng Rasenshuriken / Kirin Sấm Sét
+   * Thiết kế hiệu ứng ĐẶC TRƯNG RIÊNG BIỆT 100% THEO TỪNG NHÂN VẬT & NHẪN THUẬT:
+   * - Hidan: Vòng tròn Huyết Tế Ma Thuật Jashin tam giác + Xương đen trắng + Cọc huyết đâm xuyên
+   * - Haku: Ma Kính Băng Tinh (Kagami) gương băng bao vây + Bão phi kim Senbon
+   * - Nara Shikamaru: Kage Mane no Jutsu (Bóng Trói Chi Thuật) tỏa bóng đen răng cưa từ chân trói chặt đối thủ
+   * - Orochimaru: Mở Quỷ Môn Quan Rashomon + Đại Mãng Xà Bạch Xà 8 đầu uốn lượn
+   * - Zabuza Momochi: Sương Mù Dày Đặc Kirigakure no Jutsu + Đại Thủy Long Độn khổng lồ
+   * - Pain Tendo: Địa Bộc Thiên Tinh (Chibaku Tensei) hút đá bay lên + Thần La Thiên Chinh (Shinra Tensei)
+   * - Gaara: Đại Bão Sa Mạc Sa Phược Cữu (Sabaku Kyuu) + Tù Ngục Cát & Khiên cát Shukaku
+   * - Uchiha (Sasuke/Itachi/Madara): Khung xương Susano'o tím rực lửa + Hắc Hỏa Amaterasu đen kịt
+   * - Kakashi: Thiên Điểu Lôi Thiết Chidori / Raikiri sấm sét xanh biếc + Sharingan Kamui xoáy
+   * - Tsunade: Cú đấm Quái Lực nứt toác mặt đất + Ấn Bách Hào tím phát sáng
+   * - Senju Hashirama: Mộc Độn Thiên Thủ Quan Âm + Rồng Gỗ Mokuryuu
+   * - Namikaze Minato / Tobirama: Phi Lôi Thần Thuật dịch chuyển tức thời + Tia chớp vàng
+   * - Uzumaki Naruto: Đa Trọng Ảnh Phân Thân + Rasenshuriken Phong Độn & Hóa Cửu Vĩ / Lục Đạo
    */
   private drawNinjaDuelFx(now: number): void {
     const { ctx } = this;
@@ -1379,407 +1432,589 @@ export class Renderer {
 
       const aName = (a.info.name ?? '').toLowerCase();
       const bName = (b.info.name ?? '').toLowerCase();
-      const hasPain = aName.includes('pain') || bName.includes('pain');
-      const hasUchiha = aName.includes('itachi') || bName.includes('itachi') || aName.includes('madara') || bName.includes('madara') || aName.includes('sasuke') || bName.includes('sasuke');
-      const hasNaruto = aName.includes('naruto') || bName.includes('naruto');
-      const hasBijuu = hasNaruto || aName.includes('gaara') || bName.includes('gaara') || aName.includes('bee') || bName.includes('bee');
-      const hasJiraiya = aName.includes('jiraiya') || bName.includes('jiraiya');
-      const hasOrochimaru = aName.includes('orochimaru') || bName.includes('orochimaru');
-      const hasTsunade = aName.includes('tsunade') || bName.includes('tsunade');
-      const hasHashirama = aName.includes('hashirama') || bName.includes('hashirama');
-      const hasTobirama = aName.includes('tobirama') || bName.includes('tobirama');
-      const hasHiruzen = aName.includes('hiruzen') || bName.includes('hiruzen');
-      const hasMinato = aName.includes('minato') || bName.includes('minato');
-      const hasSasuke = aName.includes('sasuke') || bName.includes('sasuke');
-      const hasAkatsuki = hasPain || aName.includes('konan') || bName.includes('konan') || aName.includes('kisame') || bName.includes('kisame') || aName.includes('deidara') || bName.includes('deidara') || aName.includes('sasori') || bName.includes('sasori') || aName.includes('hidan') || bName.includes('hidan');
-      const hasMistSwordsman = aName.includes('zabuza') || bName.includes('zabuza') || aName.includes('kisame') || bName.includes('kisame');
+      const charOf = (pattern: string): Character | undefined => (aName.includes(pattern) ? a : bName.includes(pattern) ? b : undefined);
+      const enemyOf = (ch: Character): Character => (ch === left ? right : left);
+
+      const hidanCh = charOf('hidan');
+      const hakuCh = charOf('haku');
+      const shikamaruCh = charOf('shikamaru');
+      const orochimaruCh = charOf('orochimaru');
+      const zabuzaCh = charOf('zabuza');
+      const painCh = charOf('pain') || charOf('tendo');
+      const gaaraCh = charOf('gaara');
+      const sasukeCh = charOf('sasuke');
+      const itachiCh = charOf('itachi');
+      const madaraCh = charOf('madara');
+      const kakashiCh = charOf('kakashi');
+      const tsunadeCh = charOf('tsunade');
+      const narutoCh = charOf('naruto');
+      const hashiramaCh = charOf('hashirama');
+      const minatoCh = charOf('minato');
+      const tobiramaCh = charOf('tobirama');
+      const jiraiyaCh = charOf('jiraiya');
 
       ctx.save();
-      if (g.step <= 2) {
-        // GIAI ĐOẠN 1: KẾT ẤN, PHÂN THÂN VÀ TRIỆU HỒI SUSANO'O / VĨ THÚ CHAKRA
-        const pulse = 3 + Math.sin(now / 80) * 2.5;
 
-        // 1. ĐA TRỌNG ẢNH PHÂN THÂN CHI THUẬT (Tajuu Kage Bunshin no Jutsu - Naruto phân thân hàng chục người)
-        ctx.globalAlpha = 0.7;
-        if (hasNaruto) {
-          // Binh đoàn phân thân Naruto vàng cam bao vây toàn bộ sàn đấu (hơn 18 phân thân)
-          for (let k = 0; k < 18; k++) {
-            const kAngle = (k * Math.PI * 2) / 18 + Math.sin(now / 300) * 0.2;
-            const dist = 22 + (k % 3) * 14;
-            const bx = midX + Math.cos(kAngle) * dist;
-            const by = midY + Math.sin(kAngle) * (dist * 0.7);
-            // Thân áo cam & tóc vàng nhọn phân thân
-            ctx.fillStyle = '#ea580c';
-            ctx.fillRect(bx - 3, by - 4, 6, 8);
-            ctx.fillStyle = '#eab308';
-            ctx.fillRect(bx - 3, by - 8, 6, 4);
-            // Khói phân thân bùng nổ xung quanh
-            ctx.fillStyle = 'rgba(241, 245, 249, 0.4)';
-            ctx.beginPath();
-            ctx.arc(bx, by, 6, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        } else {
-          // Phân thân chuẩn 4 bóng hai bên
-          for (let k = -2; k <= 2; k++) {
-            if (k === 0) continue;
-            ctx.fillStyle = '#38bdf8';
-            ctx.beginPath();
-            ctx.arc(left.x + k * 8, left.y - 10, 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#f59e0b';
-            ctx.beginPath();
-            ctx.arc(right.x + k * 8, right.y - 10, 5, 0, Math.PI * 2);
-            ctx.fill();
-          }
+      // =========================================================================================
+      // 1. HIDAN (BẤT TỬ CHÚ THUẬT - TRẬN ĐỒ HUYẾT TẾ JASHIN & ĐỐI KHÁNG THỂ XÁC)
+      // =========================================================================================
+      if (hidanCh) {
+        const enemy = enemyOf(hidanCh);
+        // Vòng tròn trận đồ huyết tế màu đỏ máu có tam giác ngược bên trong dưới chân Hidan
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(hidanCh.x, hidanCh.y - 2, 18, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Tam giác huyết tế Jashin bên trong vòng tròn
+        ctx.beginPath();
+        for (let t = 0; t < 3; t++) {
+          const tAng = (t * Math.PI * 2) / 3 - Math.PI / 2;
+          const tx = hidanCh.x + Math.cos(tAng) * 16;
+          const ty = hidanCh.y - 2 + Math.sin(tAng) * 16;
+          if (t === 0) ctx.moveTo(tx, ty);
+          else ctx.lineTo(tx, ty);
         }
+        ctx.closePath();
+        ctx.stroke();
+
+        // Lời nguyền Huyết Kế: sợi tơ máu kết nối từ tim Hidan sang tim đối thủ
+        ctx.strokeStyle = '#991b1b';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(hidanCh.x, hidanCh.y - 14);
+        ctx.quadraticCurveTo(midX, midY - 24, enemy.x, enemy.y - 14);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Hidan đâm cọc sắt nguyền rủa xuyên ngực (hiệu ứng tia máu văng)
+        ctx.fillStyle = '#ef4444';
+        for (let d = 0; d < 6; d++) {
+          const dx = hidanCh.x + Math.sin(now / 70 + d) * 14;
+          const dy = hidanCh.y - 14 + Math.cos(now / 90 + d) * 12;
+          ctx.fillRect(dx, dy, 2, 2);
+        }
+      }
+
+      // =========================================================================================
+      // 2. HAKU (BĂNG ĐỘN: MA KÍNH BĂNG TINH & PHI KIM SENBON)
+      // =========================================================================================
+      if (hakuCh) {
+        const enemy = enemyOf(hakuCh);
+        // Mạng lưới các tấm gương băng hình chữ nhật bao quanh đối thủ (Makyou Hyoushou)
+        const mirrorCount = 10;
+        for (let m = 0; m < mirrorCount; m++) {
+          const mAng = (m * Math.PI * 2) / mirrorCount;
+          const mx = enemy.x + Math.cos(mAng) * 32;
+          const my = enemy.y - 10 + Math.sin(mAng) * 22;
+          // Tấm gương băng phản chiếu ánh xanh lục / xanh lam tuyết
+          ctx.fillStyle = 'rgba(224, 242, 254, 0.75)';
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1.5;
+          ctx.fillRect(mx - 4, my - 12, 8, 20);
+          ctx.strokeRect(mx - 4, my - 12, 8, 20);
+          // Vệt sáng lấp lánh phản quang băng tuyết
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(mx - 2, my - 8, 2, 8);
+        }
+
+        // Bão mưa kim băng (Senbon) phóng vụt từ các tấm gương vào tâm đối thủ
+        ctx.strokeStyle = '#e0f2fe';
+        ctx.lineWidth = 1;
+        for (let sb = 0; sb < 8; sb++) {
+          const needleProg = ((now * 2 + sb * 80) % 400) / 400;
+          const fromAng = (sb * Math.PI * 2) / 8;
+          const fx = enemy.x + Math.cos(fromAng) * 30 * (1 - needleProg);
+          const fy = enemy.y - 10 + Math.sin(fromAng) * 20 * (1 - needleProg);
+          ctx.beginPath();
+          ctx.moveTo(fx, fy);
+          ctx.lineTo(fx + Math.cos(fromAng) * 6, fy + Math.sin(fromAng) * 4);
+          ctx.stroke();
+        }
+      }
+
+      // =========================================================================================
+      // 3. NARA SHIKAMARU (ẢNH PHỐC THUẬT - BÓNG TRÓI CHI THUẬT KAGE MANE NO JUTSU)
+      // =========================================================================================
+      if (shikamaruCh) {
+        const enemy = enemyOf(shikamaruCh);
+        // Chiếc bóng đen ngoằn ngoèo rướn dài trên mặt đất từ chân Shikamaru sang chân đối phương
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+        ctx.beginPath();
+        ctx.moveTo(shikamaruCh.x - 3, shikamaruCh.y);
+        ctx.lineTo(shikamaruCh.x + 3, shikamaruCh.y);
+        // Đường bóng răng cưa biến hóa uốn lượn
+        const segs = 8;
+        for (let s = 1; s <= segs; s++) {
+          const u = s / segs;
+          const bx = shikamaruCh.x + (enemy.x - shikamaruCh.x) * u;
+          const by = shikamaruCh.y + (enemy.y - shikamaruCh.y) * u + Math.sin(u * Math.PI * 3 + now / 120) * 4;
+          const w = 3 + Math.sin(u * Math.PI) * 5;
+          ctx.lineTo(bx + w, by);
+        }
+        ctx.lineTo(enemy.x, enemy.y);
+        for (let s = segs; s >= 1; s--) {
+          const u = s / segs;
+          const bx = shikamaruCh.x + (enemy.x - shikamaruCh.x) * u;
+          const by = shikamaruCh.y + (enemy.y - shikamaruCh.y) * u + Math.sin(u * Math.PI * 3 + now / 120) * 4;
+          const w = 3 + Math.sin(u * Math.PI) * 5;
+          ctx.lineTo(bx - w, by);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        // Vòng tròn bóng trói khóa chặt chân đối thủ
+        ctx.strokeStyle = '#020617';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(enemy.x, enemy.y, 14, 8, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Ảnh Thủ Phược Thuật (Kage Kubi Shibari): bóng đen bò lên bóp cổ kẻ địch
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(enemy.x - 3, enemy.y - 18, 6, 12);
+      }
+
+      // =========================================================================================
+      // 4. OROCHIMARU (BẠCH XÀ CHI THUẬT & CỔNG QUỶ MÔN LA SINH MÔN RASHOMON)
+      // =========================================================================================
+      if (orochimaruCh) {
+        // Cổng quỷ La Sinh Môn (Rashomon) khổng lồ trồi lên sau lưng Orochimaru
+        const rY = orochimaruCh.y - 48;
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(orochimaruCh.x - 18, rY, 36, 42); // Thân cổng sắt
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(orochimaruCh.x - 20, rY - 4, 40, 6);  // Mái cổng
+        // Mặt quỷ đỏ hung dữ ở tâm cổng
+        ctx.fillStyle = '#991b1b';
+        ctx.beginPath();
+        ctx.arc(orochimaruCh.x, rY + 16, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(orochimaruCh.x - 5, rY + 13, 3, 2); // Mắt quỷ
+        ctx.fillRect(orochimaruCh.x + 2, rY + 13, 3, 2);
+
+        // Bầy Bạch Xà (Rắn trắng khổng lồ) trườn uốn lượn xung quanh
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 4;
+        for (let sn = 0; sn < 3; sn++) {
+          const sAngle = sn * 1.8 + now / 150;
+          ctx.beginPath();
+          ctx.moveTo(orochimaruCh.x, orochimaruCh.y - 10);
+          ctx.quadraticCurveTo(
+            midX + Math.sin(sAngle) * 20,
+            midY + Math.cos(sAngle) * 15,
+            midX + Math.cos(sAngle) * 35,
+            midY - 10 + Math.sin(sAngle) * 20,
+          );
+          ctx.stroke();
+        }
+      }
+
+      // =========================================================================================
+      // 5. ZABUZA MOMOCHI (THẤT KIẾM SƯƠNG MÙ - THỦY ĐỘN: ĐẠI THỦY LONG & QUỶ KIẾM)
+      // =========================================================================================
+      if (zabuzaCh) {
+        // Màn sương mù Làng Sương (Kirigakure no Jutsu) trắng đục bốc hơi nghi ngút
+        ctx.fillStyle = 'rgba(241, 245, 249, 0.55)';
+        for (let f = 0; f < 5; f++) {
+          const fx = midX + Math.sin(now / 180 + f) * 38;
+          const fy = midY + Math.cos(now / 220 + f) * 22;
+          ctx.beginPath();
+          ctx.arc(fx, fy, 22 + f * 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Thủy Độn: Thủy Long Đạn Thuật (Water Dragon) uốn lượn hùng vĩ
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(zabuzaCh.x, zabuzaCh.y);
+        ctx.bezierCurveTo(midX - 25, midY - 45, midX + 25, midY + 25, midX + 35, midY - 20);
+        ctx.stroke();
+
+        // Đầu rồng nước có răng nanh và mắt phát sáng
+        ctx.fillStyle = '#06b6d4';
+        ctx.beginPath();
+        ctx.arc(midX + 35, midY - 20, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(midX + 33, midY - 22, 3, 3);
+      }
+
+      // =========================================================================================
+      // 6. GAARA (SA MẠC BÃO CÁT - SA PHƯỢC CỮU SABAKU KYUU & THIÊN CẨU CÁT SHUKAKU)
+      // =========================================================================================
+      if (gaaraCh) {
+        const enemy = enemyOf(gaaraCh);
+        // Cát vàng sa mạc cuộn trào từ bình hồ lô phủ kín sàn đấu
+        ctx.fillStyle = 'rgba(217, 119, 6, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(midX, midY + 12, 45, 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sa Phược Cữu (Sabaku Kyuu): Cát bao bọc bóp nghẹt đối thủ
+        ctx.fillStyle = '#d97706';
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y - 12, 16 + Math.sin(now / 60) * 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Bàn tay cát khổng lồ (Shukaku Sand Hand) chộp lấy đối phương
+        ctx.strokeStyle = '#b45309';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(gaaraCh.x, gaaraCh.y - 12);
+        ctx.quadraticCurveTo(midX, midY - 30, enemy.x, enemy.y - 12);
+        ctx.stroke();
+
+        // Con mắt cát (Daisan no Me) lơ lửng trên không
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(gaaraCh.x, gaaraCh.y - 38, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(gaaraCh.x - 1, gaaraCh.y - 39, 2, 3);
+      }
+
+      // =========================================================================================
+      // 7. PAIN TENDO (THẦN LA THIÊN CHINH & ĐỊA BỘC THIÊN TINH CHIBAKU TENSEI)
+      // =========================================================================================
+      if (painCh) {
+        // Thần La Thiên Chinh (Shinra Tensei): Sóng xung kích bẻ cong không gian đẩy lùi vạn vật
+        const shockRad = 16 + ((now % 1000) / 1000) * 65;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(painCh.x, painCh.y - 14, shockRad, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Địa Bộc Thiên Tinh (Chibaku Tensei): Quả cầu hắc ám hút đất đá trên cao
+        const coreY = midY - 36;
+        ctx.fillStyle = '#09090b';
+        ctx.beginPath();
+        ctx.arc(midX, coreY, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Đá tảng bị hút bay lên trời
+        for (let r = 0; r < 8; r++) {
+          const rAng = (now / 350 + (r * Math.PI * 2) / 8) % (Math.PI * 2);
+          const rx = midX + Math.cos(rAng) * 26;
+          const ry = coreY + Math.sin(rAng) * 20;
+          ctx.fillStyle = '#78716c';
+          ctx.fillRect(rx - 3, ry - 3, 6, 6);
+        }
+      }
+
+      // =========================================================================================
+      // 8. UCHIHA (SASUKE / ITACHI / MADARA - SUSANO'O & HẮC HỎA AMATERASU)
+      // =========================================================================================
+      if (sasukeCh || itachiCh || madaraCh) {
+        const uChar = sasukeCh ?? itachiCh ?? madaraCh!;
+        const color = sasukeCh ? '#8b5cf6' : itachiCh ? '#dc2626' : '#2563eb';
+        // Khung giáp Susano'o khổng lồ rực lửa Chakra bao quanh
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath();
+        ctx.arc(uChar.x, uChar.y - 24, 35 + Math.sin(now / 80) * 4, 0, Math.PI * 2);
+        ctx.fill();
         ctx.globalAlpha = 1;
 
-        // 1.1 MƯA PHI TIÊU & SHURIKEN (Shuriken Kage Bunshin no Jutsu - Phân thân hàng trăm phi tiêu bay lượn)
-        for (let sh = 0; sh < 9; sh++) {
-          const shProg = ((now * 1.5 + sh * 120) % 600) / 600;
-          const shX = left.x + (right.x - left.x) * shProg;
-          const shY = midY - 14 + Math.sin(shProg * Math.PI + sh) * 12;
-          const rot = (now / 40 + sh) % (Math.PI * 2);
-          ctx.save();
-          ctx.translate(shX, shY);
-          ctx.rotate(rot);
-          ctx.fillStyle = '#64748b';
-          ctx.fillRect(-4, -1, 8, 2);
-          ctx.fillRect(-1, -4, 2, 8);
-          ctx.fillStyle = '#cbd5e1';
-          ctx.fillRect(-1, -1, 2, 2);
-          ctx.restore();
+        // Xương sườn Susano'o và thanh kiếm Chakra
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(uChar.x - 12, uChar.y - 42, 24, 28);
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(uChar.x - 7, uChar.y - 35, 4, 3); // Mắt vàng rực
+        ctx.fillRect(uChar.x + 3, uChar.y - 35, 4, 3);
+
+        // Ngọn lửa đen Amaterasu bốc cháy dữ dội ở tâm sàn đấu
+        ctx.fillStyle = '#09090b';
+        for (let f = 0; f < 7; f++) {
+          const fx = midX - 18 + f * 6;
+          const fh = 8 + Math.sin(now / 50 + f) * 6;
+          ctx.fillRect(fx, midY + 4 - fh, 4, fh);
         }
+      }
 
-        // 2. Triệu hồi Khung Giáp Susano'o Thần Thoại (màu tím/đỏ khổng lồ bao trùm phe Uchiha)
-        if (hasUchiha) {
-          const uChar = hasUchiha && (aName.includes('itachi') || aName.includes('madara') || aName.includes('sasuke')) ? a : b;
-          const sGrad = ctx.createRadialGradient(uChar.x, uChar.y - 25, 5, uChar.x, uChar.y - 25, 36);
-          sGrad.addColorStop(0, 'rgba(168, 85, 247, 0.85)'); // Tím Susano'o
-          sGrad.addColorStop(0.6, 'rgba(126, 34, 206, 0.45)');
-          sGrad.addColorStop(1, 'rgba(88, 28, 135, 0)');
-          ctx.fillStyle = sGrad;
-          ctx.beginPath();
-          ctx.arc(uChar.x, uChar.y - 25, 34 + Math.sin(now / 90) * 4, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Khung xương & Đôi mắt rực lửa của Susano'o
-          ctx.strokeStyle = '#f3e8ff';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(uChar.x - 10, uChar.y - 42, 20, 24);
-          ctx.fillStyle = '#fbbf24';
-          ctx.fillRect(uChar.x - 6, uChar.y - 34, 4, 3);
-          ctx.fillRect(uChar.x + 2, uChar.y - 34, 4, 3);
-        }
-
-        // 3. Vĩ Thú Hình & Trạng Thái Lục Đạo Tiên Nhân (Naruto / Jinchūriki)
-        if (hasBijuu) {
-          const bChar = (hasNaruto ? (aName.includes('naruto') ? a : b) : ((aName.includes('gaara') || aName.includes('bee')) ? a : b));
-          const isRikudo = hasNaruto && ((now % 8000) > 4000); // Luân phiên Tiên Nhân / Lục Đạo
-
-          if (isRikudo) {
-            // HÓA LỤC ĐẠO TIÊN NHÂN: Hào quang vàng kim rực sáng & 6 viên Cầu Đạo Ngọc đen lơ lửng
-            const rGrad = ctx.createRadialGradient(bChar.x, bChar.y - 22, 5, bChar.x, bChar.y - 22, 38);
-            rGrad.addColorStop(0, 'rgba(254, 240, 138, 0.95)'); // Vàng kim Lục Đạo
-            rGrad.addColorStop(0.5, 'rgba(234, 179, 8, 0.6)');
-            rGrad.addColorStop(1, 'rgba(202, 138, 4, 0)');
-            ctx.fillStyle = rGrad;
-            ctx.beginPath();
-            ctx.arc(bChar.x, bChar.y - 22, 36, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 6 viên Hắc Cầu Đạo Ngọc (Gudoudama) xoay tròn sau lưng
-            for (let g = 0; g < 6; g++) {
-              const gAng = (now / 350 + (g * Math.PI * 2) / 6) % (Math.PI * 2);
-              const gx = bChar.x + Math.cos(gAng) * 22;
-              const gy = bChar.y - 22 + Math.sin(gAng) * 22;
-              ctx.fillStyle = '#09090b';
-              ctx.beginPath();
-              ctx.arc(gx, gy, 4, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.strokeStyle = '#fde047';
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-          } else {
-            // HÓA CỬU VĨ CHAKRA (Kurama Mode)
-            const bGrad = ctx.createRadialGradient(bChar.x, bChar.y - 20, 4, bChar.x, bChar.y - 20, 32);
-            bGrad.addColorStop(0, 'rgba(249, 115, 22, 0.9)'); // Cam Cửu Vĩ
-            bGrad.addColorStop(0.7, 'rgba(234, 88, 12, 0.4)');
-            bGrad.addColorStop(1, 'rgba(194, 65, 12, 0)');
-            ctx.fillStyle = bGrad;
-            ctx.beginPath();
-            ctx.arc(bChar.x, bChar.y - 20, 30 + Math.sin(now / 70) * 3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Đuôi Vĩ Thú đập mạnh phía sau
-            ctx.strokeStyle = '#ea580c';
-            ctx.lineWidth = 3;
-            for (let t = 0; t < 3; t++) {
-              const tAngle = Math.PI * 0.7 + t * 0.35 + Math.sin(now / 100 + t) * 0.2;
-              ctx.beginPath();
-              ctx.moveTo(bChar.x, bChar.y - 10);
-              ctx.quadraticCurveTo(bChar.x + Math.cos(tAngle) * 22, bChar.y - 24, bChar.x + Math.cos(tAngle) * 32, bChar.y - 38);
-              ctx.stroke();
-            }
-          }
-        }
-
-        // 4. TRIỆU HỒI ĐẠI CÓC GAMABUNTA (Jiraiya / Naruto)
-        if (hasJiraiya || (hasNaruto && (now % 6000 < 3000))) {
-          const jChar = hasJiraiya ? (aName.includes('jiraiya') ? a : b) : (aName.includes('naruto') ? a : b);
-          // Thân Cóc Gamabunta khổng lồ màu đỏ tía xuất hiện sau lưng
-          ctx.fillStyle = '#b91c1c';
-          ctx.beginPath();
-          ctx.ellipse(jChar.x - 22, jChar.y - 26, 20, 16, 0, 0, Math.PI * 2);
-          ctx.fill();
-          // Mắt cóc vàng rực & tẩu thuốc
-          ctx.fillStyle = '#facc15';
-          ctx.fillRect(jChar.x - 28, jChar.y - 32, 6, 4);
-          ctx.fillStyle = '#78350f';
-          ctx.fillRect(jChar.x - 34, jChar.y - 24, 8, 3); // tẩu thuốc Gamabunta
-        }
-
-        // 5. TIÊN PHÁP MỘC ĐỘN: CHÂN SỐ THIÊN THỦ - THIÊN THỦ QUAN ÂM & MỘC LONG (Senju Hashirama - Đệ Nhất)
-        if (hasHashirama) {
-          const hChar = aName.includes('hashirama') ? a : b;
-          // Tượng Phật Mộc Thần Thiên Thủ Quan Âm khổng lồ (Shin Susenju)
-          // 1. Đài sen và thân tượng Phật gỗ uy nghi sau lưng Hashirama
-          ctx.fillStyle = '#854d0e';
-          ctx.beginPath();
-          ctx.ellipse(hChar.x, hChar.y - 32, 22, 28, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = '#ca8a04';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-
-          // Khuôn mặt tượng Phật trang nghiêm với dấu ấn Tiên Nhân Thuật
-          ctx.fillStyle = '#a16207';
-          ctx.beginPath();
-          ctx.arc(hChar.x, hChar.y - 42, 11, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#dc2626';
-          ctx.fillRect(hChar.x - 2, hChar.y - 48, 4, 3); // Chấm chu sa đỏ giữa trán Phật
-
-          // 2. Vành đai ngàn cánh tay gỗ (Thiên Thủ) tỏa ra như vầng thái dương
-          ctx.strokeStyle = '#a16207';
-          ctx.lineWidth = 1.5;
-          const armCount = 20;
-          for (let aIdx = 0; aIdx < armCount; aIdx++) {
-            const angle = Math.PI + (aIdx * Math.PI) / (armCount - 1);
-            const reach = 38 + ((aIdx % 3) * 6) + Math.sin(now / 80 + aIdx) * 3;
-            const ax = hChar.x + Math.cos(angle) * reach;
-            const ay = (hChar.y - 32) + Math.sin(angle) * reach;
-            ctx.beginPath();
-            ctx.moveTo(hChar.x, hChar.y - 32);
-            ctx.lineTo(ax, ay);
-            ctx.stroke();
-            // Nắm đấm gỗ uy lực ở đầu mỗi cánh tay (Đỉnh Thượng Hóa Phật)
-            ctx.fillStyle = '#ca8a04';
-            ctx.beginPath();
-            ctx.arc(ax, ay, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          // 3. Rồng Gỗ khổng lồ (Mokuryuu) quấn quanh tượng phật
-          ctx.strokeStyle = '#15803d';
-          ctx.lineWidth = 3.5;
-          ctx.beginPath();
-          ctx.moveTo(hChar.x - 18, hChar.y - 10);
-          ctx.bezierCurveTo(hChar.x - 35, hChar.y - 45, hChar.x + 35, hChar.y - 55, hChar.x + 12, hChar.y - 65);
-          ctx.stroke();
-        }
-
-        // 6. PHI LÔI THẦN THUẬT (Namikaze Minato - Đệ Tứ & Tobirama - Đệ Nhị)
-        if (hasMinato || hasTobirama) {
-          const mChar = (hasMinato ? (aName.includes('minato') ? a : b) : (aName.includes('tobirama') ? a : b));
-          // Tia chớp vàng / Phù chú Phi Lôi Thần dịch chuyển tức thời
-          ctx.strokeStyle = hasMinato ? '#facc15' : '#38bdf8';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([3, 3]);
-          ctx.beginPath();
-          ctx.moveTo(mChar.x, mChar.y - 10);
-          ctx.lineTo(mChar.x + (Math.sin(now / 50) * 35), mChar.y - 25);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-
-        // Trận địa Chakra sấm sét mặt đất
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 1.5;
+      // =========================================================================================
+      // 9. HATAKE KAKASHI (LÔI THIẾT RAIKIRI & KAMUI KHÔNG GIAN)
+      // =========================================================================================
+      if (kakashiCh) {
+        const enemy = enemyOf(kakashiCh);
+        // Lôi Thiết Raikiri (Thiên Điểu xanh biếc nổ lốp bốp trên tay)
+        ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(left.x, left.y - 7, 10 + pulse, 0, Math.PI * 2);
+        ctx.arc(kakashiCh.x + 10, kakashiCh.y - 12, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        for (let s = 0; s < 6; s++) {
+          const sAng = s * 1.1 + now / 40;
+          ctx.beginPath();
+          ctx.moveTo(kakashiCh.x + 10, kakashiCh.y - 12);
+          ctx.lineTo(kakashiCh.x + 10 + Math.cos(sAng) * 22, kakashiCh.y - 12 + Math.sin(sAng) * 16);
+          ctx.stroke();
+        }
+
+        // Hố đen Kamui vặn xoắn không gian ngay trên đầu kẻ địch
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2.5;
+        for (let k = 0; k < 3; k++) {
+          const kAng = now / 100 + k * 1.5;
+          ctx.beginPath();
+          ctx.arc(enemy.x, enemy.y - 24, 12 - k * 3, kAng, kAng + Math.PI * 1.2);
+          ctx.stroke();
+        }
+      }
+
+      // =========================================================================================
+      // 10. TSUNADE (QUÁI LỰC NỨT ĐẤT & BÁCH HÀO THUẬT PHÁT SÁNG)
+      // =========================================================================================
+      if (tsunadeCh) {
+        // Ấn Bách Hào Thuật phát sáng rực rỡ tím sen
+        ctx.fillStyle = '#a855f7';
+        ctx.beginPath();
+        ctx.arc(tsunadeCh.x, tsunadeCh.y - 20, 8 + Math.sin(now / 60) * 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cú đấm Quái Lực phá tan mặt đất (vết nứt tỏa ra khắp sàn)
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        for (let c = 0; c < 6; c++) {
+          const cAng = (c * Math.PI * 2) / 6;
+          ctx.beginPath();
+          ctx.moveTo(midX, midY + 6);
+          ctx.lineTo(midX + Math.cos(cAng) * 32, midY + 6 + Math.sin(cAng) * 18);
+          ctx.stroke();
+        }
+      }
+
+      // =========================================================================================
+      // 11. SENJU HASHIRAMA (TIÊN PHÁP MỘC ĐỘN: CHÂN SỐ THIÊN THỦ & MỘC LONG)
+      // =========================================================================================
+      if (hashiramaCh) {
+        // Tượng Phật Mộc Thần Thiên Thủ nghìn tay sau lưng Hashirama
+        ctx.fillStyle = '#854d0e';
+        ctx.beginPath();
+        ctx.ellipse(hashiramaCh.x, hashiramaCh.y - 36, 24, 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ca8a04';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Vành đai các bàn tay gỗ tỏa ra như vầng thái dương
+        ctx.strokeStyle = '#a16207';
+        ctx.lineWidth = 2;
+        for (let aIdx = 0; aIdx < 16; aIdx++) {
+          const angle = Math.PI + (aIdx * Math.PI) / 15;
+          const reach = 38 + Math.sin(now / 80 + aIdx) * 5;
+          ctx.beginPath();
+          ctx.moveTo(hashiramaCh.x, hashiramaCh.y - 36);
+          ctx.lineTo(hashiramaCh.x + Math.cos(angle) * reach, hashiramaCh.y - 36 + Math.sin(angle) * reach);
+          ctx.stroke();
+        }
+      }
+
+      // =========================================================================================
+      // 12. UZUMAKI NARUTO (RASENSHURIKEN & BIJUUDAMA CỬU VĨ / LỤC ĐẠO)
+      // =========================================================================================
+      if (narutoCh) {
+        // Phân thân Naruto vây quanh hỗ trợ tung Rasenshuriken
+        const rRad = 12 + Math.sin(now / 40) * 3;
+        const rGrad = ctx.createRadialGradient(midX, midY - 6, 2, midX, midY - 6, rRad + 14);
+        rGrad.addColorStop(0, '#ffffff');
+        rGrad.addColorStop(0.4, '#38bdf8');
+        rGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        ctx.fillStyle = rGrad;
+        ctx.beginPath();
+        ctx.arc(midX, midY - 6, rRad + 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 4 cánh quạt gió Phong Độn xoay vù vù tốc độ cao
+        ctx.strokeStyle = '#f0f9ff';
+        ctx.lineWidth = 2.5;
+        for (let b = 0; b < 4; b++) {
+          const bAngle = (now / 50 + (b * Math.PI) / 2) % (Math.PI * 2);
+          ctx.beginPath();
+          ctx.moveTo(midX, midY - 6);
+          ctx.lineTo(midX + Math.cos(bAngle) * (rRad + 20), midY - 6 + Math.sin(bAngle) * (rRad + 20));
+          ctx.stroke();
+        }
+      }
+
+      // =========================================================================================
+      // 13. MINATO & TOBIRAMA (PHI LÔI THẦN THUẬT - DỊCH CHUYỂN TỨC THỜI & TIA CHỚP VÀNG)
+      // =========================================================================================
+      if (minatoCh || tobiramaCh) {
+        const fChar = minatoCh ?? tobiramaCh!;
+        const fColor = minatoCh ? '#facc15' : '#38bdf8';
+        ctx.strokeStyle = fColor;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(fChar.x, fChar.y - 12);
+        ctx.lineTo(fChar.x + Math.sin(now / 50) * 45, fChar.y - 30);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // =========================================================================================
+      // 14. ĐẠI HIỆN DIỆN CHUNG: ĐẠI CHIẾN CHAKRA BÙNG NỔ (NẾU KHÔNG TRÙNG RIÊNG TRÊN)
+      // =========================================================================================
+      if (!hidanCh && !hakuCh && !shikamaruCh && !orochimaruCh && !zabuzaCh && !gaaraCh && !painCh && !sasukeCh && !itachiCh && !kakashiCh && !tsunadeCh && !narutoCh && !hashiramaCh) {
+        const pulse = 4 + Math.sin(now / 80) * 3;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(left.x, left.y - 10, 12 + pulse, 0, Math.PI * 2);
         ctx.stroke();
 
         ctx.strokeStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.arc(right.x, right.y - 7, 10 + pulse, 0, Math.PI * 2);
-        ctx.stroke();
-      } else {
-        // GIAI ĐOẠN 2: ĐẠI CHIẾN TUNG CHIÊU TỐI THƯỢNG (ĐỊA BỘC THIÊN TINH / VĨ THÚ NGỌC / SUSANO'O SLICE)
-        const shockRad = 24 + ((now % 1200) / 1200) * 55;
-
-        // 1. THẦN LA THIÊN CHINH (Shinra Tensei) - Sóng xung kích đẩy lùi bẻ cong không gian
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(midX, midY, shockRad, 0, Math.PI * 2);
+        ctx.arc(right.x, right.y - 10, 12 + pulse, 0, Math.PI * 2);
         ctx.stroke();
 
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(midX, midY, shockRad * 0.7, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // 2. ĐỊA BỘC THIÊN TINH (Chibaku Tensei) - Quả cầu hấp dẫn hắc ám hút đá đất bay lên
-        if (hasPain || (g.step >= 4)) {
-          const coreY = midY - 32;
-          // Lõi đen hắc ám hút mọi vật chất
-          ctx.fillStyle = '#09090b';
-          ctx.beginPath();
-          ctx.arc(midX, coreY, 14, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = '#dc2626';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-
-          // Các tảng đá khổng lồ bị lực hút Chibaku Tensei lôi lên không trung
-          for (let r = 0; r < 7; r++) {
-            const rockAngle = (now / 400 + (r * Math.PI * 2) / 7) % (Math.PI * 2);
-            const dist = 18 + ((now + r * 150) % 25);
-            const rx = midX + Math.cos(rockAngle) * dist;
-            const ry = coreY + Math.sin(rockAngle) * dist;
-            ctx.fillStyle = '#57534e';
-            ctx.fillRect(rx - 3, ry - 3, 6, 6);
-            ctx.strokeStyle = '#a8a29e';
-            ctx.strokeRect(rx - 3, ry - 3, 6, 6);
-          }
-        }
-
-        // 3. VĨ THÚ NGỌC (Bijuu Dama) & PHONG ĐỘN: RASENSHURIKEN BÙNG NỔ
-        const bRad = 12 + Math.sin(now / 40) * 3;
-        const bGrad = ctx.createRadialGradient(midX, midY, 2, midX, midY, bRad + 12);
-        bGrad.addColorStop(0, '#ffffff');
-        bGrad.addColorStop(0.3, '#3b82f6');
-        bGrad.addColorStop(0.7, '#8b5cf6');
-        bGrad.addColorStop(1, 'rgba(139, 92, 246, 0)');
-        ctx.fillStyle = bGrad;
-        ctx.beginPath();
-        ctx.arc(midX, midY, bRad + 12, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Cánh quạt Chakra Phong Độn Rasenshuriken xoay tròn tốc độ cao
-        ctx.strokeStyle = '#e0f2fe';
-        ctx.lineWidth = 2;
-        for (let b = 0; b < 4; b++) {
-          const bAngle = (now / 60 + (b * Math.PI) / 2) % (Math.PI * 2);
-          const bx = midX + Math.cos(bAngle) * (bRad + 18);
-          const by = midY + Math.sin(bAngle) * (bRad + 18);
-          ctx.beginPath();
-          ctx.moveTo(midX, midY);
-          ctx.lineTo(bx, by);
-          ctx.stroke();
-        }
-
-        // 4. LÔI THẦN KIRIN / TIA SÉT CHIDORI OANH TẠC MẶT ĐẤT
+        // Tia sét va chạm ở trung tâm
         ctx.strokeStyle = '#fef08a';
         ctx.lineWidth = 2;
-        for (let s = 0; s < 5; s++) {
-          const sx = midX - 35 + s * 18;
-          ctx.beginPath();
-          ctx.moveTo(sx, midY - 45);
-          ctx.lineTo(sx + 6, midY - 20);
-          ctx.lineTo(sx - 4, midY - 5);
-          ctx.lineTo(sx + 8, midY + 12);
-          ctx.stroke();
-        }
-
-        // 5. THIÊN THẦN GIẤY KAMI NO SHISHA (Konan) & RỐI XÍCH BÍ KỸ (Sasori)
-        if (hasAkatsuki) {
-          // Bão ngàn tờ giấy bay lượn sắc bén của Konan
-          for (let p = 0; p < 8; p++) {
-            const px = midX + Math.sin(now / 150 + p) * 32;
-            const py = midY - 20 + Math.cos(now / 180 + p) * 20;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(px, py, 4, 3);
-            ctx.strokeStyle = '#6366f1';
-            ctx.strokeRect(px, py, 4, 3);
-          }
-        }
-
-        // 6. THẤT KIẾM LÀNG SƯƠNG MÙ (Zabuza & Kisame - Quỷ Kiếm Chém Sương)
-        if (hasMistSwordsman) {
-          // Màn sương mù dày đặc (Kirigakure no Jutsu) che phủ toàn sàn đấu
-          ctx.fillStyle = 'rgba(241, 245, 249, 0.45)';
-          ctx.fillRect(midX - 55, midY - 35, 110, 50);
-          // Vệt chém nước Thủy Độn khổng lồ
-          ctx.strokeStyle = '#0284c7';
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(midX, midY, 32, Math.PI * 0.2, Math.PI * 0.8);
-          ctx.stroke();
-        }
-
-        // 7. TAM NIN HUYỀN THOẠI (BẠCH XÀ OROCHIMARU & ĐẠI BÁCH HÀO TSUNADE)
-        if (hasOrochimaru) {
-          // Rắn trắng khổng lồ nhiều đầu trườn qua chiến địa
-          ctx.strokeStyle = '#f8fafc';
-          ctx.lineWidth = 5;
-          ctx.beginPath();
-          ctx.moveTo(midX - 30, midY + 10);
-          ctx.bezierCurveTo(midX - 10, midY - 20, midX + 20, midY + 20, midX + 35, midY - 10);
-          ctx.stroke();
-        }
-        if (hasTsunade) {
-          // Cú đấm Quái Lực phá hủy mặt đất (Rạn nứt đất đá)
-          ctx.strokeStyle = '#ef4444';
-          ctx.lineWidth = 2;
-          for (let c = 0; c < 4; c++) {
-            ctx.beginPath();
-            ctx.moveTo(midX, midY + 5);
-            ctx.lineTo(midX + Math.cos(c * 1.5) * 26, midY + 5 + Math.sin(c * 1.5) * 16);
-            ctx.stroke();
-          }
-        }
-
-        // 8. ĐỆ TAM SARUTOBI HIRUZEN (TRIỆU HỒI HẦU VƯƠNG ENMA & NGŨ HÀNH LIÊN HOÀN ĐỘN)
-        if (hasHiruzen) {
-          // Triệu Hồi Hầu Vương Enma (Vua Khỉ lông bạc giáp hổ xuất hiện)
-          ctx.fillStyle = '#f8fafc';
-          ctx.beginPath();
-          ctx.ellipse(midX - 25, midY - 24, 14, 18, 0, 0, Math.PI * 2);
-          ctx.fill();
-          // Mắt đỏ & Giáp hổ vàng đen của Hầu Vương
-          ctx.fillStyle = '#dc2626';
-          ctx.fillRect(midX - 30, midY - 30, 4, 3);
-          ctx.fillRect(midX - 22, midY - 30, 4, 3);
-          ctx.fillStyle = '#eab308';
-          ctx.fillRect(midX - 32, midY - 20, 14, 8);
-
-          // Kim Cang Thiết Bổng Enma biến hóa đập thẳng xuống sàn
-          ctx.fillStyle = '#78350f';
-          ctx.fillRect(midX - 12, midY - 42, 7, 52);
-          ctx.fillStyle = '#fef08a';
-          ctx.fillRect(midX - 13, midY - 44, 9, 4);
-          ctx.fillRect(midX - 13, midY + 8, 9, 4);
-
-          // ĐA NHẪN THUẬT: NGŨ ĐỘN LIÊN HOÀN (Hỏa - Thủy - Thổ - Lôi - Phong bắn ra 5 hướng)
-          const jutsuColors = ['#ef4444', '#0284c7', '#78350f', '#facc15', '#22c55e'];
-          for (let e = 0; e < 5; e++) {
-            const eAngle = (e * Math.PI * 2) / 5 + now / 100;
-            const ex = midX + Math.cos(eAngle) * 36;
-            const ey = midY + Math.sin(eAngle) * 26;
-            ctx.fillStyle = jutsuColors[e];
-            ctx.beginPath();
-            ctx.arc(ex, ey, 6, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
+        ctx.beginPath();
+        ctx.moveTo(left.x + 8, left.y - 10);
+        ctx.lineTo(midX, midY);
+        ctx.lineTo(right.x - 8, right.y - 10);
+        ctx.stroke();
       }
+
       ctx.restore();
     }
+  }
+
+  private drawNinjaTeamBattleFx(now: number): void {
+    const war = this.sim.ninjaWar?.getState();
+    if (!war || war.phase === 'idle' || war.phase === 'disperse') return;
+    const { ctx } = this;
+    const ax = war.arenaCenter.x * TILE;
+    const ay = war.arenaCenter.y * TILE;
+
+    ctx.save();
+
+    // 1. VÕ ĐÀI TRUNG TÂM & VÀNG HÀO QUANG ĐẠI CHIẾN
+    const pulse = Math.sin(now / 150) * 8;
+    const rad = 72 + pulse;
+    const auraGrad = ctx.createRadialGradient(ax, ay, 10, ax, ay, rad + 40);
+    auraGrad.addColorStop(0, war.phase === 'victory' ? 'rgba(255, 215, 0, 0.45)' : 'rgba(239, 68, 68, 0.35)');
+    auraGrad.addColorStop(0.5, war.phase === 'victory' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(59, 130, 246, 0.25)');
+    auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.arc(ax, ay, rad + 40, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Vành đai ấn chú trận pháp bảo hộ sàn đấu
+    ctx.strokeStyle = war.phase === 'victory' ? '#fbbf24' : '#f97316';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.arc(ax, ay, rad, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 2. KHI ĐANG GIAO TRANH (CLASH): VẼ CÁC ĐẠI CHIÊU NHẪN THUẬT CHO CÁC ĐẤU THỦ
+    if (war.phase === 'clash') {
+      // Tia sét và sóng năng lượng va chạm ở giữa tâm võ đài
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let s = 0; s < 5; s++) {
+        const ang = (s * Math.PI * 2) / 5 + now / 200;
+        const dist = 18 + Math.sin(now / 60 + s) * 12;
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax + Math.cos(ang) * dist, ay + Math.sin(ang) * dist);
+      }
+      ctx.stroke();
+
+      // Hiệu ứng từng nhẫn giả tham gia trận chiến
+      const allCombatants = [...war.teamAChars, ...war.teamBChars];
+      for (const ch of allCombatants) {
+        const n = (ch.info.name ?? '').toLowerCase();
+        if (n.includes('naruto')) {
+          const rGrad = ctx.createRadialGradient(ch.x + (ch.dir === 'right' ? 14 : -14), ch.y - 10, 2, ch.x + (ch.dir === 'right' ? 14 : -14), ch.y - 10, 20);
+          rGrad.addColorStop(0, '#ffffff');
+          rGrad.addColorStop(0.5, '#38bdf8');
+          rGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
+          ctx.fillStyle = rGrad;
+          ctx.beginPath();
+          ctx.arc(ch.x + (ch.dir === 'right' ? 14 : -14), ch.y - 10, 20, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (n.includes('sasuke')) {
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(ch.x + (ch.dir === 'right' ? 12 : -12), ch.y - 10, 14, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (n.includes('madara')) {
+          ctx.strokeStyle = '#60a5fa';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(ch.x, ch.y - 16, 26, Math.PI, Math.PI * 2);
+          ctx.stroke();
+        } else if (n.includes('hashirama')) {
+          ctx.strokeStyle = '#22c55e';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(ch.x, ch.y - 14, 24, 0, Math.PI);
+          ctx.stroke();
+        } else if (n.includes('pain') || n.includes('tendo')) {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(ch.x, ch.y - 8, 30 + Math.sin(now / 70) * 8, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (n.includes('gai') || n.includes('lee')) {
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(ch.x, ch.y - 8, 18, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (n.includes('minato')) {
+          ctx.strokeStyle = '#eab308';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(ch.x - 12, ch.y - 8);
+          ctx.lineTo(ch.x + 12, ch.y - 8);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // 3. KHI Ở PHASE VICTORY: CỘT SÁNG VINH QUANG CHIẾU XUỐNG ĐỘI CHIẾN THẮNG
+    if (war.phase === 'victory' && war.winnerTeam) {
+      const winnerChars = war.winnerTeam === 'A' ? war.teamAChars : war.teamBChars;
+      for (const ch of winnerChars) {
+        const sGrad = ctx.createLinearGradient(ch.x, ch.y - 120, ch.x, ch.y);
+        sGrad.addColorStop(0, 'rgba(253, 224, 71, 0)');
+        sGrad.addColorStop(0.5, 'rgba(253, 224, 71, 0.4)');
+        sGrad.addColorStop(1, 'rgba(253, 224, 71, 0.8)');
+        ctx.fillStyle = sGrad;
+        ctx.fillRect(ch.x - 14, ch.y - 120, 28, 120);
+
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(ch.x, ch.y - 2, 16, 8, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    ctx.restore();
   }
 
   private icon(name: IconName): Sprite | null {

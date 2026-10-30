@@ -30,7 +30,11 @@ export type OfficeTheme = 'auto' | SeasonalTheme;
  * 26 de dezembro e, no resto do ano, o escritório original.
  */
 export function seasonalThemeFor(theme: OfficeTheme | undefined, date: Date): SeasonalTheme {
-  // Thay thế Halloween bằng chủ đề nhẫn giả ninja không gian chuẩn
+  if (theme && theme !== 'auto') return theme;
+  const m = date.getMonth();
+  const d = date.getDate();
+  if (m === 9) return 'halloween';
+  if (m === 10 || (m === 11 && d <= 26)) return 'christmas';
   return 'none';
 }
 
@@ -49,6 +53,10 @@ export interface SoundCue {
   /** Teclado: quantas teclas na rajada. */
   count?: number;
 }
+
+import type { NinjaTeamBattleState } from './sim/ninja-war-director';
+
+export type { NinjaTeamBattleState };
 
 export interface WorldApi {
   /** Seleciona (ou limpa) um agente/sala. `focus` move a câmera até ele. */
@@ -95,6 +103,18 @@ export interface WorldApi {
    * câmera; ao voltar, a simulação avança o tempo que passou (como com a aba em segundo plano).
    */
   setSuspended?(suspended: boolean): void;
+  /** (Opcional, aditivo) Điều khiển trực tiếp nhẫn giả (Player Control Mode). */
+  controlAgent?(id: string | null): void;
+  getControlledAgent?(): string | null;
+  onControlledChange?(cb: (id: string | null) => void): () => void;
+  setControlledIntent?(intent: { dx: number; dy: number; run: boolean }): void;
+  controlledWalkTo?(tx: number, ty: number, run?: boolean): boolean;
+  challengeNinja?(targetId?: string): { ok: boolean; target?: string; reason?: string };
+  getNearbyNinjas?(radiusTiles?: number): Array<{ id: string; name: string; dist: number }>;
+  /** (Opcional, aditivo) Màn Thi Đấu Team & Đại Chiến Nhẫn Giả Kinh Điển. */
+  triggerTeamBattle?(scenarioIdOrIndex?: string | number): boolean;
+  getTeamBattleState?(): NinjaTeamBattleState | null;
+  onTeamBattleChange?(cb: (state: NinjaTeamBattleState | null) => void): () => void;
   destroy(): void;
 }
 

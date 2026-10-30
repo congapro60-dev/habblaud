@@ -1,50 +1,15 @@
 // Avatares dos agentes para a UI: gerados pelo módulo de arte uma única vez e reaproveitados como data URL.
 import { partsKey } from '../../../shared/appearance';
 import type { AgentInfo } from '../../../shared/types';
+import { resolveNinjaAvatarUrl } from '../../../shared/local-character-roster';
 import { avatarCanvas } from '../art';
 import { h } from './dom';
+
+export { resolveNinjaAvatarUrl };
 
 const cache = new Map<string, { url: string; w: number; h: number }>();
 
 export type AvatarSource = Pick<AgentInfo, 'seed' | 'look' | 'kind' | 'parts'> & { name?: string };
-
-/** Bản đồ nhận diện ảnh anime/manga chính thức của các Kage & Nhân vật Naruto */
-export function resolveNinjaAvatarUrl(name?: string): string | null {
-  if (!name) return null;
-  const n = name.toLowerCase();
-  if (n.includes('tsunade')) return '/assets/ninja/avatars/tsunade.png';
-  if (n.includes('gaara')) return '/assets/ninja/avatars/gaara.png';
-  if (n.includes('ohnoki') || n.includes('onoki')) return '/assets/ninja/avatars/ohnoki.png';
-  if (n.includes('mei')) return '/assets/ninja/avatars/mei.png';
-  if (n.includes('raikage') || n.includes('ay')) return '/assets/ninja/avatars/ay.png';
-  if (n.includes('jiraiya')) return '/assets/ninja/avatars/jiraiya.png';
-  if (n.includes('pain') || n.includes('tendo')) return '/assets/ninja/avatars/pain.png';
-  if (n.includes('naruto')) return '/assets/ninja/avatars/naruto.png';
-  if (n.includes('sasuke')) return '/assets/ninja/avatars/sasuke.png';
-  if (n.includes('kakashi')) return '/assets/ninja/avatars/kakashi.png';
-  if (n.includes('shikamaru')) return '/assets/ninja/avatars/shikamaru.png';
-  if (n.includes('neji')) return '/assets/ninja/avatars/neji.png';
-  if (n.includes('hinata')) return '/assets/ninja/avatars/hinata.png';
-  if (n.includes('itachi')) return '/assets/ninja/avatars/itachi.png';
-  if (n.includes('obito')) return '/assets/ninja/avatars/obito.png';
-  if (n.includes('madara')) return '/assets/ninja/avatars/madara.png';
-  if (n.includes('hashirama')) return '/assets/ninja/avatars/hashirama.png';
-  if (n.includes('tobirama')) return '/assets/ninja/avatars/tobirama.png';
-  if (n.includes('hiruzen')) return '/assets/ninja/avatars/hiruzen.png';
-  if (n.includes('minato')) return '/assets/ninja/avatars/minato.png';
-  if (n.includes('orochimaru')) return '/assets/ninja/avatars/orochimaru.png';
-  if (n.includes('konan')) return '/assets/ninja/avatars/konan.png';
-  if (n.includes('kisame')) return '/assets/ninja/avatars/kisame.png';
-  if (n.includes('deidara')) return '/assets/ninja/avatars/deidara.png';
-  if (n.includes('sasori')) return '/assets/ninja/avatars/sasori.png';
-  if (n.includes('lee')) return '/assets/ninja/avatars/lee.png';
-  if (n.includes('sakura')) return '/assets/ninja/avatars/sakura.png';
-  if (n.includes('zabuza')) return '/assets/ninja/avatars/zabuza.png';
-  if (n.includes('haku')) return '/assets/ninja/avatars/haku.png';
-  if (n.includes('gai')) return '/assets/ninja/avatars/gai.png';
-  if (n.includes('bee')) return '/assets/ninja/avatars/killerbee.png';
-  return null;
-}
 
 function avatarData(agent: AvatarSource, scale: number): { url: string; w: number; h: number } {
   const key = `${agent.seed}|${agent.look}|${agent.kind}|${scale}|${partsKey(agent.parts)}`;

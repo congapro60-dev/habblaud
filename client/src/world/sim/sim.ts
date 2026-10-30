@@ -5,7 +5,7 @@ import type { AgentInfo, OfficeSnapshot, Provider, RoomInfo } from '../../../../
 import { LOCAL_DEPARTMENT_HEADS } from '../../../../shared/local-character-roster';
 import type { ArtModule, Dir, RoomTheme } from '../../art/api';
 import type { WorldOptions } from '../api';
-import { COL_W, COMPACT_DELAY_MS, DISMANTLE_DELAY_MS, FOOT_DX, FOOT_DY, MISSING_DEBOUNCE_MS, RUN_SPEED, TILE, WALK_SPEED } from '../constants';
+import { COL_W, COMPACT_DELAY_MS, CORRIDOR_Y, DISMANTLE_DELAY_MS, FOOT_DX, FOOT_DY, MISSING_DEBOUNCE_MS, RUN_SPEED, TILE, WALK_SPEED } from '../constants';
 import { assembleBuilding, type BuildingLayout } from '../layout/building';
 import { DIRECTOR_ID, RECEPTION_ID } from '../layout/core';
 import { columnsFor, inRect } from '../layout/geometry';
@@ -17,6 +17,7 @@ import { PROGRAM_SEED } from '../social/gathering';
 import { hasTrait, personaFor, soloWeights } from '../social/persona';
 import { Social } from '../social/social';
 import { browserStorage, type StorageLike } from '../social/wallet';
+import { NinjaWarDirector, type NinjaTeamBattleState } from './ninja-war-director';
 import {
   canDismantle,
   chooseSeat,
@@ -83,6 +84,53 @@ const VIRTUAL_HEADS = [
   { headId: 'head:archive', departmentId: 'archive', roomId: 'core:archive', key: 'archive' },
 ] as const;
 
+/** Danh sách Ninja Huyền Thoại đóng vai trò NPC thường trực, tạo không khí đông đúc & thi đấu đại chiến */
+const RESIDENT_NINJA_ROSTER = [
+  // 1. Đội 7 Konoha
+  { id: 'npc:naruto', name: 'Uzumaki Naruto (Hiền Nhân Cửu Vĩ)', role: 'Thế Hệ Vàng Lá', look: 'm' as const, roomId: 'core:claude', seed: 0x7a110001 },
+  { id: 'npc:sasuke', name: 'Uchiha Sasuke (Rinnegan / Chidori)', role: 'Thế Hệ Vàng Lá', look: 'm' as const, roomId: 'core:claude', seed: 0x7a110002 },
+  { id: 'npc:sakura', name: 'Haruno Sakura (Bách Hào Thuật)', role: 'Thế Hệ Vàng Lá', look: 'f' as const, roomId: 'core:claude', seed: 0x7a110003 },
+  { id: 'npc:kakashi', name: 'Hatake Kakashi (Sharingan / Thiên Điểu)', role: 'Hokage Đệ Lục', look: 'm' as const, roomId: 'core:claude', seed: 0x7a110004 },
+
+  // 2. Đội Gai & Thiên tài Konoha
+  { id: 'npc:gai', name: 'Maito Gai (Bát Môn Độn Giáp)', role: 'Mãnh Thú Konoha', look: 'm' as const, roomId: 'core:corredor', seed: 0x7a110005 },
+  { id: 'npc:lee', name: 'Rock Lee (Liên Hoa Sanh)', role: 'Thể Thuật Kỳ Tài', look: 'm' as const, roomId: 'core:corredor', seed: 0x7a110006 },
+  { id: 'npc:neji', name: 'Hyuuga Neji (Bát Quái 64 Chưởng)', role: 'Thiên Tài Hyuuga', look: 'm' as const, roomId: 'core:lounge', seed: 0x7a110007 },
+  { id: 'npc:shikamaru', name: 'Nara Shikamaru (Bóng Trói Chi Thuật)', role: 'Quân Sư Konoha', look: 'm' as const, roomId: 'core:lounge', seed: 0x7a110008 },
+  { id: 'npc:hinata', name: 'Hyuuga Hinata (Bạch Nhãn / Song Sư Quyền)', role: 'Bạch Nhãn Công Chúa', look: 'f' as const, roomId: 'core:lounge', seed: 0x7a110009 },
+
+  // 3. Tam Nin & Huyền Thoại Tiền Nhiệm
+  { id: 'npc:orochimaru', name: 'Orochimaru (Bạch Xà Quỷ Môn)', role: 'Huyền Thoại Tam Nin', look: 'm' as const, roomId: 'core:archive', seed: 0x7a11000a },
+  { id: 'npc:hashirama', name: 'Senju Hashirama (Hokage Đệ Nhất / Mộc Độn)', role: 'Hokage Đệ Nhất', look: 'm' as const, roomId: 'core:archive', seed: 0x7a11000b },
+  { id: 'npc:tobirama', name: 'Senju Tobirama (Hokage Đệ Nhị / Phi Lôi Thần)', role: 'Hokage Đệ Nhị', look: 'm' as const, roomId: 'core:archive', seed: 0x7a11000c },
+  { id: 'npc:hiruzen', name: 'Sarutobi Hiruzen (Hokage Đệ Tam / Ngũ Hành)', role: 'Hokage Đệ Tam', look: 'm' as const, roomId: 'core:lounge', seed: 0x7a11000d },
+  { id: 'npc:minato', name: 'Namikaze Minato (Tia Chớp Vàng Konoha)', role: 'Hokage Đệ Tứ', look: 'm' as const, roomId: 'core:recepcao', seed: 0x7a11000e },
+
+  // 4. Gia Tộc Thần Uchiha
+  { id: 'npc:madara', name: 'Uchiha Madara (Susanoo Hoàn Hảo)', role: 'Huyền Thoại Uchiha', look: 'm' as const, roomId: 'core:corredor', seed: 0x7a11000f },
+  { id: 'npc:itachi', name: 'Uchiha Itachi (Tsukuyomi / Amaterasu)', role: 'Thiên Tài Sharingan', look: 'm' as const, roomId: 'core:corredor', seed: 0x7a110010 },
+  { id: 'npc:shisui', name: 'Uchiha Shisui (Kotoamatsukami)', role: 'Thuấn Thân Shisui', look: 'm' as const, roomId: 'core:claude', seed: 0x7a110011 },
+  { id: 'npc:obito', name: 'Tobi Uchiha Obito (Mặt Nạ Xoắn Ốc)', role: 'Kamui Không Gian', look: 'm' as const, roomId: 'core:corredor', seed: 0x7a110012 },
+
+  // 5. Quân Đoàn Akatsuki Tuần Tra
+  { id: 'npc:pain', name: 'Pain Tendo (Thiên Đạo / Shinra Tensei)', role: 'Thủ Lĩnh Akatsuki', look: 'm' as const, roomId: 'core:corredor', seed: 0x7a110013 },
+  { id: 'npc:konan', name: 'Konan (Thiên Thần Giấy / Kami no Shisha)', role: 'Thiên Thần Giấy', look: 'f' as const, roomId: 'core:corredor', seed: 0x7a110014 },
+  { id: 'npc:kisame', name: 'Kisame Hoshigaki (Quái Vật Làng Sương)', role: 'Vĩ Thú Không Đuôi', look: 'm' as const, roomId: 'core:opencode', seed: 0x7a110015 },
+  { id: 'npc:deidara', name: 'Deidara (Bộc Độn C4 Nghệ Thuật)', role: 'Nghệ Thuật Bộc Phá', look: 'm' as const, roomId: 'core:gemini', seed: 0x7a110016 },
+  { id: 'npc:sasori', name: 'Sasori (Xích Bí Kỹ Trăm Con Rối)', role: 'Thiên Tài Rối Sát Thủ', look: 'm' as const, roomId: 'core:codex', seed: 0x7a110017 },
+  { id: 'npc:hidan', name: 'Hidan (Bất Tử Chú Thuật)', role: 'Tín Đồ Jashin Bất Tử', look: 'm' as const, roomId: 'core:corredor', seed: 0x7a110018 },
+  { id: 'npc:kakuzu', name: 'Kakuzu (Địa Oán Ngu 5 Trái Tim)', role: 'Thủ Khố 5 Trái Tim', look: 'm' as const, roomId: 'core:corredor', seed: 0x7a110019 },
+
+  // 6. Jinchūriki & Danh Nhẫn Các Làng
+  { id: 'npc:killerbee', name: 'Killer Bee (Jinchūriki Bát Vĩ Gyūki)', role: 'Jinchūriki Bát Vĩ', look: 'm' as const, roomId: 'core:review', seed: 0x7a11001a },
+  { id: 'npc:yugito', name: 'Yugito Nii (Jinchūriki Nhị Vĩ Matatabi)', role: 'Jinchūriki Nhị Vĩ', look: 'f' as const, roomId: 'core:review', seed: 0x7a11001b },
+  { id: 'npc:zabuza', name: 'Zabuza Momochi (Quỷ Nhân Kiếm Chém Sương)', role: 'Thất Kiếm Sương Mù', look: 'm' as const, roomId: 'core:opencode', seed: 0x7a11001c },
+  { id: 'npc:haku', name: 'Haku (Băng Độn Ma Kính Băng Tinh)', role: 'Băng Độn Huyết Kế', look: 'm' as const, roomId: 'core:opencode', seed: 0x7a11001d },
+  { id: 'npc:temari', name: 'Temari (Quạt Ba Tiêu Phong Độn)', role: 'Công Chúa Làng Cát', look: 'f' as const, roomId: 'core:codex', seed: 0x7a11001e },
+  { id: 'npc:kankuro', name: 'Kankuro (Hắc Bí Kỹ Rối Sát Thủ)', role: 'Đoàn Thưởng Làng Cát', look: 'm' as const, roomId: 'core:codex', seed: 0x7a11001f },
+  { id: 'npc:darui', name: 'Darui (Hắc Lôi / Lam Độn)', role: 'Cánh Tay Phải Raikage', look: 'm' as const, roomId: 'core:review', seed: 0x7a110020 },
+] as const;
+
 const FALLBACK_THEME: RoomTheme = {
   carpet: '#5b7fa6',
   carpet2: '#4f7093',
@@ -115,6 +163,7 @@ const lookSig = (a: AgentInfo): string => `${a.seed}|${a.look}|${partsKey(a.part
 export class Sim {
   readonly chars = new Map<string, Character>();
   private readonly virtualHeadIds = new Set<string>();
+  readonly npcNinjaIds = new Set<string>();
   private readonly virtualHeadHome = new Map<string, string>();
   readonly rooms = new Map<string, RoomState>();
   readonly spots = new SpotRegistry();
@@ -160,6 +209,11 @@ export class Sim {
   visitorIntent: VisitorIntent = { ...NO_INTENT };
   /** Visita: as luzes do prédio (aplicadas a cada snapshot e a cada segundo). */
   visitLight: VisitLight = 'live';
+  /** Nhẫn giả được người dùng trực tiếp điều khiển (Player Control Mode). */
+  controlledCharId: string | null = null;
+  controlledIntent: VisitorIntent = { ...NO_INTENT };
+  /** Bộ điều phối màn thi đấu team & đại chiến nhẫn giả kinh điển (3 phút/trận) */
+  readonly ninjaWar: NinjaWarDirector;
   /** Trưởng phòng ảo cục bộ: só quando o scene do escritório pede (`SimMode.heads`). */
   private readonly withHeads: boolean;
 
@@ -173,12 +227,16 @@ export class Sim {
     this.visit = !!mode.visit;
     this.withHeads = !this.visit && !!mode.heads;
     this.social = new Social(this, storage);
+    this.ninjaWar = new NinjaWarDirector(this);
     this.building = assembleBuilding(columnsFor([]), [], 0);
     this.finder = new PathFinder(this.building.grid);
     this.spots.setSpots(this.building.spots);
     for (const s of this.spots.ofKind('elevator')) this.elevators.push(new Elevator(this.elevators.length, s.id));
     this.addDirectorCharacter();
-    if (this.withHeads) this.addVirtualDepartmentHeads();
+    if (this.withHeads) {
+      this.addVirtualDepartmentHeads();
+      this.populateNpcNinjaRoster();
+    }
   }
 
   /** Local-only department heads. Never part of OfficeSnapshot or Habblaud World. */
@@ -203,11 +261,88 @@ export class Sim {
       const walkable = this.building.grid.nearestWalkable(tx, ty, 8) ?? { x: tx, y: ty };
       ch.placeAtTile(walkable.x, walkable.y);
       ch.mode = 'work';
-      ch.thinkAt = Number.POSITIVE_INFINITY;
+      ch.thinkAt = 0;
       ch.setPose('stand');
       this.chars.set(id, ch);
       this.virtualHeadIds.add(id);
       this.virtualHeadHome.set(def.headId, def.roomId);
+    }
+  }
+
+  /** Phân bổ các Ninja Huyền Thoại đóng vai trò NPC thường trực tại các võ đường & hành lang */
+  private populateNpcNinjaRoster(): void {
+    for (const def of RESIDENT_NINJA_ROSTER) {
+      if (this.chars.has(def.id)) continue;
+      const area = this.building.core.find((candidate) => candidate.id === def.roomId) ?? this.building.core[0];
+      if (!area) continue;
+      const info: AgentInfo = {
+        id: def.id,
+        kind: 'main',
+        roomId: def.roomId,
+        name: def.name,
+        look: def.look,
+        role: def.role,
+        title: def.role,
+        sessionId: def.id,
+        account: '@npc-ninja',
+        status: 'working',
+        recent: [],
+        tasks: [],
+        startedAt: 0,
+        lastEventAt: 0,
+        statusSince: 0,
+        stats: { toolCalls: 0, tokensIn: 0, tokensOut: 0, subagents: 0 },
+        seed: def.seed,
+        custom: true,
+        permissionMode: 'READ_ONLY',
+        activity: { id: `${def.id}:ready`, kind: 'plan', icon: '⚔️', text: `${def.name} · ${def.role}`, at: 0 },
+      };
+      let appearance;
+      try {
+        appearance = this.art.appearanceFromSeed(info.seed, { look: info.look, parts: info.parts });
+      } catch {
+        continue;
+      }
+      const ch = new Character(info, appearance);
+      // Rải vị trí tự nhiên trong khu vực phòng võ đường hoặc dọc hành lang
+      const tx = Math.floor(area.rect.x + 2 + Math.random() * Math.max(1, area.rect.w - 4));
+      const ty = Math.floor(area.rect.y + 1 + Math.random() * Math.max(1, area.rect.h - 3));
+      const walkable = this.building.grid.nearestWalkable(tx, ty, 8) ?? { x: tx, y: ty };
+      ch.placeAtTile(walkable.x, walkable.y);
+      ch.mode = 'work';
+      ch.thinkAt = 1_000 + Math.random() * 4_000;
+      ch.homeSpot = null; // NPC không bao giờ chiếm bàn làm việc của session thật!
+      ch.setPose('stand');
+      this.chars.set(def.id, ch);
+      this.npcNinjaIds.add(def.id);
+    }
+  }
+
+  /** Hành vi NPC của các Ninja thường trực: đi dạo vài bước trong khu vực, kết ấn, tập kiếm, không tranh bàn ghế */
+  private runNpcBehavior(ch: Character, now: number): void {
+    if (ch.step || ch.queue.length) return;
+    if (!ch.thinkAt) ch.thinkAt = now + 4_000 + ch.rng() * 6_000;
+    if (now < ch.thinkAt) return;
+    ch.thinkAt = now + 6_000 + ch.rng() * 8_000;
+
+    const rng = ch.rng();
+    if (rng < 0.4) {
+      // Đổi tư thế kết ấn, luyện công hoặc reo hò
+      const poses: ('stand' | 'rps' | 'cheer')[] = ['stand', 'rps', 'cheer'];
+      ch.setPose(poses[Math.floor(rng * poses.length)]);
+      if (rng < 0.25) ch.setIcon(rng < 0.12 ? 'lightning' : 'star', 2_500, now);
+      return;
+    }
+
+    // Đi dạo vài bước xung quanh khu vực hiện tại (bán kính 2-3 ô)
+    const dx = Math.floor((ch.rng() - 0.5) * 6);
+    const dy = Math.floor((ch.rng() - 0.5) * 4);
+    const target = this.building.grid.nearestWalkable(ch.tx + dx, ch.ty + dy, 4);
+    if (target && (target.x !== ch.tx || target.y !== ch.ty)) {
+      ch.queue.push(
+        { t: 'go', tx: target.x, ty: target.y, run: false },
+        { t: 'act', pose: 'stand', ms: 2_000 + ch.rng() * 3_000 },
+      );
     }
   }
 
@@ -279,7 +414,7 @@ export class Sim {
     ch.homeSpot = seat.id;
     this.snapTo(ch, seat);
     ch.mode = 'work';
-    ch.thinkAt = Number.POSITIVE_INFINITY;
+    ch.thinkAt = 0;
     ch.setPose('sit', 'papers');
     this.director = ch;
   }
@@ -354,6 +489,7 @@ export class Sim {
       }
     }
     for (const ch of this.chars.values()) {
+      if (this.virtualHeadIds.has(ch.id) || this.npcNinjaIds.has(ch.id)) continue;
       if (!seen.has(ch.id) && !ch.leaving && ch.missingSince === null) ch.missingSince = now;
     }
     // modos (depois de todos existirem, para subagentes acharem o pai)
@@ -704,11 +840,13 @@ export class Sim {
     for (const e of this.elevators) e.update(dt, now);
     this.updateRooms(now);
     this.social.update(now);
+    this.ninjaWar.update(now);
     if (this.roomFx.active.size) this.roomFx.update(this, now);
     for (const ch of this.chars.values()) {
       if (ch.missingSince !== null && !ch.leaving && now - ch.missingSince >= MISSING_DEBOUNCE_MS) this.refreshMode(ch);
       this.runCharacter(ch, dt, now);
     }
+    if (this.director) this.runCharacter(this.director, dt, now);
     if (this.visitor) this.runVisitor(this.visitor, dt, now);
     for (const [id, ch] of this.chars) {
       if (ch.gone) {
@@ -902,15 +1040,54 @@ export class Sim {
       ch.updateLane(dt);
       return;
     }
-    if (this.virtualHeadIds.has(ch.id)) {
+    if (this.virtualHeadIds.has(ch.id) || this.npcNinjaIds.has(ch.id)) {
       ch.animT += dt * 1000;
       ch.updateLane(dt);
+      if (ch.icon && now >= ch.iconUntil) ch.icon = null;
       if (!ch.step) ch.step = ch.queue.shift() ?? null;
       if (ch.step) {
         const done = this.runStep(ch, ch.step, dt, now);
         ch.stepT += dt * 1000;
         if (done) { ch.step = null; ch.stepT = 0; ch.stepStarted = false; }
-      } else ch.setPose('stand');
+      } else {
+        this.runNpcBehavior(ch, now);
+      }
+      return;
+    }
+    // Nhân vật do người chơi trực tiếp điều khiển
+    if (ch.id === this.controlledCharId) {
+      ch.animT += dt * 1000;
+      ch.updateLane(dt);
+      if (ch.icon && now >= ch.iconUntil) ch.icon = null;
+      if (ch.gathering && ch.gathering.phase === 'run') {
+        return; // Trận đấu đang diễn ra, để Social điều khiển pose/animation
+      }
+      const intent = this.controlledIntent;
+      if (intent.dx || intent.dy) {
+        ch.queue.length = 0;
+        ch.step = null;
+        const r = stepFree(this.building.grid, { x: ch.x, y: ch.y, dir: ch.dir }, intent, (intent.run ? RUN_SPEED : WALK_SPEED) * dt);
+        ch.x = r.x;
+        ch.y = r.y;
+        ch.dir = r.dir;
+        const t = tileAt(ch.x, ch.y);
+        ch.tx = t.x;
+        ch.ty = t.y;
+        ch.setPose(r.moved ? (intent.run ? 'run' : 'walk') : 'stand');
+        return;
+      }
+      if (!ch.step) {
+        ch.step = ch.queue.shift() ?? null;
+        ch.stepT = 0;
+        ch.stepStarted = false;
+      }
+      if (ch.step) {
+        const done = this.runStep(ch, ch.step, dt, now);
+        ch.stepT += dt * 1000;
+        if (done) { ch.step = null; ch.stepT = 0; ch.stepStarted = false; }
+        return;
+      }
+      ch.setPose('stand');
       return;
     }
     // animação
@@ -1320,6 +1497,9 @@ export class Sim {
     if (ch.gone) return false;
     if (ch.mode === 'leave') return this.planLeave(ch, now);
     if (ch.mode === 'deliver') return this.planDeliver(ch, now);
+    if (this.virtualHeadIds.has(ch.id) || (this.director && this.director.id === ch.id)) {
+      return this.planNinjaLeaderRoutine(ch, now);
+    }
     const room = this.rooms.get(ch.roomId);
     if (!room || !room.present) return this.planLobby(ch, room);
     this.assignHome(ch);
@@ -1368,7 +1548,7 @@ export class Sim {
       return false;
     }
 
-    if (ch.mode === 'idle' && !this.longIdle(ch, now)) {
+    if ((ch.mode === 'idle' && !this.longIdle(ch, now)) || isKageOrNinjaLeader) {
       if (!ch.nextOutingAt) ch.nextOutingAt = now + outingInterval;
       if (now >= ch.nextOutingAt) {
         if (this.planOuting(ch, now)) return true;
@@ -1377,7 +1557,7 @@ export class Sim {
     }
     // Nhân vật đang làm việc hoặc đi tuần tra: chủ động đứng dậy tỉ thí nhẫn thuật, giao lưu đại chiến
     if (ch.mode === 'work' || isKageOrNinjaLeader) {
-      const socialInterval = isKageOrNinjaLeader ? 2_000 + ch.rng() * 4_000 : 12_000 + ch.rng() * 15_000;
+      const socialInterval = isKageOrNinjaLeader ? 2_000 + ch.rng() * 4_000 : 8_000 + ch.rng() * 12_000;
       if (!ch.nextSocialAt) ch.nextSocialAt = now + 1_000 + ch.rng() * 2_000;
       if (now >= ch.nextSocialAt) {
         ch.nextSocialAt = now + socialInterval;
@@ -1651,6 +1831,87 @@ export class Sim {
     for (const k of kinds) for (const s of this.spots.ofKind(k)) if (this.spots.isFree(s.id, ch.id)) cands.push(s);
     if (!cands.length) return null;
     return cands[Math.floor(ch.rng() * cands.length)];
+  }
+
+  /**
+   * Hoạt động tuần tra, xuất kích và tỉ thí tự do của các Trưởng phòng / Kage / Giám đốc Hokage:
+   * Thường xuyên rời phòng ra hành lang tuần tra, biểu diễn nhẫn thuật, sang các phòng khác giao lưu,
+   * khiêu chiến so tài với các ninja khác, rồi mới quay về bản doanh.
+   */
+  private planNinjaLeaderRoutine(ch: Character, now: number): boolean {
+    if (ch.step || ch.queue.length) return false;
+    if (!ch.nextOutingAt) ch.nextOutingAt = now + 1_000 + ch.rng() * 2_000;
+    if (now < ch.nextOutingAt) return false;
+    ch.nextOutingAt = now + 4_000 + ch.rng() * 6_000;
+
+    const rng = ch.rng();
+    const isDirector = this.director?.id === ch.id;
+    const homeAreaId = isDirector ? DIRECTOR_ID : (this.virtualHeadHome.get(ch.id.replace('virtual:head:', '')) ?? ch.roomId);
+    const homeArea = this.building.core.find((a) => a.id === homeAreaId) ?? this.building.core[0];
+
+    // 1. KHIÊU CHIẾN & TỈ THÍ NHẪN THUẬT: Nếu có nhẫn giả đứng gần trong tầm 6 ô
+    const nearby = [...this.chars.values()].find((other) => other !== ch && !other.gone && Math.hypot(other.tx - ch.tx, other.ty - ch.ty) <= 6);
+    if (nearby && rng < 0.4) {
+      const dirTo = ch.tx < nearby.tx ? 'right' : 'left';
+      ch.dir = dirTo;
+      ch.setIcon(rng < 0.4 ? 'lightning' : rng < 0.7 ? 'star' : 'idea', 3_500, now);
+      nearby.setIcon('star', 3_000, now);
+      ch.queue.push(
+        { t: 'act', pose: 'rps', ms: 1_800 },
+        { t: 'act', pose: 'cheer', ms: 1_200 },
+      );
+      return true;
+    }
+
+    // 2. SANG CÁC PHÒNG KHÁC GIAO LƯU / THĂM HỎI ĐỒNG MINH (35% cơ hội)
+    if (rng < 0.75) {
+      const otherCores = this.building.core.filter((a) => a.id !== homeAreaId);
+      const targetCore = otherCores[Math.floor(ch.rng() * otherCores.length)];
+      if (targetCore) {
+        const tx = Math.floor(targetCore.rect.x + 2 + ch.rng() * (targetCore.rect.w - 4));
+        const ty = Math.floor(targetCore.rect.y + 2 + ch.rng() * (targetCore.rect.h - 4));
+        const targetTile = this.building.grid.nearestWalkable(tx, ty, 6);
+        if (targetTile) {
+          ch.queue.push(
+            { t: 'go', tx: targetTile.x, ty: targetTile.y, run: true },
+            { t: 'act', pose: 'stand', ms: 2_500 + ch.rng() * 3_000 },
+            { t: 'act', pose: 'rps', ms: 1_500 },
+          );
+          return true;
+        }
+      }
+    }
+
+    // 3. TUẦN TRA HÀNH LANG (Corridor Patrol) (40% cơ hội)
+    if (rng < 0.9) {
+      const corridorTx = Math.floor(ch.rng() * this.building.cols * COL_W);
+      const corridorTy = CORRIDOR_Y + 1 + Math.floor(ch.rng() * 2);
+      const walk = this.building.grid.nearestWalkable(corridorTx, corridorTy, 6);
+      if (walk) {
+        ch.queue.push(
+          { t: 'go', tx: walk.x, ty: walk.y, run: ch.rng() < 0.6 },
+          { t: 'act', pose: 'stand', ms: 2_500 + ch.rng() * 3_000 },
+          { t: 'act', pose: ch.rng() < 0.5 ? 'rps' : 'cheer', ms: 1_400 },
+        );
+        return true;
+      }
+    }
+
+    // 4. TRỞ VỀ PHÒNG BẢN DOANH NGHỈ NGƠI / THIỀN ĐỊNH
+    if (homeArea) {
+      const tx = Math.floor(homeArea.rect.x + homeArea.rect.w / 2);
+      const ty = Math.floor(homeArea.rect.y + homeArea.rect.h / 2);
+      const walk = this.building.grid.nearestWalkable(tx, ty, 6);
+      if (walk && (Math.abs(ch.tx - walk.x) > 2 || Math.abs(ch.ty - walk.y) > 2)) {
+        ch.queue.push(
+          { t: 'go', tx: walk.x, ty: walk.y, run: false },
+          { t: 'act', pose: isDirector ? 'sit' : 'stand', ms: 4_000 + ch.rng() * 4_000 },
+        );
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private planOuting(ch: Character, now: number): boolean {
@@ -1967,6 +2228,75 @@ export class Sim {
     v.step = null;
     v.queue.push({ t: 'go', tx, ty, run });
     return true;
+  }
+
+  /** Chế độ người chơi điều khiển trực tiếp nhân vật. */
+  setControlled(id: string | null): void {
+    if (this.controlledCharId === id) return;
+    const prev = this.controlledCharId ? this.chars.get(this.controlledCharId) : null;
+    if (prev) {
+      prev.queue.length = 0;
+      prev.step = null;
+      prev.setPose('stand');
+    }
+    this.controlledCharId = id;
+    this.controlledIntent = { ...NO_INTENT };
+    const cur = id ? this.chars.get(id) : null;
+    if (cur) {
+      cur.queue.length = 0;
+      cur.step = null;
+      cur.setPose('stand');
+    }
+  }
+
+  controlledWalkTo(tx: number, ty: number, run = false): boolean {
+    if (!this.controlledCharId) return false;
+    const ch = this.chars.get(this.controlledCharId);
+    if (!ch || ch.leaving || ch.gone) return false;
+    if (ch.gathering && ch.gathering.phase === 'run') return false;
+    ch.queue.length = 0;
+    ch.step = null;
+    ch.queue.push({ t: 'go', tx, ty, run });
+    return true;
+  }
+
+  getNearbyNinjas(radiusTiles = 6): Array<{ id: string; name: string; dist: number }> {
+    if (!this.controlledCharId) return [];
+    const ch = this.chars.get(this.controlledCharId);
+    if (!ch) return [];
+    const list: Array<{ id: string; name: string; dist: number }> = [];
+    for (const other of this.chars.values()) {
+      if (other.id === ch.id || other.gone || other.leaving) continue;
+      const d = Math.hypot(other.x - ch.x, other.y - ch.y) / 16;
+      if (d <= radiusTiles) {
+        list.push({ id: other.id, name: other.info.name ?? other.id, dist: Math.round(d * 10) / 10 });
+      }
+    }
+    return list.sort((a, b) => a.dist - b.dist);
+  }
+
+  challengeNinja(targetId?: string): { ok: boolean; target?: string; reason?: string } {
+    if (!this.controlledCharId) return { ok: false, reason: 'Chưa chọn nhẫn giả điều khiển' };
+    const ch = this.chars.get(this.controlledCharId);
+    if (!ch) return { ok: false, reason: 'Không tìm thấy nhân vật' };
+    if (ch.gathering && ch.gathering.phase === 'run') return { ok: false, reason: 'Đang trong trận tỉ thí nhẫn thuật' };
+
+    let target: Character | undefined;
+    if (targetId) {
+      target = this.chars.get(targetId);
+    } else {
+      const nearby = this.getNearbyNinjas(6);
+      if (nearby.length && nearby[0]) {
+        target = this.chars.get(nearby[0].id);
+      }
+    }
+
+    if (!target) return { ok: false, reason: 'Không có nhẫn giả nào ở gần (hãy di chuyển lại gần)' };
+    const dist = Math.hypot(target.x - ch.x, target.y - ch.y) / 16;
+    if (dist > 6) return { ok: false, target: target.info.name, reason: 'Mục tiêu ở quá xa, hãy áp sát đối thủ' };
+
+    const ok = this.social.startInstantDuel(ch, target, this.now);
+    return { ok, target: target.info.name };
   }
 
   /** O elevador perto do visitante (a até EXIT_RADIUS tiles da frente), ou null: dali ele sai do prédio. */

@@ -71,6 +71,8 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
   let selection: Selection = null;
   let hover: string | null = null;
   let mouse: { x: number; y: number } | null = null;
+  let controlledId: string | null = null;
+  const controlledCbs = new Set<(id: string | null) => void>();
   let raf = 0;
   let lastTs = 0;
   let hiddenAt = 0;
@@ -222,9 +224,32 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
     camera.follow = VISITOR_ID;
   };
 
+  const setControlled = (id: string | null) => {
+    if (id === controlledId) return;
+    controlledId = id;
+    sim.setControlled(id);
+    if (id) {
+      setSelection({ type: 'agent', id }, true);
+      focusAgent(id, { follow: true });
+    }
+    controlledCbs.forEach((cb) => cb(id));
+  };
+
   const detachInput = attachInput(canvas, camera, {
     pick,
-    click: (hit, at) => (visitMode ? visitClick(hit, at) : setSelection(hit)),
+    click: (hit, at) => {
+      if (visitMode) return visitClick(hit, at);
+      if (controlledId) {
+        if (hit?.type === 'agent' && hit.id !== controlledId) {
+          sim.challengeNinja(hit.id);
+          return;
+        }
+        const w = camera.screenToWorld(at.x, at.y);
+        sim.controlledWalkTo(Math.floor(w.x / TILE), Math.floor(w.y / TILE));
+        return;
+      }
+      setSelection(hit);
+    },
     doubleClick: (hit) => {
       if (hit?.type === 'agent') {
         setSelection(hit);
@@ -237,13 +262,15 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
     },
     interact: () => {
       userMoved = true;
-      camera.follow = null;
-      camera.stop();
+      if (!controlledId) {
+        camera.follow = null;
+        camera.stop();
+      }
     },
     overview: () => overview(true),
     zoomStep,
     active: () => !suspended,
-    keys: () => !visitMode,
+    keys: () => !visitMode && !controlledId,
   });
 
   // ------------------------------------------------------------------ dados
@@ -330,6 +357,8 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
       // seleção de quem já foi embora
       if (selection?.type === 'agent' && !sim.chars.has(selection.id)) setSelection(null);
       if (selection?.type === 'room' && !sim.rooms.has(selection.id)) setSelection(null);
+      if (controlledId && !sim.chars.has(controlledId)) setControlled(null);
+      if (controlledId && camera.follow !== controlledId) camera.follow = controlledId;
     } catch (err) {
       console.error('[mundo] erro no frame', err);
     }
@@ -461,6 +490,21 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
       soundCbs.add(cb);
       return () => void soundCbs.delete(cb);
     },
+    controlAgent: (id) => setControlled(id),
+    getControlledAgent: () => controlledId,
+    onControlledChange: (cb) => {
+      controlledCbs.add(cb);
+      return () => void controlledCbs.delete(cb);
+    },
+    setControlledIntent: (intent) => {
+      sim.controlledIntent = { ...intent };
+    },
+    controlledWalkTo: (tx, ty, run = false) => sim.controlledWalkTo(tx, ty, run),
+    challengeNinja: (targetId) => sim.challengeNinja(targetId),
+    getNearbyNinjas: (radiusTiles) => sim.getNearbyNinjas(radiusTiles),
+    triggerTeamBattle: (scenarioIdOrIndex) => sim.ninjaWar.startBattle(scenarioIdOrIndex, Date.now()),
+    getTeamBattleState: () => sim.ninjaWar.getState(),
+    onTeamBattleChange: (cb) => sim.ninjaWar.subscribe(cb),
     setSuspended: (on) => {
       if (on === suspended) return;
       suspended = on;
