@@ -39,7 +39,7 @@ export class DirectorRoom implements UiComponent {
   private workOrderEvents: EventSource | null = null;
 
   constructor(private readonly ctx: UiContext) {
-    this.button = iconButton(ICONS.office, tr('Phòng giám đốc: criar WorkOrder'), () => this.toggle(), 'ui-btn-director');
+    this.button = iconButton(ICONS.office, tr('Dinh Hokage: Giao Nhiệm vụ Ninja (WorkOrder)'), () => this.toggle(), 'ui-btn-director');
     this.button.setAttribute('aria-haspopup', 'dialog');
     this.objective = h('textarea', { class: 'ui-director__objective', attrs: { rows: '4', maxlength: '8000', placeholder: tr('O que a equipe de IA deve fazer?') } });
     this.projectPath = h('input', { class: 'ui-director__path', attrs: { type: 'text', maxlength: '1024', 'aria-label': tr('Pasta do projeto'), placeholder: tr('Caminho absoluto do repositório/worktree') } });

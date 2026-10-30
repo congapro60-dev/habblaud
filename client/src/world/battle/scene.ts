@@ -27,6 +27,13 @@ interface Ninja {
 type Effect =
   | { kind: 'shuriken'; x0: number; x1: number; y: number; t: number; dur: number }
   | { kind: 'fireball'; x0: number; x1: number; y: number; t: number; dur: number }
+  | { kind: 'rasengan'; x0: number; x1: number; y: number; t: number; dur: number }
+  | { kind: 'chidori'; x0: number; x1: number; y: number; t: number; dur: number }
+  | { kind: 'amaterasu'; x: number; y: number; t: number; dur: number }
+  | { kind: 'susanoo'; x: number; y: number; t: number; dur: number }
+  | { kind: 'shinra'; x: number; y: number; t: number; dur: number }
+  | { kind: 'bijuu'; x0: number; x1: number; y: number; t: number; dur: number }
+  | { kind: 'summon-creature'; x: number; y: number; creature: string; t: number; dur: number }
   | { kind: 'chakra'; x: number; y: number; t: number; dur: number }
   | { kind: 'smoke'; x: number; y: number; t: number; dur: number }
   | { kind: 'summon'; x: number; y: number; t: number; dur: number }
@@ -135,11 +142,36 @@ export class BattleScene {
         this.effects.push({ kind: 'fireball', x0: attacker.homeX + attacker.offset, x1: x, y, t: 0, dur: 460 });
         defender.burning = strike.burnSet ? 1400 : 0;
         break;
-      case 'summon':
-        this.effects.push({ kind: 'summon', x, y, t: 0, dur: strike.failed ? 500 : 620 });
+      case 'rasengan':
+        this.effects.push({ kind: 'rasengan', x0: attacker.homeX + attacker.offset, x1: x, y, t: 0, dur: 450 });
+        break;
+      case 'chidori':
+        this.effects.push({ kind: 'chidori', x0: attacker.homeX + attacker.offset, x1: x, y, t: 0, dur: 400 });
+        break;
+      case 'amaterasu':
+        this.effects.push({ kind: 'susanoo', x: attacker.homeX + attacker.offset, y: attacker.y - 30, t: 0, dur: 500 });
+        this.effects.push({ kind: 'amaterasu', x, y, t: 0, dur: 700 });
+        defender.burning = 2400;
+        break;
+      case 'tsukuyomi':
+        this.effects.push({ kind: 'susanoo', x: attacker.homeX + attacker.offset, y: attacker.y - 30, t: 0, dur: 600 });
+        this.effects.push({ kind: 'smoke', x, y, t: 0, dur: 500 });
+        break;
+      case 'shinra-tensei':
+        this.effects.push({ kind: 'shinra', x: attacker.homeX + attacker.offset, y: attacker.y - 20, t: 0, dur: 600 });
+        break;
+      case 'bijuudama':
+        this.effects.push({ kind: 'bijuu', x0: attacker.homeX + attacker.offset, x1: x, y, t: 0, dur: 550 });
+        break;
+      case 'summon': {
+        const creatures = ['🐸 Cóc Gamabunta', '🐍 Đại Xà Aoda', '🐌 Sên Katsuyu', '⚡ Khỉ Enma'];
+        const chosen = creatures[Math.abs(strike.round * 31 + attacker.fighter.seed) % creatures.length];
+        this.effects.push({ kind: 'summon-creature', x, y, creature: chosen, t: 0, dur: strike.failed ? 500 : 650 });
         if (strike.failed) this.effects.push({ kind: 'smoke', x: attacker.homeX + attacker.offset, y: attacker.y - 24, t: 0, dur: 500 });
         break;
+      }
       case 'shadow-clone':
+        this.effects.push({ kind: 'smoke', x: attacker.homeX + attacker.offset, y: attacker.y - 10, t: 0, dur: 300 });
         this.effects.push({ kind: 'shuriken', x0: attacker.homeX + attacker.offset, x1: x, y: y - 8, t: 0, dur: 320 });
         this.effects.push({ kind: 'shuriken', x0: attacker.homeX + attacker.offset, x1: x, y: y + 10, t: 160, dur: 320 });
         break;
@@ -274,6 +306,88 @@ export class BattleScene {
         ctx.fill();
         break;
       }
+      case 'rasengan': {
+        const x = e.x0 + (e.x1 - e.x0) * p;
+        const r = 7 + 6 * Math.sin(p * Math.PI);
+        const g = ctx.createRadialGradient(x, e.y, 1, x, e.y, r);
+        g.addColorStop(0, '#ffffff');
+        g.addColorStop(0.4, '#80d4ff');
+        g.addColorStop(1, '#0088ff');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, e.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#e0f4ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x, e.y, r + 3, p * 12, p * 12 + Math.PI);
+        ctx.stroke();
+        break;
+      }
+      case 'chidori': {
+        const x = e.x0 + (e.x1 - e.x0) * p;
+        ctx.strokeStyle = '#cceeff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x - 12, e.y);
+        for (let i = 0; i < 5; i++) {
+          ctx.lineTo(x - 12 + i * 6, e.y + (Math.sin(e.t / 20 + i) * 8));
+        }
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x, e.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 'amaterasu': {
+        ctx.fillStyle = `rgba(18, 18, 20, ${0.9 - 0.2 * p})`;
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.arc(e.x + Math.cos(a) * (8 + 4 * p), e.y - 10 + Math.sin(a) * (8 + 4 * p), 6 + 3 * p, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#9b111e';
+        ctx.beginPath();
+        ctx.arc(e.x, e.y - 10, 4, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 'susanoo': {
+        ctx.strokeStyle = `rgba(160, 40, 220, ${0.8 - 0.7 * p})`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(e.x - 16, e.y - 32, 32, 42);
+        ctx.fillStyle = `rgba(140, 30, 200, ${0.35 - 0.3 * p})`;
+        ctx.fillRect(e.x - 16, e.y - 32, 32, 42);
+        ctx.fillStyle = '#f0c0ff';
+        ctx.font = 'bold 10px "Pixelify Sans", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('SUSANOO', e.x, e.y - 36);
+        break;
+      }
+      case 'shinra': {
+        const r = 10 + 60 * p;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.85 - 0.85 * p})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      }
+      case 'bijuu': {
+        const x = e.x0 + (e.x1 - e.x0) * p;
+        const r = 10 + 6 * p;
+        const g = ctx.createRadialGradient(x, e.y, 2, x, e.y, r);
+        g.addColorStop(0, '#110022');
+        g.addColorStop(0.7, '#660099');
+        g.addColorStop(1, '#ff0033');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, e.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
       case 'chakra': {
         ctx.strokeStyle = `rgba(90,170,255,${0.9 - 0.9 * p})`;
         ctx.lineWidth = 2;
@@ -282,6 +396,18 @@ export class BattleScene {
           ctx.arc(e.x, e.y, 6 + i * 5 + 8 * p, p * 6 + i, p * 6 + i + Math.PI * 1.2);
           ctx.stroke();
         }
+        break;
+      }
+      case 'summon-creature': {
+        const slam = e.t < e.dur / 2 ? p * 2 : (1 - p) * 2;
+        ctx.fillStyle = `rgba(20,28,44,${0.75})`;
+        ctx.beginPath();
+        ctx.ellipse(e.x, e.y + 16, 32 * (0.6 + slam), 12 * (0.6 + slam), 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffcc00';
+        ctx.font = 'bold 12px "Pixelify Sans", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(e.creature, e.x, e.y - 30 - 16 * (1 - p));
         break;
       }
       case 'smoke': {

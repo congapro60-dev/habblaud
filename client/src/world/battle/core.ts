@@ -5,8 +5,23 @@ import { hash32 } from '../../../../shared/hash';
 import type { AppearanceParts } from '../../../../shared/appearance';
 import { tr } from '../../../../shared/i18n';
 
-/** Kỹ năng (jutsu) của nhẫn giả. */
-export type Jutsu = 'shuriken' | 'fireball' | 'summon' | 'shadow-clone' | 'substitution' | 'focus';
+/** Kỹ năng (jutsu) của nhẫn giả chuẩn Narutopedia. */
+export type Jutsu =
+  | 'shuriken'
+  | 'fireball'
+  | 'rasengan'
+  | 'chidori'
+  | 'amaterasu'
+  | 'tsukuyomi'
+  | 'shinra-tensei'
+  | 'bijuudama'
+  | 'summon'
+  | 'shadow-clone'
+  | 'substitution'
+  | 'focus';
+
+/** Vĩ thú tương ứng theo làng hoặc linh thú triệu hồi. */
+export type TailedBeast = 'shukaku' | 'matatabi' | 'isobu' | 'son-goku' | 'kokuo' | 'saiken' | 'chomei' | 'gyuki' | 'kurama';
 
 /** Một nhẫn giả tham dự. */
 export interface Fighter {
@@ -68,19 +83,32 @@ const MAX_FIGHTERS = 8;
 const MIN_FIGHTERS = 3;
 
 const JUTSU_CHANCE: Readonly<Record<Jutsu, number>> = {
-  shuriken: 0.28,
-  fireball: 0.2,
-  summon: 0.12,
-  'shadow-clone': 0.14,
-  substitution: 0.13,
-  focus: 0.13,
+  shuriken: 0.16,
+  fireball: 0.12,
+  rasengan: 0.11,
+  chidori: 0.11,
+  amaterasu: 0.08,
+  tsukuyomi: 0.08,
+  'shinra-tensei': 0.07,
+  bijuudama: 0.06,
+  summon: 0.07,
+  'shadow-clone': 0.07,
+  substitution: 0.04,
+  focus: 0.03,
 };
 const SHURIKEN_DMG = 8;
-const FIREBALL_DMG = 18;
+const FIREBALL_DMG = 16;
 const FIREBALL_BURN_TURNS = 2;
+const RASENGAN_DMG = 24;
+const CHIDORI_DMG = 22;
+const AMATERASU_DMG = 26;
+const AMATERASU_BURN_TURNS = 4;
+const TSUKUYOMI_DMG = 15;
+const SHINRA_TENSEI_DMG = 28;
+const BIJUUDAMA_DMG = 38;
 const BURN_DMG = 4;
-const SUMMON_DMG = 26;
-const SUMMON_FAIL_CHANCE = 0.3;
+const SUMMON_DMG = 25;
+const SUMMON_FAIL_CHANCE = 0.25;
 const CLONE_HITS = 2;
 const CLONE_DMG = 7;
 const COUNTER_DMG = 6;
@@ -93,15 +121,19 @@ export interface Village {
   readonly emoji: string;
   /** Màu băng đô của làng. */
   readonly color: string;
+  /** Tên Vĩ thú trấn thủ của làng. */
+  readonly beast: string;
 }
 
 const VILLAGES: Readonly<Record<string, Village>> = {
-  claude: { name: 'Làng Lá', emoji: '🍃', color: '#3f7a3f' },
-  codex: { name: 'Làng Cát', emoji: '⏳', color: '#c2a24a' },
-  opencode: { name: 'Làng Sương', emoji: '🌫️', color: '#5b7fa6' },
-  'gemini-antigravity': { name: 'Làng Đá', emoji: '🪨', color: '#8a6a4a' },
+  claude: { name: 'Làng Lá', emoji: '🍃', color: '#3f7a3f', beast: 'Cửu Vĩ Kurama (9 Đuôi)' },
+  codex: { name: 'Làng Cát', emoji: '⏳', color: '#c2a24a', beast: 'Nhất Vĩ Shukaku (1 Đuôi)' },
+  opencode: { name: 'Làng Sương', emoji: '🌫️', color: '#5b7fa6', beast: 'Tam Vĩ Isobu (3 Đuôi)' },
+  'gemini-antigravity': { name: 'Làng Đá', emoji: '🪨', color: '#8a6a4a', beast: 'Tứ Vĩ Son Goku (4 Đuôi)' },
+  review: { name: 'Làng Mây', emoji: '⚡', color: '#b28a36', beast: 'Bát Vĩ Gyūki (8 Đuôi)' },
+  akatsuki: { name: 'Akatsuki', emoji: '☁️', color: '#a61c1c', beast: 'Thập Vĩ Dị Thần' },
 };
-const GRASS_VILLAGE: Village = { name: 'Làng Cỏ', emoji: '🌿', color: '#4d9970' };
+const GRASS_VILLAGE: Village = { name: 'Làng Cỏ', emoji: '🌿', color: '#4d9970', beast: 'Thất Vĩ Chōmei (7 Đuôi)' };
 
 /** Làng của một engine/provider (mặc định claude = Làng Lá, đúng chuẩn AgentInfo). */
 export function villageOf(family: string): Village {
@@ -214,6 +246,41 @@ export class BattleRoyale {
           this.log.push(tr('{0} está queimando', [defender.name]));
         }
         return { ...strike, burnSet: !strike.negated };
+      }
+      case 'rasengan': {
+        const damage = Math.round(RASENGAN_DMG * bonus);
+        this.log.push(tr('{0} acerta Rasengan em {1}!', [attacker.name, defender.name]));
+        return this.hit(base, attacker, defender, damage, false);
+      }
+      case 'chidori': {
+        const damage = Math.round(CHIDORI_DMG * bonus);
+        this.log.push(tr('{0} đâm thủng phòng ngự bằng Chidori!', [attacker.name]));
+        return this.hit(base, attacker, defender, damage, false);
+      }
+      case 'amaterasu': {
+        const damage = Math.round(AMATERASU_DMG * bonus);
+        const strike = this.hit(base, attacker, defender, damage, true);
+        if (!strike.negated) {
+          this.burn.set(defender.id, AMATERASU_BURN_TURNS);
+          this.log.push(tr('{0} thiêu đốt đối thủ bằng hắc hỏa Amaterasu!', [attacker.name]));
+        }
+        return { ...strike, burnSet: !strike.negated };
+      }
+      case 'tsukuyomi': {
+        const damage = Math.round(TSUKUYOMI_DMG * bonus);
+        this.log.push(tr('{0} kéo {1} vào ảo thuật Nguyệt Độc Tsukuyomi!', [attacker.name, defender.name]));
+        return this.hit(base, attacker, defender, damage, false);
+      }
+      case 'shinra-tensei': {
+        const damage = Math.round(SHINRA_TENSEI_DMG * bonus);
+        this.log.push(tr('{0} dùng Thần La Thiên Chinh (Shinra Tensei) thổi bay {1}!', [attacker.name, defender.name]));
+        return this.hit(base, attacker, defender, damage, false);
+      }
+      case 'bijuudama': {
+        const damage = Math.round(BIJUUDAMA_DMG * bonus);
+        const beast = villageOf(attacker.family).beast;
+        this.log.push(tr('{0} ngưng tụ Vĩ Thú Ngọc ({1}) huỷ diệt sân đấu!', [attacker.name, beast]));
+        return this.hit(base, attacker, defender, damage, false);
       }
       case 'shadow-clone': {
         const perHit = Math.round(CLONE_DMG * bonus);

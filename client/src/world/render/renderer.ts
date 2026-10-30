@@ -22,6 +22,20 @@ import { Particles } from './particles';
 import { carSprite, propSprite, shadowSprite } from './props';
 import { countBadge, fallbackIcon } from './shell-sprites';
 import { decorateElevator, drawSeasonalLights, drawSeasonalWindow, seasonalCostume, seasonalFurniture } from './seasonal';
+
+/** Màu băng đô ninja theo làng của agent. */
+function villageColorFor(family: string): string {
+  switch (family) {
+    case 'claude': return '#3f7a3f'; // Làng Lá 🍃
+    case 'codex': return '#c2a24a';  // Làng Cát ⏳
+    case 'opencode': return '#5b7fa6'; // Làng Sương 🌫️
+    case 'gemini-antigravity':
+    case 'gemini':
+    case 'antigravity': return '#8a6a4a'; // Làng Đá 🪨
+    case 'review': return '#b28a36'; // Làng Mây ⚡
+    default: return '#4d9970'; // Làng Cỏ 🌿
+  }
+}
 import { buildAreaVis, furnitureSprites, opaqueBounds, paintShell, toWallVis, WALL_MARGIN, wallItemOrigin, wallSprites, type AreaVis, type FurnVis, type WallVis } from './scene';
 
 const enum K {
@@ -843,7 +857,8 @@ export class Renderer {
     req.pose = ch.pose;
     req.held = ch.held;
     req.seated = ch.seated;
-    req.costume = seasonalCostume(this.theme, ch.info.seed);
+    req.costume = 'ninja';
+    req.costumeColor = villageColorFor(ch.info.engine ?? ch.info.provider ?? 'claude');
     try {
       sprite = this.charSprite(req, ch.animT);
     } catch {
@@ -1046,7 +1061,8 @@ export class Renderer {
       req.pose = ch.pose === 'groom' ? 'groom' : 'stand';
       req.held = ch.pose === 'groom' ? ch.held : 'none';
       req.seated = false;
-      req.costume = seasonalCostume(this.theme, ch.info.seed);
+      req.costume = 'ninja';
+      req.costumeColor = villageColorFor(ch.info.engine ?? ch.info.provider ?? 'claude');
       let s: Sprite;
       try {
         s = this.charSprite(req, ch.animT);
