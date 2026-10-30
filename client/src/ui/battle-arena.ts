@@ -7,9 +7,10 @@ import { BattleRoyale, type BattleResult, type Fighter } from '../world/battle/c
 import type { OfficeStore } from '../net/store';
 import type { UiComponent, UiContext } from './context';
 import { h } from './dom';
-import { canFight, hpTimeline, pickFighters, roundLabel } from './battle-view';
+import { canFight, familyEmoji, hpTimeline, pickFighters, roundLabel } from './battle-view';
 
 const ROUND_MS = 900;
+const CONFETTI = ['🎉', '✨', '🎊', '⚔️', '🪙'] as const;
 
 /** Điểm cần từ store: danh sách agent hiện có. */
 export type BattleStore = Pick<OfficeStore, 'snapshot'>;
@@ -122,7 +123,7 @@ export class BattleArena implements UiComponent {
       const bar = h('span', { class: 'ui-battle__bar-fill' });
       const hpText = h('span', { class: 'ui-battle__hp', text: '100' });
       const root = h('div', { class: 'ui-battle__fighter' },
-        h('span', { class: 'ui-battle__sym', text: f.symbol, attrs: { 'aria-hidden': 'true' } }),
+        h('span', { class: 'ui-battle__sym', text: familyEmoji(f.family), attrs: { 'aria-hidden': 'true', title: f.symbol } }),
         h('strong', { class: 'ui-battle__name', text: f.name }),
         h('span', { class: 'ui-battle__bar' }, bar),
         hpText,
@@ -140,12 +141,15 @@ export class BattleArena implements UiComponent {
       const r = result.rounds[round];
       round += 1;
       for (const strike of r.strikes) {
+        const attackerCard = this.cards.find((c) => c.fighter.id === strike.attacker);
         const card = this.cards.find((c) => c.fighter.id === strike.defender);
+        if (strike.move === 'charge' && attackerCard) this.spawnFloat(attackerCard.root, '⚡ ×2', 'ui-battle__dmg--charge');
         if (!card) continue;
         card.bar.style.width = `${strike.hpAfter}%`;
         card.hpText.textContent = String(strike.hpAfter);
         card.root.classList.toggle('is-down', strike.hpAfter <= 0);
         card.root.classList.toggle('is-hit', strike.hpAfter > 0);
+        if (strike.damage > 0) this.spawnFloat(card.root, `−${strike.damage} ❤️`, strike.hpAfter <= 0 ? 'ui-battle__dmg--ko' : '');
       }
       for (const id of r.eliminated) {
         const card = this.cards.find((c) => c.fighter.id === id);
@@ -169,8 +173,22 @@ export class BattleArena implements UiComponent {
     const champion = result.champion;
     const card = this.cards.find((c) => c.fighter.id === champion.id);
     if (card) card.root.classList.add('is-champion');
+    for (let i = 0; i < 16; i++) {
+      const piece = h('span', { class: 'ui-battle__confetti', text: CONFETTI[i % CONFETTI.length] });
+      piece.style.left = `${(i * 23 + champion.name.length * 7) % 92}%`;
+      piece.style.animationDelay = `${(i % 5) * 0.12}s`;
+      this.arena.append(piece);
+      window.setTimeout(() => piece.remove(), 2600);
+    }
     this.status.textContent = tr('{0} vence a arena e leva {1} moedas! As demais levam {2} por participar.', [champion.name, '🪙50', '🪙10']);
     this.log.append(h('p', { class: 'ui-battle__champ', text: tr('Campeão: {0}', [champion.name]) }));
+  }
+
+  /** Số bay lên trên thẻ võ sĩ (sát thương, ⚡×2) rồi tự biến mất. */
+  private spawnFloat(root: HTMLElement, text: string, extraClass: string): void {
+    const span = h('span', { class: `ui-battle__dmg ${extraClass}`, text });
+    root.append(span);
+    window.setTimeout(() => span.remove(), 950);
   }
 
   private stopTimer(): void {

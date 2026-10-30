@@ -11203,3 +11203,10 @@ html.is-replay #world {
 .ui-battle__round { font: 700 10px var(--font-px); text-transform: uppercase; letter-spacing: .08em; color: var(--ui-muted); margin: 6px 0 2px; }
 .ui-battle__line { margin: 0; font-size: 12px; }
 .ui-battle__champ { margin: 8px 0 0; font: 700 13px var(--font-px); color: #d9a12e; }
+.ui-battle__fighter { position: relative; }
+.ui-battle__dmg { position: absolute; right: 10px; top: -4px; font: 700 13px var(--font-px); color: #b3474d; pointer-events: none; animation: ui-battle-float .95s ease-out forwards; }
+.ui-battle__dmg--charge { color: #2f7fd1; animation-duration: .8s; }
+.ui-battle__dmg--ko { font-size: 15px; color: #8f1d24; }
+@keyframes ui-battle-float { 0% { opacity: 0; transform: translateY(6px) scale(.8); } 20% { opacity: 1; transform: translateY(0) scale(1.1); } 100% { opacity: 0; transform: translateY(-18px) scale(1); } }
+.ui-battle__confetti { position: absolute; bottom: 10px; font-size: 16px; pointer-events: none; animation: ui-battle-confetti 2.4s ease-in forwards; }
+@keyframes ui-battle-confetti { 0% { opacity: 0; transform: translateY(0) rotate(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-150px) rotate(220deg); } }

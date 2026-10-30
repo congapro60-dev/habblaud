@@ -47,3 +47,14 @@ export function hpTimeline(result: BattleResult): HpTimeline {
 export function roundLabel(round: number, total: number): string {
   return tr('Rodada {0} de {1}', [String(round), String(total)]);
 }
+
+/** Avatar chibi theo family (emoji, không cần art mới). */
+export function familyEmoji(family: string): string {
+  switch (family) {
+    case 'claude': return '⚔️';
+    case 'codex': return '🥷';
+    case 'opencode': return '🧙';
+    case 'gemini-antigravity': return '✨';
+    default: return '🥋';
+  }
+}
