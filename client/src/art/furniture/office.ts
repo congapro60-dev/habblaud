@@ -72,7 +72,7 @@ function deskBody(s: BufSprite, m: DeskMats, seed: number, back: boolean): void 
   b.set(0, 6, m.edge.lt);
 }
 
-/** Objetos sobre a mesa (variações por semente). Retorna o retângulo da tela principal e o da secundária. */
+/** Objetos sobre a mesa (Bãi tập ném phi tiêu, bia Shuriken, cuộn bí kíp nhẫn thuật, giá kiếm Katana & bùa nổ). */
 function deskTop(s: BufSprite, seed: number, tone: DeskItemTone): { screen: Box; screen2?: Box } {
   const b = s.buf;
   const r = rngOf(seed, 11);
@@ -92,7 +92,6 @@ function deskTop(s: BufSprite, seed: number, tone: DeskItemTone): { screen: Box;
     }
     case 2: {
       screen = monitorFront(b, 5, -17, 16, 11);
-      // Notebook aberto à direita (tela ligada com conteúdo fixo).
       b.rect(22, -9, 9, 6, '#3a404d');
       b.hline(22, 30, -9, '#4d5464');
       screen2 = { x: 23, y: -8, w: 7, h: 4 };
@@ -128,7 +127,6 @@ function deskTop(s: BufSprite, seed: number, tone: DeskItemTone): { screen: Box;
       screen = monitorFront(b, 8, -17, 16, 11);
       keyboard(b, 11, -1, 10, tone);
       mouse(b, 23, 0, tone);
-      // Fone de ouvido sobre a mesa.
       b.hline(2, 6, -4, '#3a3f4b');
       b.set(1, -3, '#3a3f4b');
       b.set(7, -3, '#3a3f4b');
@@ -148,6 +146,69 @@ function deskTop(s: BufSprite, seed: number, tone: DeskItemTone): { screen: Box;
       break;
     }
   }
+
+  // BIẾN THÀNH BÃI TẬP NÉM PHI TIÊU & BIA LUYỆN VÕ NINJA (SHURIKEN TARGET & SHINOBI WEAPON STATION)
+  const scx = screen.x;
+  const scy = screen.y;
+  const scw = screen.w;
+  const sch = screen.h;
+
+  // 1. Bia tập ném phi tiêu bằng gỗ (Shuriken Target) phủ lên khung
+  // Vành bia gỗ sồi dày dặn
+  b.rect(scx, scy, scw, sch, '#854d0e');
+  b.rect(scx + 1, scy + 1, scw - 2, sch - 2, '#a16207');
+  // Vòng tròn đồng tâm hồng tâm tập ném phi tiêu (trắng - đỏ - vàng)
+  const tcx = scx + Math.floor(scw / 2);
+  const tcy = scy + Math.floor(sch / 2);
+  b.ellipse(tcx, tcy, 5, 3.5, '#f8fafc');
+  b.ellipse(tcx, tcy, 3, 2, '#dc2626');
+  b.set(tcx, tcy, '#fde047'); // Hồng tâm vàng
+
+  // 2. Phi tiêu Shuriken 4 cánh bằng thép sắc bén cắm ngập vào bia
+  b.set(tcx - 3, tcy - 1, '#cbd5e1'); // tâm phi tiêu
+  b.set(tcx - 4, tcy - 1, '#64748b'); // 4 cánh sắt
+  b.set(tcx - 2, tcy - 1, '#64748b');
+  b.set(tcx - 3, tcy - 2, '#64748b');
+  b.set(tcx - 3, tcy, '#64748b');
+
+  // Dao găm Kunai cắm chéo vào góc bia gỗ
+  b.line(tcx + 2, tcy - 2, tcx + 5, tcy - 4, '#cbd5e1');
+  b.set(tcx + 6, tcy - 5, '#ef4444'); // dây đỏ đuôi Kunai
+
+  // 3. Cuộn Bí Kíp Nhẫn Thuật (Shinobi Jutsu Scroll) trải trên mặt bàn
+  b.rect(3, -2, 11, 4, '#fef08a'); // giấy da cổ
+  b.hline(3, 13, -2, '#ca8a04'); // mép cuộn trục
+  b.hline(3, 13, 1, '#ca8a04');
+  b.vline(3, -2, 1, '#78350f'); // trục gỗ hai bên
+  b.vline(13, -2, 1, '#78350f');
+  // Phù chú ký tự phong ấn màu đỏ/đen
+  b.set(5, -1, '#dc2626');
+  b.set(7, -1, '#09090b');
+  b.set(9, -1, '#dc2626');
+  b.set(11, -1, '#09090b');
+
+  // 4. Giá gác kiếm Katana Ninja hoặc Bùa Nổ (Kibaku Fuda)
+  if (v % 2 === 0) {
+    // Giá gác bảo kiếm Katana/Tanto sơn mài đen
+    b.rect(17, -3, 11, 2, '#18181b');
+    b.set(18, -4, '#18181b'); // mấu gác kiếm
+    b.set(26, -4, '#18181b');
+    // Thanh kiếm Katana vỏ đen tuyền chuôi quấn băng trắng
+    b.hline(16, 27, -5, '#09090b');
+    b.hline(16, 19, -5, '#f8fafc'); // chuôi kiếm
+    b.set(20, -5, '#f59e0b'); // tsuba kiếm vàng
+  } else {
+    // Bùa nổ Kibaku Fuda (Explosive Tag)
+    b.rect(19, -3, 6, 4, '#fef9c3');
+    b.rect(20, -2, 4, 2, '#dc2626');
+    b.set(21, -2, '#fef9c3'); // chữ "Bộc" (爆)
+    b.set(22, -1, '#fef9c3');
+  }
+
+  // 5. Hồ Lô thuốc võ đạo (Gourd) đựng tiên dược hồi phục Chakra
+  b.ellipse(28, -2, 2, 2.5, '#78350f');
+  b.set(28, -5, '#dc2626'); // nút thắt đỏ
+
   return { screen, screen2 };
 }
 
@@ -177,7 +238,7 @@ export function deskBack(variant: string | undefined, seed: number): BufFurnitur
   const v = seed % 4;
   const mugC = pick(r, MUG_COLORS);
   const tone = itemTone(variant);
-  // Verso em plástico claro; na mesa escura (nogueira), cinza médio para não brilhar demais.
+  // Verso em plástico claro / gỗ mộc sáng đảm bảo độ sáng
   const plastic = variant === 'dark' ? 'mid' : 'light';
   if (v === 1) {
     monitorBack(b, 2, -7, 15, 10, plastic);
@@ -189,6 +250,22 @@ export function deskBack(variant: string | undefined, seed: number): BufFurnitur
     if (v === 3) photoFrame(b, 2, -3);
     else mug(b, 2, 0, mugC);
   }
+
+  // KHUNG ĐỠ BIA PHI TIÊU GỖ & CỌC TẬP VÕ NINJA TỪ PHÍA SAU
+  // 1. Chân chống chữ A bằng gỗ đỡ mặt sau bia
+  b.line(9, 2, 11, -5, '#78350f');
+  b.line(22, 2, 20, -5, '#78350f');
+  // 2. Mũi phi tiêu Shuriken cắm xuyên thủng qua lưng bia
+  b.set(15, -4, '#94a3b8');
+  b.set(16, -4, '#cbd5e1');
+  b.set(18, -2, '#94a3b8');
+  // 3. Ống tre cắm phi tiêu Shuriken rèn luyện
+  b.rect(2, 0, 3, 4, '#15803d');
+  b.set(3, -1, '#94a3b8');
+  // 4. Cuộn bí kíp đã cuộn tròn buộc dây đỏ
+  b.rect(25, 0, 6, 2, '#fef08a');
+  b.set(27, 0, '#dc2626');
+
   b.outline();
   deskShadow(b);
   return { base: s };
@@ -208,19 +285,19 @@ function chairRamp(variant: string | undefined): Ramp {
   return ramp(CHAIR_COLORS[variant ?? 'black'] ?? CHAIR_COLORS.black, 0.07);
 }
 
-/** Base estrela com rodízios + pistão. */
+/** Chân đôn gỗ võ quán cổ truyền (thay thế chân xoay kim loại và bánh xe công sở). */
 function starBase(b: BufSprite['buf']): void {
-  const metal = '#565d6b';
-  const caster = '#23262e';
-  b.hline(3, 12, 13, metal);
-  b.hline(5, 10, 14, metal);
-  b.set(3, 13, '#6c7382');
+  const wood = '#78350f';
+  const woodHi = '#a16207';
+  b.hline(3, 12, 13, wood);
+  b.hline(5, 10, 14, wood);
+  b.set(3, 13, woodHi);
   for (const [x, y] of [[2, 14], [13, 14], [4, 15], [11, 15]] as const) {
-    b.set(x, y, caster);
-    b.set(x + (x < 8 ? 1 : -1), y, caster);
+    b.set(x, y, '#451a03'); // chân gỗ mun
+    b.set(x + (x < 8 ? 1 : -1), y, '#451a03');
   }
-  b.rect(7, 9, 2, 4, '#a3aab6');
-  b.vline(8, 9, 12, '#7d8592');
+  b.rect(7, 9, 2, 4, woodHi);
+  b.vline(8, 9, 12, wood);
 }
 
 export function officeChair(variant: string | undefined): BufFurniture {
@@ -323,7 +400,7 @@ export function bookshelf(seed: number): BufFurniture {
         b.rect(x + 1, bottom - 2, 3, 1, shade(bc, -0.2));
         x += 6;
       } else if (kind < 0.26 && x < 26) {
-        // Troféu.
+        // Tượng Linh Thú Cóc Vàng / Bình Rượu Thuốc
         b.rect(x + 1, bottom - 4, 3, 2, '#f2c14e');
         b.set(x, bottom - 4, '#d9a42e');
         b.set(x + 4, bottom - 4, '#d9a42e');
@@ -331,17 +408,20 @@ export function bookshelf(seed: number): BufFurniture {
         b.rect(x + 1, bottom - 1, 3, 2, '#6b4a32');
         x += 6;
       } else {
-        // Grupo de livros com alturas variadas (um às vezes inclinado).
+        // Cuộn Trục Bí Kíp Nhẫn Thuật (Shinobi Scrolls) cuộn tròn nhiều màu
         const n = 2 + Math.floor(r() * 4);
+        const scrollColors = ['#fef08a', '#dc2626', '#38bdf8', '#a855f7', '#22c55e', '#f97316'];
         for (let k = 0; k < n && x < 29; k++) {
           const bw = 1 + Math.floor(r() * 2);
           const bh = 6 + Math.floor(r() * 4);
-          book(b, x, bottom - bh + 1, bw, bh, pick(r, ACCENTS));
+          const sCol = pick(r, scrollColors);
+          book(b, x, bottom - bh + 1, bw, bh, sCol);
+          b.set(x, bottom - Math.floor(bh / 2), '#dc2626'); // Dây nơ đỏ buộc cuộn bí kíp
           x += bw;
         }
         if (r() < 0.3 && x < 26) {
-          b.line(x, bottom, x + 3, bottom - 6, pick(r, ACCENTS), 1);
-          b.line(x + 1, bottom, x + 4, bottom - 6, pick(r, ACCENTS), 1);
+          b.line(x, bottom, x + 3, bottom - 6, '#fef08a', 1); // cuộn bí kíp nghiêng
+          b.line(x + 1, bottom, x + 4, bottom - 6, '#fef08a', 1);
           x += 5;
         } else x += 1;
       }
@@ -426,28 +506,33 @@ export function filingCabinet(): BufFurniture {
 export function printer(): BufFurniture {
   const s = floorSheet(1, 1, 14);
   const b = s.buf;
-  const body = ramp('#dfe2e7', 0.05);
-  const dark = ramp('#7b8391', 0.06);
-  // Gabinete com bandejas de papel.
-  frontFace(b, 0, 2, 16, 14, body);
-  for (const y of [6, 10]) {
-    b.hline(1, 14, y, body.dd);
-    b.rect(6, y + 1, 4, 1, dark.base);
-  }
-  // Corpo da impressora.
-  topFace(b, 0, -11, 16, 6, body);
-  b.rect(1, -10, 14, 3, '#f4f5f7');
-  b.hline(1, 14, -8, '#c9ced6');
-  frontFace(b, 0, -5, 16, 7, body);
-  // Painel de controle com tela e LED.
-  b.rect(10, -10, 5, 3, dark.base);
-  b.rect(11, -9, 3, 1, '#7fd0ff');
-  b.set(14, -8, '#5fd07a');
-  // Saída de papel.
-  b.rect(2, -4, 9, 2, '#3d4350');
-  b.rect(3, -5, 7, 2, '#fbfbf8');
-  b.hline(3, 9, -3, '#e3e1da');
-  b.set(13, -2, '#5fd07a');
+  const wood = ramp('#854d0e', 0.06);
+  const iron = ramp('#475569', 0.06);
+
+  // RƯƠNG VŨ KHÍ NHẪN CỤ NINJA (SHINOBI WEAPON CHEST)
+  // Thân rương gỗ cổ nẹp đai sắt
+  frontFace(b, 0, 2, 16, 14, wood);
+  b.hline(0, 15, 2, iron.base);
+  b.hline(0, 15, 8, iron.base);
+  b.hline(0, 15, 15, iron.dk);
+  b.vline(0, 2, 15, iron.base);
+  b.vline(15, 2, 15, iron.base);
+  b.rect(7, 5, 2, 3, '#f59e0b'); // Khóa đồng rương
+
+  // Nắp rương hơi mở hé lộ phi tiêu & cuộn bí kíp
+  topFace(b, 0, -11, 16, 6, wood);
+  b.rect(1, -10, 14, 3, '#78350f');
+  b.hline(1, 14, -8, iron.hi);
+  frontFace(b, 0, -5, 16, 7, wood);
+
+  // Phi tiêu Shuriken & Dao Kunai lấp lánh trong rương
+  b.set(3, -4, '#cbd5e1');
+  b.set(4, -4, '#64748b');
+  b.set(7, -3, '#cbd5e1');
+  b.set(8, -3, '#ef4444'); // đuôi Kunai đỏ
+  b.rect(10, -5, 4, 3, '#fef08a'); // cuộn bí kíp vàng
+  b.set(11, -4, '#dc2626');
+
   b.outline();
   contact(b, -1, 13, 18, 4, 0.22);
   return { base: s };
@@ -456,21 +541,22 @@ export function printer(): BufFurniture {
 export function trashBin(): BufFurniture {
   const s = floorSheet(1, 1, 2);
   const b = s.buf;
-  const m = ramp('#8a96a8', 0.07);
-  // Corpo afunilado.
+  // ỐNG TRE CẮM PHI TIÊU SHURIKEN LUYỆN TẬP
+  const bamboo = ramp('#15803d', 0.07);
   for (let y = 7; y <= 15; y++) {
     const inset = y > 13 ? 1 : 0;
-    b.hline(4 + inset, 11 - inset, y, m.base);
-    b.set(4 + inset, y, m.lt);
-    b.set(11 - inset, y, m.dk);
+    b.hline(4 + inset, 11 - inset, y, bamboo.base);
+    b.set(4 + inset, y, bamboo.lt);
+    b.set(11 - inset, y, bamboo.dk);
   }
-  b.hline(5, 10, 15, m.dk);
-  // Boca (elipse) com papel amassado.
-  b.ellipse(8, 6.5, 4.5, 2, m.lt);
-  b.ellipse(8, 6.6, 3.5, 1.3, '#3b4150');
-  b.rect(6, 5, 3, 2, '#f4f2ee');
-  b.set(8, 5, '#d8d4ca');
-  b.set(9, 6, '#f7d154');
+  b.hline(5, 10, 11, bamboo.dk); // mắt tre
+  b.hline(5, 10, 15, bamboo.dk);
+  // Miệng ống cắm đầy phi tiêu Shuriken sắt
+  b.ellipse(8, 6.5, 4.5, 2, bamboo.lt);
+  b.ellipse(8, 6.6, 3.5, 1.3, '#14532d');
+  b.rect(6, 4, 3, 3, '#94a3b8'); // phi tiêu Shuriken cắm bên trong
+  b.set(7, 3, '#cbd5e1');
+  b.set(9, 4, '#ef4444'); // bùa đỏ
   b.outline();
   contact(b, 3, 14, 10, 2, 0.22);
   return { base: s };
@@ -653,52 +739,47 @@ export function glassPartition(variant: string | undefined): BufFurniture {
 export function meetingTable(seed: number): BufFurniture {
   const s = floorSheet(3, 2, 10);
   const b = s.buf;
-  const m = M.white;
+  const m = M.oak;
   const r = rngOf(seed, 31);
-  // Pernas em painel nas extremidades.
+  // BÀN SA BÀN CHỈ HUY TÁC CHIẾN NHẪN GIẢ (SHINOBI WAR TACTICS SAND TABLE)
+  // Chân bàn gỗ sồi dày dặn
   for (const x of [2, 43]) {
-    b.rect(x, 21, 3, 11, M.steel.base);
-    b.vline(x, 21, 31, M.steel.lt);
-    b.vline(x + 2, 21, 31, M.steel.dk);
+    b.rect(x, 21, 3, 11, '#5c3d28');
+    b.vline(x, 21, 31, '#78350f');
+    b.vline(x + 2, 21, 31, '#451a03');
   }
   topFace(b, 0, -4, 48, 24, m);
   b.hline(0, 47, 20, m.base);
   b.hline(0, 47, 21, m.dk);
-  // Faixa central de madeira.
-  b.rect(4, 2, 40, 10, M.oak.lt);
-  b.hline(4, 43, 2, M.oak.base);
-  b.hline(4, 43, 11, M.oak.hi);
-  woodGrain(b, 4, 3, 40, 8, M.oak, seed);
-  // Caixa de tomadas/viva-voz no centro.
-  b.rect(21, 5, 6, 3, '#3a404d');
-  b.rect(22, 5, 4, 1, '#5a6070');
-  b.set(24, 6, '#5fd07a');
-  // Notebooks e objetos (variam por semente).
-  const laptop = (x: number, y: number, facing: 'up' | 'down') => {
-    if (facing === 'down') {
-      b.rect(x, y, 9, 5, '#3a404d');
-      b.hline(x, x + 8, y, '#4d5464');
-      staticScreen(b, { x: x + 1, y: y + 1, w: 7, h: 3 }, x < 20 ? 'ide' : 'sheet', seed + x);
-      b.rect(x - 1, y + 5, 11, 2, '#c9ced6');
-      b.hline(x - 1, x + 9, y + 6, '#9aa1ad');
-    } else {
-      b.rect(x - 1, y, 11, 2, '#c9ced6');
-      b.rect(x, y + 2, 9, 4, '#aeb5c0');
-      b.hline(x, x + 8, y + 2, '#d6dbe2');
-      b.set(x + 4, y + 4, '#eef1f5');
-    }
-  };
-  laptop(6, -3, 'down');
-  laptop(32, 13, 'up');
-  if (seed % 2 === 0) laptop(34, -3, 'down');
-  else papers(b, 34, -1, 7, 5);
-  papers(b, 8, 14, 6, 4);
-  // Copos de água / canecas.
-  mug(b, 18, 14, pick(r, MUG_COLORS));
-  b.rect(29, -1, 2, 3, 'rgba(190,225,245,0.9)');
-  b.set(29, -1, '#ffffff');
-  b.rect(16, -2, 2, 3, 'rgba(190,225,245,0.9)');
-  b.set(16, -2, '#ffffff');
+
+  // Vùng Sa bàn địa hình 5 Làng Ninja ở trung tâm bàn
+  b.rect(4, 2, 40, 10, '#c7a36c'); // Cát sa bàn địa hình
+  b.hline(4, 43, 2, '#a1784c');
+  b.hline(4, 43, 11, '#e2d3b8');
+  // Dòng sông Thủy Độn xanh biếc chạy ngang sa bàn
+  b.line(6, 6, 20, 8, '#0284c7');
+  b.line(20, 8, 42, 5, '#0284c7');
+  // Mô hình núi non Đá & Rừng cây Làng Lá
+  b.rect(10, 4, 3, 3, '#15803d');
+  b.rect(26, 3, 4, 3, '#64748b');
+  b.rect(34, 7, 3, 2, '#d97706');
+
+  // Cờ hiệu các làng ninja cắm trên sa bàn
+  b.vline(12, 1, 4, '#dc2626'); // Cờ Lửa Konoha
+  b.set(13, 1, '#ef4444');
+  b.vline(36, 4, 7, '#38bdf8'); // Cờ Lôi Kumogakure
+  b.set(37, 4, '#0284c7');
+
+  // Cuộn giấy phong ấn quân sự & hồ lô nước
+  b.rect(6, 13, 10, 3, '#fef08a');
+  b.hline(6, 15, 13, '#ca8a04');
+  b.set(8, 14, '#dc2626');
+  b.set(11, 14, '#09090b');
+
+  // Hồ lô rượu thuốc (Gourd)
+  b.ellipse(35, 13, 2.5, 3, '#78350f');
+  b.set(35, 9, '#ef4444');
+
   b.outline();
   contact(b, -1, 28, 50, 5, 0.22);
   underRect(b, 4, 22, 40, 8, 'rgba(30,34,52,0.16)');
@@ -708,13 +789,13 @@ export function meetingTable(seed: number): BufFurniture {
 export function stool(): BufFurniture {
   const s = floorSheet(1, 1, 2);
   const b = s.buf;
-  // Base e haste.
-  b.ellipse(8, 14.5, 4, 1.4, '#5b6272');
-  b.rect(7, 8, 2, 6, '#9aa1ad');
-  b.vline(8, 8, 13, '#737b89');
-  b.hline(5, 10, 11, '#9aa1ad');
-  // Assento redondo.
-  const seat = ramp('#3f7fd8', 0.07);
+  // ĐÔN GỖ VÕ ĐẠO / ĐỆM NGỒI CÓI TATAMI
+  b.ellipse(8, 14.5, 4, 1.4, '#451a03');
+  b.rect(7, 8, 2, 6, '#78350f');
+  b.vline(8, 8, 13, '#5c3d28');
+  b.hline(5, 10, 11, '#9a3412');
+  // Đệm ngồi cói bọc vải đỏ/xanh võ quán
+  const seat = ramp('#991b1b', 0.07);
   b.ellipse(8, 6, 5.5, 3, seat.dk);
   b.ellipse(8, 5.4, 5.5, 2.6, seat.lt);
   b.set(5, 4, seat.hi);
@@ -727,20 +808,21 @@ export function stool(): BufFurniture {
 export function floorLamp(): BufFurniture {
   const s = floorSheet(1, 1, 26);
   const b = s.buf;
-  b.ellipse(8, 14, 4, 1.5, '#3a3f4b');
-  b.hline(6, 9, 13, '#5a6070');
-  b.vline(8, -17, 13, '#4a505c');
-  b.vline(7, -17, 13, '#6b7282');
-  // Cúpula de tecido creme (luz acesa).
-  const sh = ramp('#f3e6c8', 0.05);
+  // ĐÈN LỒNG TRUYỀN THỐNG NHẪN GIẢ (SHINOBI LANTERN)
+  b.ellipse(8, 14, 4, 1.5, '#451a03');
+  b.hline(6, 9, 13, '#78350f');
+  b.vline(8, -17, 13, '#5c3d28');
+  b.vline(7, -17, 13, '#78350f');
+  // Khung lồng đèn giấy đỏ viền đen
+  const sh = ramp('#ef4444', 0.05);
   for (let i = 0; i < 7; i++) {
     const half = 3 + Math.floor(i / 2);
     b.hline(8 - half, 7 + half, -24 + i, i === 0 ? sh.hi : sh.lt);
-    b.set(8 - half, -24 + i, sh.hi);
-    b.set(7 + half, -24 + i, sh.dk);
+    b.set(8 - half, -24 + i, '#18181b');
+    b.set(7 + half, -24 + i, '#18181b');
   }
-  b.hline(3, 12, -17, sh.dk);
-  b.hline(5, 10, -16, '#fff6d8');
+  b.hline(3, 12, -17, '#18181b');
+  b.hline(5, 10, -16, '#fef08a');
   b.outline();
   contact(b, 3, 13, 10, 3, 0.22);
   s.rects = { glow: rectAt(s, 4, -20, 8, 6) };
@@ -750,37 +832,27 @@ export function floorLamp(): BufFurniture {
 export function waterCooler(): BufFurniture {
   const s = floorSheet(1, 1, 20);
   const b = s.buf;
-  const body = ramp('#eceef1', 0.05);
-  // Corpo.
-  topFace(b, 3, -5, 10, 3, body);
-  frontFace(b, 3, -2, 10, 18, body);
-  b.vline(3, -2, 15, body.hi);
-  // Torneiras (quente/fria) e bandeja.
-  b.rect(5, 1, 2, 2, '#4a86d8');
-  b.rect(9, 1, 2, 2, '#e05a5a');
-  b.set(5, 1, '#8ab8f0');
-  b.set(9, 1, '#f08a8a');
-  b.rect(4, 5, 8, 2, '#c3c9d2');
-  b.hline(5, 10, 5, '#9aa2ae');
-  // Porta inferior.
-  b.rect(4, 8, 8, 7, body.base);
-  b.hline(4, 11, 8, body.dk);
-  b.rect(10, 11, 1, 2, '#9aa2ae');
-  // Galão azul translúcido.
-  const g = 'rgba(92,170,240,0.78)';
-  b.rect(5, -6, 6, 1, '#5b8fd0');
-  for (let y = -17; y <= -7; y++) {
-    const narrow = y < -15 ? 1 : 0;
-    b.hline(4 + narrow, 11 - narrow, y, g);
+  // CHUM NƯỚC THỦY ĐỘN / BÌNH NƯỚC THÁNH NINJA (SHINOBI WATER URN)
+  const clay = ramp('#78350f', 0.06);
+  // Đế gỗ đỡ chum
+  topFace(b, 3, -2, 10, 3, ramp('#451a03', 0.05));
+  frontFace(b, 3, 1, 10, 15, ramp('#451a03', 0.05));
+  b.vline(3, 1, 15, '#78350f');
+
+  // Thân chum gốm đất nung cổ tròn bầu
+  for (let y = -14; y <= 0; y++) {
+    const hw = Math.round(Math.sqrt(Math.max(0, 25 - (y + 7) * (y + 7))) * 1.1) + 2;
+    b.hline(8 - hw, 8 + hw, y, clay.base);
+    b.set(8 - hw, y, clay.lt);
+    b.set(8 + hw, y, clay.dk);
   }
-  b.rect(6, -19, 4, 2, '#3f74c0');
-  b.vline(5, -15, -8, 'rgba(255,255,255,0.65)');
-  b.vline(6, -14, -9, 'rgba(255,255,255,0.3)');
-  b.hline(5, 10, -12, 'rgba(60,120,200,0.6)');
-  b.vline(10, -15, -8, 'rgba(40,90,170,0.55)');
-  // Porta-copos lateral.
-  b.rect(13, -1, 2, 6, '#f4f6f8');
-  b.set(14, -1, '#c9ced6');
+  // Miệng chum và nắp gỗ
+  b.rect(5, -16, 7, 2, '#ca8a04'); // nắp gỗ
+  b.set(8, -17, '#78350f'); // núm nắp
+  // Gáo tre múc nước gác ngang miệng chum
+  b.line(4, -15, 13, -13, '#15803d');
+  b.rect(12, -14, 2, 2, '#166534');
+
   b.outline();
   contact(b, 1, 13, 14, 4, 0.22);
   return { base: s };
