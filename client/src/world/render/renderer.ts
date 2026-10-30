@@ -5,6 +5,7 @@ import { TILE, type ArtModule, type CharacterFrameRequest, type IconName, type S
 import type { SeasonalTheme, WorldOptions } from '../api';
 import type { WorldAssets } from '../assets';
 import type { Camera } from '../camera';
+import { resolveNinjaAvatarUrl } from '../../ui/avatar';
 import { BUILDING_H, COL_W, CORE_COLS, CORRIDOR_Y, EXT_EAST, EXT_NORTH, EXT_WEST } from '../constants';
 import { layoutExterior, slotShell, type ExteriorLayout, type SlotShell } from '../layout/exterior';
 import { slotAt } from '../layout/geometry';
@@ -130,6 +131,7 @@ export class Renderer {
   private clearColor = '#7fae62';
   private grass: CanvasPattern | null = null;
   private theme: SeasonalTheme = 'none';
+  private ninjaImgCache = new Map<string, HTMLImageElement>();
 
   constructor(
     readonly canvas: HTMLCanvasElement,
@@ -997,6 +999,43 @@ export class Renderer {
       const sx = x - sprite.ax;
       const sy = y - sprite.ay;
       ctx.drawImage(sprite.canvas, sx, sy);
+
+      // Ảnh anime nguyên mẫu gốc Naruto bay lơ lửng uy phong trên đầu nhân vật
+      const avatarUrl = resolveNinjaAvatarUrl(ch.info.name);
+      if (avatarUrl) {
+        let img = this.ninjaImgCache.get(avatarUrl);
+        if (!img) {
+          img = new Image();
+          img.src = avatarUrl;
+          this.ninjaImgCache.set(avatarUrl, img);
+        }
+        if (img.complete && img.naturalWidth > 0) {
+          const sz = 24;
+          const px = Math.round(x - sz / 2);
+          const py = Math.round(sy - sz - 4);
+          ctx.save();
+          // Hào quang Chakra bao quanh avatar chân dung
+          ctx.beginPath();
+          ctx.arc(px + sz / 2, py + sz / 2, sz / 2 + 2, 0, Math.PI * 2);
+          ctx.fillStyle = isAkatsuki ? 'rgba(220, 38, 38, 0.45)' : req.kageRole ? 'rgba(234, 179, 8, 0.55)' : 'rgba(56, 189, 248, 0.45)';
+          ctx.fill();
+          // Khung viền tròn avatar anime
+          ctx.beginPath();
+          ctx.arc(px + sz / 2, py + sz / 2, sz / 2, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(img, px, py, sz, sz);
+          ctx.restore();
+          // Viền vàng kim hoặc đỏ cho avatar
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(px + sz / 2, py + sz / 2, sz / 2, 0, Math.PI * 2);
+          ctx.strokeStyle = req.kageRole ? '#fde047' : isAkatsuki ? '#ef4444' : '#38bdf8';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
       const b = opaqueBounds(sprite.canvas);
       head.bx = sx + b.x;
       head.by = sy + b.y;
@@ -1315,8 +1354,11 @@ export class Renderer {
   }
 
   /**
-   * Hiệu ứng tỉ thí nhẫn thuật trực tiếp ngoài đời (hành lang / phòng làm việc):
-   * Rasengan, tia sét Chidori, Shuriken xoay tròn và khói Chakra bay giữa 2 nhẫn giả.
+   * Hiệu ứng đại chiến nhẫn thuật tối thượng (Super Ultimate Jutsu FX):
+   * - Địa Bộc Thiên Tinh (Chibaku Tensei) & Thần La Thiên Chinh (Shinra Tensei) của Pain Akatsuki
+   * - Susano'o khổng lồ của Uchiha (Itachi/Madara/Sasuke)
+   * - Vĩ Thú Hình (Cửu Vĩ Kyuubi / Nhất Vĩ Shukaku) & Vĩ Thú Ngọc bùng nổ
+   * - Thuật Phân Thân Chi Thuật (Kage Bunshin) & Chưởng lực diện rộng Rasenshuriken / Kirin Sấm Sét
    */
   private drawNinjaDuelFx(now: number): void {
     const { ctx } = this;
@@ -1333,65 +1375,170 @@ export class Renderer {
       const left = a.x < b.x ? a : b;
       const right = a.x < b.x ? b : a;
       const midX = (left.x + right.x) / 2;
-      const midY = (left.y + right.y) / 2 - 8;
+      const midY = (left.y + right.y) / 2 - 12;
+
+      const aName = (a.info.name ?? '').toLowerCase();
+      const bName = (b.info.name ?? '').toLowerCase();
+      const hasPain = aName.includes('pain') || bName.includes('pain');
+      const hasUchiha = aName.includes('itachi') || bName.includes('itachi') || aName.includes('madara') || bName.includes('madara') || aName.includes('sasuke') || bName.includes('sasuke');
+      const hasBijuu = aName.includes('naruto') || bName.includes('naruto') || aName.includes('gaara') || bName.includes('gaara') || aName.includes('bee') || bName.includes('bee');
 
       ctx.save();
       if (g.step <= 2) {
-        // Giai đoạn kết ấn & tụ Chakra: vòng hào quang xoay quanh 2 nhẫn giả
-        const pulse = 2 + Math.sin(now / 100) * 1.5;
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 1;
+        // GIAI ĐOẠN 1: KẾT ẤN, PHÂN THÂN VÀ TRIỆU HỒI SUSANO'O / VĨ THÚ CHAKRA
+        const pulse = 3 + Math.sin(now / 80) * 2.5;
+
+        // 1. Phân thân chi thuật (Kage Bunshin no Jutsu): 2 bóng phân thân mờ ảo đứng kèm sau lưng mỗi bên
+        ctx.globalAlpha = 0.55;
+        // Phân thân bên trái
+        ctx.fillStyle = '#38bdf8';
         ctx.beginPath();
-        ctx.arc(left.x, left.y - 7, 7 + pulse, 0, Math.PI * 2);
+        ctx.arc(left.x - 14, left.y - 12, 6, 0, Math.PI * 2);
+        ctx.arc(left.x - 14, left.y - 4, 8, 0, Math.PI * 2);
+        ctx.fill();
+        // Phân thân bên phải
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(right.x + 14, right.y - 12, 6, 0, Math.PI * 2);
+        ctx.arc(right.x + 14, right.y - 4, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // 2. Triệu hồi Khung Giáp Susano'o Thần Thoại (màu tím/đỏ khổng lồ bao trùm phe Uchiha)
+        if (hasUchiha) {
+          const uChar = hasUchiha && (aName.includes('itachi') || aName.includes('madara') || aName.includes('sasuke')) ? a : b;
+          const sGrad = ctx.createRadialGradient(uChar.x, uChar.y - 25, 5, uChar.x, uChar.y - 25, 36);
+          sGrad.addColorStop(0, 'rgba(168, 85, 247, 0.85)'); // Tím Susano'o
+          sGrad.addColorStop(0.6, 'rgba(126, 34, 206, 0.45)');
+          sGrad.addColorStop(1, 'rgba(88, 28, 135, 0)');
+          ctx.fillStyle = sGrad;
+          ctx.beginPath();
+          ctx.arc(uChar.x, uChar.y - 25, 34 + Math.sin(now / 90) * 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Khung xương & Đôi mắt rực lửa của Susano'o
+          ctx.strokeStyle = '#f3e8ff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(uChar.x - 10, uChar.y - 42, 20, 24);
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillRect(uChar.x - 6, uChar.y - 34, 4, 3);
+          ctx.fillRect(uChar.x + 2, uChar.y - 34, 4, 3);
+        }
+
+        // 3. Vĩ Thú Hình Bộc Phát (Hào quang Cửu Vĩ / Nhất Vĩ khổng lồ)
+        if (hasBijuu) {
+          const bChar = (aName.includes('naruto') || aName.includes('gaara') || aName.includes('bee')) ? a : b;
+          const bGrad = ctx.createRadialGradient(bChar.x, bChar.y - 20, 4, bChar.x, bChar.y - 20, 32);
+          bGrad.addColorStop(0, 'rgba(249, 115, 22, 0.9)'); // Cam Cửu Vĩ
+          bGrad.addColorStop(0.7, 'rgba(234, 88, 12, 0.4)');
+          bGrad.addColorStop(1, 'rgba(194, 65, 12, 0)');
+          ctx.fillStyle = bGrad;
+          ctx.beginPath();
+          ctx.arc(bChar.x, bChar.y - 20, 30 + Math.sin(now / 70) * 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Đuôi Vĩ Thú đập mạnh phía sau
+          ctx.strokeStyle = '#ea580c';
+          ctx.lineWidth = 3;
+          for (let t = 0; t < 3; t++) {
+            const tAngle = Math.PI * 0.7 + t * 0.35 + Math.sin(now / 100 + t) * 0.2;
+            ctx.beginPath();
+            ctx.moveTo(bChar.x, bChar.y - 10);
+            ctx.quadraticCurveTo(bChar.x + Math.cos(tAngle) * 22, bChar.y - 24, bChar.x + Math.cos(tAngle) * 32, bChar.y - 38);
+            ctx.stroke();
+          }
+        }
+
+        // Trận địa Chakra sấm sét mặt đất
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(left.x, left.y - 7, 10 + pulse, 0, Math.PI * 2);
         ctx.stroke();
 
         ctx.strokeStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.arc(right.x, right.y - 7, 7 + pulse, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Tia Chakra nối giữa 2 người
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.setLineDash([2, 4]);
-        ctx.beginPath();
-        ctx.moveTo(left.x, left.y - 7);
-        ctx.lineTo(right.x, right.y - 7);
+        ctx.arc(right.x, right.y - 7, 10 + pulse, 0, Math.PI * 2);
         ctx.stroke();
       } else {
-        // Giai đoạn tung chiêu & va chạm: Quả cầu Rasengan / Tia sét Chidori / Tia lửa bùng nổ ở giữa
-        const sparkPhase = (now % 200) / 200;
-        const rad = 4 + Math.sin(now / 50) * 2;
+        // GIAI ĐOẠN 2: ĐẠI CHIẾN TUNG CHIÊU TỐI THƯỢNG (ĐỊA BỘC THIÊN TINH / VĨ THÚ NGỌC / SUSANO'O SLICE)
+        const shockRad = 24 + ((now % 1200) / 1200) * 55;
 
-        // Quả cầu Chakra Rasengan xanh lam
-        const grad = ctx.createRadialGradient(midX, midY, 1, midX, midY, 8);
-        grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.4, '#38bdf8');
-        grad.addColorStop(0.8, '#0284c7');
-        grad.addColorStop(1, 'rgba(2, 132, 199, 0)');
-        ctx.fillStyle = grad;
+        // 1. THẦN LA THIÊN CHINH (Shinra Tensei) - Sóng xung kích đẩy lùi bẻ cong không gian
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(midX, midY, 8 + rad, 0, Math.PI * 2);
+        ctx.arc(midX, midY, shockRad, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(midX, midY, shockRad * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 2. ĐỊA BỘC THIÊN TINH (Chibaku Tensei) - Quả cầu hấp dẫn hắc ám hút đá đất bay lên
+        if (hasPain || (g.step >= 4)) {
+          const coreY = midY - 32;
+          // Lõi đen hắc ám hút mọi vật chất
+          ctx.fillStyle = '#09090b';
+          ctx.beginPath();
+          ctx.arc(midX, coreY, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Các tảng đá khổng lồ bị lực hút Chibaku Tensei lôi lên không trung
+          for (let r = 0; r < 7; r++) {
+            const rockAngle = (now / 400 + (r * Math.PI * 2) / 7) % (Math.PI * 2);
+            const dist = 18 + ((now + r * 150) % 25);
+            const rx = midX + Math.cos(rockAngle) * dist;
+            const ry = coreY + Math.sin(rockAngle) * dist;
+            ctx.fillStyle = '#57534e';
+            ctx.fillRect(rx - 3, ry - 3, 6, 6);
+            ctx.strokeStyle = '#a8a29e';
+            ctx.strokeRect(rx - 3, ry - 3, 6, 6);
+          }
+        }
+
+        // 3. VĨ THÚ NGỌC (Bijuu Dama) & PHONG ĐỘN: RASENSHURIKEN BÙNG NỔ
+        const bRad = 12 + Math.sin(now / 40) * 3;
+        const bGrad = ctx.createRadialGradient(midX, midY, 2, midX, midY, bRad + 12);
+        bGrad.addColorStop(0, '#ffffff');
+        bGrad.addColorStop(0.3, '#3b82f6');
+        bGrad.addColorStop(0.7, '#8b5cf6');
+        bGrad.addColorStop(1, 'rgba(139, 92, 246, 0)');
+        ctx.fillStyle = bGrad;
+        ctx.beginPath();
+        ctx.arc(midX, midY, bRad + 12, 0, Math.PI * 2);
         ctx.fill();
 
-        // Tia Chidori / Lôi độn giật xung quanh
+        // Cánh quạt Chakra Phong Độn Rasenshuriken xoay tròn tốc độ cao
         ctx.strokeStyle = '#e0f2fe';
-        ctx.lineWidth = 1.5;
-        for (let i = 0; i < 3; i++) {
-          const ang = (now / 120 + (i * Math.PI * 2) / 3) % (Math.PI * 2);
-          const px = midX + Math.cos(ang) * (6 + rad);
-          const py = midY + Math.sin(ang) * (6 + rad);
+        ctx.lineWidth = 2;
+        for (let b = 0; b < 4; b++) {
+          const bAngle = (now / 60 + (b * Math.PI) / 2) % (Math.PI * 2);
+          const bx = midX + Math.cos(bAngle) * (bRad + 18);
+          const by = midY + Math.sin(bAngle) * (bRad + 18);
           ctx.beginPath();
           ctx.moveTo(midX, midY);
-          ctx.lineTo(px, py);
+          ctx.lineTo(bx, by);
           ctx.stroke();
         }
 
-        // Shuriken / Hỏa cầu bay giáp chiến giữa 2 bên
-        const flyT = (now % 500) / 500;
-        const sx = left.x + (right.x - left.x) * flyT;
-        const sy = midY + Math.sin(flyT * Math.PI) * -6;
-        ctx.fillStyle = '#f97316';
-        ctx.fillRect(Math.round(sx) - 1, Math.round(sy) - 1, 3, 3);
+        // 4. LÔI THẦN KIRIN / TIA SÉT CHIDORI OANH TẠC MẶT ĐẤT
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 2;
+        for (let s = 0; s < 5; s++) {
+          const sx = midX - 35 + s * 18;
+          ctx.beginPath();
+          ctx.moveTo(sx, midY - 45);
+          ctx.lineTo(sx + 6, midY - 20);
+          ctx.lineTo(sx - 4, midY - 5);
+          ctx.lineTo(sx + 8, midY + 12);
+          ctx.stroke();
+        }
       }
       ctx.restore();
     }
