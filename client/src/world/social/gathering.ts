@@ -110,14 +110,14 @@ export function active(g: Gathering): Member[] {
 // ---------------------------------------------------------------- escolha da atividade
 
 const BASE: Readonly<Record<GatherKind, number>> = {
-  tv: 5,
-  videogame: 6,
-  arcade: 4,
-  pingpong: 6,
-  kitchen: 8,
-  talk: 6,
-  rps: 28, // Ưu tiên hàng đầu cho các nhẫn giả tỉ thí nhẫn thuật ngoài hành lang và văn phòng
-  mirror: 2,
+  tv: 2,
+  videogame: 2,
+  arcade: 2,
+  pingpong: 2,
+  kitchen: 3,
+  talk: 2,
+  rps: 80, // Tỉ lệ 80% là ra tỉ thí nhẫn thuật ngoài hành lang và phòng làm việc
+  mirror: 1,
 };
 
 /** Quanto cada traço multiplica a vontade de cada roda. */

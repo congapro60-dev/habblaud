@@ -1351,13 +1351,21 @@ export class Sim {
         ch.nextOutingAt = now + idleSitMs(ch.rng, this.options().liveliness);
       }
     }
+    // Nhân vật đang làm việc (work) cũng có thể chủ động đứng dậy tỉ thí nhẫn thuật giải lao
+    if (ch.mode === 'work') {
+      if (!ch.nextSocialAt) ch.nextSocialAt = now + 4_000 + ch.rng() * 8_000;
+      if (now >= ch.nextSocialAt) {
+        ch.nextSocialAt = now + 12_000 + ch.rng() * 15_000;
+        if (this.social.hasCompany(ch, now) && ch.rng() < 0.75 && this.social.tryInitiate(ch, now, false)) return true;
+      }
+    }
     // esperando um shell: só sai da mesa para uma roda (sozinho, fica na pipoca)
     if (ch.mode === 'shell') {
       if (!ch.nextSocialAt) ch.nextSocialAt = now + idleSitMs(ch.rng, this.options().liveliness) * 1.3;
       if (now >= ch.nextSocialAt) {
         ch.nextSocialAt = now + idleSitMs(ch.rng, this.options().liveliness) * 1.3;
         const p = personaFor(ch.info.seed);
-        if (this.social.hasCompany(ch, now) && ch.rng() < 0.5 + p.sociability * 0.4 && this.social.tryInitiate(ch, now, true)) return true;
+        if (this.social.hasCompany(ch, now) && ch.rng() < 0.75 && this.social.tryInitiate(ch, now, true)) return true;
       }
     }
     return false;
