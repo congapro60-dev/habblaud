@@ -1344,9 +1344,11 @@ export class Sim {
     }
     if (ch.atSpot !== ch.homeSpot) return this.planGoHome(ch, now);
     ch.arriving = false;
-    // Kage & Nhẫn giả tự do: đi lại giao lưu, tuần tra và thi đấu thường xuyên
-    const isKageOrNinjaLeader = ch.info.name && (ch.info.name.includes('Hokage') || ch.info.name.includes('Kazekage') || ch.info.name.includes('Mizukage') || ch.info.name.includes('Raikage') || ch.info.name.includes('Tsuchikage') || ch.info.name.includes('Pain') || ch.info.name.includes('Jiraiya') || ch.info.name.includes('Itachi') || ch.info.name.includes('Madara'));
-    const outingInterval = isKageOrNinjaLeader ? 2_500 + ch.rng() * 4_000 : idleSitMs(ch.rng, this.options().liveliness);
+    // Kage, Akatsuki & Thất Kiếm Làng Sương Mù: những kẻ phá bĩnh lang thang hành lang thách đấu
+    const nameLower = (ch.info.name ?? '').toLowerCase();
+    const isTroublemaker = nameLower.includes('pain') || nameLower.includes('konan') || nameLower.includes('kisame') || nameLower.includes('deidara') || nameLower.includes('sasori') || nameLower.includes('hidan') || nameLower.includes('kakuzu') || nameLower.includes('itachi') || nameLower.includes('zabuza') || nameLower.includes('haku') || nameLower.includes('orochimaru');
+    const isKageOrNinjaLeader = isTroublemaker || nameLower.includes('hokage') || nameLower.includes('kazekage') || nameLower.includes('mizukage') || nameLower.includes('raikage') || nameLower.includes('tsuchikage') || nameLower.includes('jiraiya') || nameLower.includes('madara') || nameLower.includes('naruto') || nameLower.includes('sasuke') || nameLower.includes('hashirama') || nameLower.includes('tobirama') || nameLower.includes('hiruzen') || nameLower.includes('minato');
+    const outingInterval = isTroublemaker ? 1_500 + ch.rng() * 2_500 : isKageOrNinjaLeader ? 2_500 + ch.rng() * 4_000 : idleSitMs(ch.rng, this.options().liveliness);
 
     if (ch.mode === 'idle' && !this.longIdle(ch, now)) {
       if (!ch.nextOutingAt) ch.nextOutingAt = now + outingInterval;
@@ -1357,11 +1359,11 @@ export class Sim {
     }
     // Nhân vật đang làm việc hoặc đi tuần tra: chủ động đứng dậy tỉ thí nhẫn thuật, giao lưu đại chiến
     if (ch.mode === 'work' || isKageOrNinjaLeader) {
-      const socialInterval = isKageOrNinjaLeader ? 2_000 + ch.rng() * 4_000 : 12_000 + ch.rng() * 15_000;
-      if (!ch.nextSocialAt) ch.nextSocialAt = now + 1_500 + ch.rng() * 3_000;
+      const socialInterval = isTroublemaker ? 1_200 + ch.rng() * 2_500 : isKageOrNinjaLeader ? 2_000 + ch.rng() * 4_000 : 12_000 + ch.rng() * 15_000;
+      if (!ch.nextSocialAt) ch.nextSocialAt = now + 1_000 + ch.rng() * 2_000;
       if (now >= ch.nextSocialAt) {
         ch.nextSocialAt = now + socialInterval;
-        if (this.social.hasCompany(ch, now) && ch.rng() < 0.9 && this.social.tryInitiate(ch, now, false)) return true;
+        if (this.social.hasCompany(ch, now) && ch.rng() < 0.95 && this.social.tryInitiate(ch, now, false)) return true;
       }
     }
     // esperando um shell: só sai da mesa para uma roda (sozinho, fica na pipoca)

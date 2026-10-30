@@ -1381,7 +1381,18 @@ export class Renderer {
       const bName = (b.info.name ?? '').toLowerCase();
       const hasPain = aName.includes('pain') || bName.includes('pain');
       const hasUchiha = aName.includes('itachi') || bName.includes('itachi') || aName.includes('madara') || bName.includes('madara') || aName.includes('sasuke') || bName.includes('sasuke');
-      const hasBijuu = aName.includes('naruto') || bName.includes('naruto') || aName.includes('gaara') || bName.includes('gaara') || aName.includes('bee') || bName.includes('bee');
+      const hasNaruto = aName.includes('naruto') || bName.includes('naruto');
+      const hasBijuu = hasNaruto || aName.includes('gaara') || bName.includes('gaara') || aName.includes('bee') || bName.includes('bee');
+      const hasJiraiya = aName.includes('jiraiya') || bName.includes('jiraiya');
+      const hasOrochimaru = aName.includes('orochimaru') || bName.includes('orochimaru');
+      const hasTsunade = aName.includes('tsunade') || bName.includes('tsunade');
+      const hasHashirama = aName.includes('hashirama') || bName.includes('hashirama');
+      const hasTobirama = aName.includes('tobirama') || bName.includes('tobirama');
+      const hasHiruzen = aName.includes('hiruzen') || bName.includes('hiruzen');
+      const hasMinato = aName.includes('minato') || bName.includes('minato');
+      const hasSasuke = aName.includes('sasuke') || bName.includes('sasuke');
+      const hasAkatsuki = hasPain || aName.includes('konan') || bName.includes('konan') || aName.includes('kisame') || bName.includes('kisame') || aName.includes('deidara') || bName.includes('deidara') || aName.includes('sasori') || bName.includes('sasori') || aName.includes('hidan') || bName.includes('hidan');
+      const hasMistSwordsman = aName.includes('zabuza') || bName.includes('zabuza') || aName.includes('kisame') || bName.includes('kisame');
 
       ctx.save();
       if (g.step <= 2) {
@@ -1425,28 +1436,103 @@ export class Renderer {
           ctx.fillRect(uChar.x + 2, uChar.y - 34, 4, 3);
         }
 
-        // 3. Vĩ Thú Hình Bộc Phát (Hào quang Cửu Vĩ / Nhất Vĩ khổng lồ)
+        // 3. Vĩ Thú Hình & Trạng Thái Lục Đạo Tiên Nhân (Naruto / Jinchūriki)
         if (hasBijuu) {
-          const bChar = (aName.includes('naruto') || aName.includes('gaara') || aName.includes('bee')) ? a : b;
-          const bGrad = ctx.createRadialGradient(bChar.x, bChar.y - 20, 4, bChar.x, bChar.y - 20, 32);
-          bGrad.addColorStop(0, 'rgba(249, 115, 22, 0.9)'); // Cam Cửu Vĩ
-          bGrad.addColorStop(0.7, 'rgba(234, 88, 12, 0.4)');
-          bGrad.addColorStop(1, 'rgba(194, 65, 12, 0)');
-          ctx.fillStyle = bGrad;
-          ctx.beginPath();
-          ctx.arc(bChar.x, bChar.y - 20, 30 + Math.sin(now / 70) * 3, 0, Math.PI * 2);
-          ctx.fill();
+          const bChar = (hasNaruto ? (aName.includes('naruto') ? a : b) : ((aName.includes('gaara') || aName.includes('bee')) ? a : b));
+          const isRikudo = hasNaruto && ((now % 8000) > 4000); // Luân phiên Tiên Nhân / Lục Đạo
 
-          // Đuôi Vĩ Thú đập mạnh phía sau
-          ctx.strokeStyle = '#ea580c';
-          ctx.lineWidth = 3;
-          for (let t = 0; t < 3; t++) {
-            const tAngle = Math.PI * 0.7 + t * 0.35 + Math.sin(now / 100 + t) * 0.2;
+          if (isRikudo) {
+            // HÓA LỤC ĐẠO TIÊN NHÂN: Hào quang vàng kim rực sáng & 6 viên Cầu Đạo Ngọc đen lơ lửng
+            const rGrad = ctx.createRadialGradient(bChar.x, bChar.y - 22, 5, bChar.x, bChar.y - 22, 38);
+            rGrad.addColorStop(0, 'rgba(254, 240, 138, 0.95)'); // Vàng kim Lục Đạo
+            rGrad.addColorStop(0.5, 'rgba(234, 179, 8, 0.6)');
+            rGrad.addColorStop(1, 'rgba(202, 138, 4, 0)');
+            ctx.fillStyle = rGrad;
             ctx.beginPath();
-            ctx.moveTo(bChar.x, bChar.y - 10);
-            ctx.quadraticCurveTo(bChar.x + Math.cos(tAngle) * 22, bChar.y - 24, bChar.x + Math.cos(tAngle) * 32, bChar.y - 38);
-            ctx.stroke();
+            ctx.arc(bChar.x, bChar.y - 22, 36, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 6 viên Hắc Cầu Đạo Ngọc (Gudoudama) xoay tròn sau lưng
+            for (let g = 0; g < 6; g++) {
+              const gAng = (now / 350 + (g * Math.PI * 2) / 6) % (Math.PI * 2);
+              const gx = bChar.x + Math.cos(gAng) * 22;
+              const gy = bChar.y - 22 + Math.sin(gAng) * 22;
+              ctx.fillStyle = '#09090b';
+              ctx.beginPath();
+              ctx.arc(gx, gy, 4, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.strokeStyle = '#fde047';
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          } else {
+            // HÓA CỬU VĨ CHAKRA (Kurama Mode)
+            const bGrad = ctx.createRadialGradient(bChar.x, bChar.y - 20, 4, bChar.x, bChar.y - 20, 32);
+            bGrad.addColorStop(0, 'rgba(249, 115, 22, 0.9)'); // Cam Cửu Vĩ
+            bGrad.addColorStop(0.7, 'rgba(234, 88, 12, 0.4)');
+            bGrad.addColorStop(1, 'rgba(194, 65, 12, 0)');
+            ctx.fillStyle = bGrad;
+            ctx.beginPath();
+            ctx.arc(bChar.x, bChar.y - 20, 30 + Math.sin(now / 70) * 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Đuôi Vĩ Thú đập mạnh phía sau
+            ctx.strokeStyle = '#ea580c';
+            ctx.lineWidth = 3;
+            for (let t = 0; t < 3; t++) {
+              const tAngle = Math.PI * 0.7 + t * 0.35 + Math.sin(now / 100 + t) * 0.2;
+              ctx.beginPath();
+              ctx.moveTo(bChar.x, bChar.y - 10);
+              ctx.quadraticCurveTo(bChar.x + Math.cos(tAngle) * 22, bChar.y - 24, bChar.x + Math.cos(tAngle) * 32, bChar.y - 38);
+              ctx.stroke();
+            }
           }
+        }
+
+        // 4. TRIỆU HỒI ĐẠI CÓC GAMABUNTA (Jiraiya / Naruto)
+        if (hasJiraiya || (hasNaruto && (now % 6000 < 3000))) {
+          const jChar = hasJiraiya ? (aName.includes('jiraiya') ? a : b) : (aName.includes('naruto') ? a : b);
+          // Thân Cóc Gamabunta khổng lồ màu đỏ tía xuất hiện sau lưng
+          ctx.fillStyle = '#b91c1c';
+          ctx.beginPath();
+          ctx.ellipse(jChar.x - 22, jChar.y - 26, 20, 16, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Mắt cóc vàng rực & tẩu thuốc
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(jChar.x - 28, jChar.y - 32, 6, 4);
+          ctx.fillStyle = '#78350f';
+          ctx.fillRect(jChar.x - 34, jChar.y - 24, 8, 3); // tẩu thuốc Gamabunta
+        }
+
+        // 5. MỘC ĐỘN MỘC LONG & MỘC THẦN (Senju Hashirama - Đệ Nhất)
+        if (hasHashirama) {
+          const hChar = aName.includes('hashirama') ? a : b;
+          // Rồng Gỗ khổng lồ (Mokuryuu) quấn lượn
+          ctx.strokeStyle = '#15803d';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(hChar.x, hChar.y - 5);
+          ctx.bezierCurveTo(hChar.x - 20, hChar.y - 35, hChar.x + 20, hChar.y - 45, hChar.x, hChar.y - 55);
+          ctx.stroke();
+          // Hoa Mộc Độn nở rộ
+          ctx.fillStyle = '#ec4899';
+          ctx.beginPath();
+          ctx.arc(hChar.x, hChar.y - 55, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 6. PHI LÔI THẦN THUẬT (Namikaze Minato - Đệ Tứ & Tobirama - Đệ Nhị)
+        if (hasMinato || hasTobirama) {
+          const mChar = (hasMinato ? (aName.includes('minato') ? a : b) : (aName.includes('tobirama') ? a : b));
+          // Tia chớp vàng / Phù chú Phi Lôi Thần dịch chuyển tức thời
+          ctx.strokeStyle = hasMinato ? '#facc15' : '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          ctx.moveTo(mChar.x, mChar.y - 10);
+          ctx.lineTo(mChar.x + (Math.sin(now / 50) * 35), mChar.y - 25);
+          ctx.stroke();
+          ctx.setLineDash([]);
         }
 
         // Trận địa Chakra sấm sét mặt đất
@@ -1538,6 +1624,64 @@ export class Renderer {
           ctx.lineTo(sx - 4, midY - 5);
           ctx.lineTo(sx + 8, midY + 12);
           ctx.stroke();
+        }
+
+        // 5. THIÊN THẦN GIẤY KAMI NO SHISHA (Konan) & RỐI XÍCH BÍ KỸ (Sasori)
+        if (hasAkatsuki) {
+          // Bão ngàn tờ giấy bay lượn sắc bén của Konan
+          for (let p = 0; p < 8; p++) {
+            const px = midX + Math.sin(now / 150 + p) * 32;
+            const py = midY - 20 + Math.cos(now / 180 + p) * 20;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(px, py, 4, 3);
+            ctx.strokeStyle = '#6366f1';
+            ctx.strokeRect(px, py, 4, 3);
+          }
+        }
+
+        // 6. THẤT KIẾM LÀNG SƯƠNG MÙ (Zabuza & Kisame - Quỷ Kiếm Chém Sương)
+        if (hasMistSwordsman) {
+          // Màn sương mù dày đặc (Kirigakure no Jutsu) che phủ toàn sàn đấu
+          ctx.fillStyle = 'rgba(241, 245, 249, 0.45)';
+          ctx.fillRect(midX - 55, midY - 35, 110, 50);
+          // Vệt chém nước Thủy Độn khổng lồ
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(midX, midY, 32, Math.PI * 0.2, Math.PI * 0.8);
+          ctx.stroke();
+        }
+
+        // 7. TAM NIN HUYỀN THOẠI (BẠCH XÀ OROCHIMARU & ĐẠI BÁCH HÀO TSUNADE)
+        if (hasOrochimaru) {
+          // Rắn trắng khổng lồ nhiều đầu trườn qua chiến địa
+          ctx.strokeStyle = '#f8fafc';
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(midX - 30, midY + 10);
+          ctx.bezierCurveTo(midX - 10, midY - 20, midX + 20, midY + 20, midX + 35, midY - 10);
+          ctx.stroke();
+        }
+        if (hasTsunade) {
+          // Cú đấm Quái Lực phá hủy mặt đất (Rạn nứt đất đá)
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2;
+          for (let c = 0; c < 4; c++) {
+            ctx.beginPath();
+            ctx.moveTo(midX, midY + 5);
+            ctx.lineTo(midX + Math.cos(c * 1.5) * 26, midY + 5 + Math.sin(c * 1.5) * 16);
+            ctx.stroke();
+          }
+        }
+
+        // 8. ĐỆ TAM SARUTOBI HIRUZEN (THIÊN LÝ KHỈ ENMA & NGŨ HÀNH LIÊN HOÀN ĐỘN)
+        if (hasHiruzen) {
+          // Kim Cang Bổng Enma đập xuống chiến trường
+          ctx.fillStyle = '#78350f';
+          ctx.fillRect(midX - 25, midY - 35, 6, 45);
+          ctx.fillStyle = '#fef08a';
+          ctx.fillRect(midX - 26, midY - 37, 8, 4);
+          ctx.fillRect(midX - 26, midY + 8, 8, 4);
         }
       }
       ctx.restore();
