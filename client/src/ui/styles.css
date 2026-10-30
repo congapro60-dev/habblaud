@@ -573,6 +573,14 @@
   user-select: none;
 }
 
+.ui-avatar.ui-avatar--official-ninja img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  image-rendering: auto;
+}
+
 .ui-avatar--xs {
   width: 20px;
   height: 20px;
