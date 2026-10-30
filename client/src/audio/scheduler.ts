@@ -17,6 +17,11 @@ export const CATEGORY_OF: Readonly<Record<SoundKind, SoundCategory>> = {
   pingpong: 'social',
   table: 'social',
   arcade: 'social',
+  ninja_clink: 'social',
+  ninja_chidori: 'social',
+  ninja_rasengan: 'social',
+  ninja_boom: 'social',
+  ninja_gong: 'alerts',
 };
 
 /** Intervalo mínimo (ms) entre dois sons do mesmo canal. */
@@ -28,6 +33,11 @@ export const MIN_GAP_MS: Readonly<Record<SoundKind, number>> = {
   pingpong: 200,
   table: 200,
   arcade: 450,
+  ninja_clink: 150,
+  ninja_chidori: 600,
+  ninja_rasengan: 600,
+  ninja_boom: 400,
+  ninja_gong: 1_500,
 };
 
 /** O sino e o estalo dividem o mesmo canal (um não atropela o outro). */
@@ -39,6 +49,11 @@ const CHANNEL: Readonly<Record<SoundKind, string>> = {
   pingpong: 'pingpong',
   table: 'pingpong',
   arcade: 'arcade',
+  ninja_clink: 'ninja_clink',
+  ninja_chidori: 'ninja_fx',
+  ninja_rasengan: 'ninja_fx',
+  ninja_boom: 'ninja_boom',
+  ninja_gong: 'ninja_gong',
 };
 
 /** Teto global: no máximo isto de sons por segundo (o sino de alerta sempre passa). */

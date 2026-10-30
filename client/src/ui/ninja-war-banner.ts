@@ -125,10 +125,13 @@ export class NinjaWarBanner implements UiComponent {
       );
     } else if (s.phase === 'victory') {
       const winnerName = s.winnerTeam === 'A' ? s.scenario.teamA.name : s.scenario.teamB.name;
+      const b = s.bingoRecord;
+      const mvp = b?.mvpName ? ` | 🏅 MVP: ${b.mvpName} (${b.mvpTitle})` : '';
+      const total = b?.totalBattles ? ` | 📜 Bingo Book: ${b.totalBattles} trận đã đấu` : '';
       setText(this.titleEl, `🏆 CHIẾN THẮNG: [${winnerName.toUpperCase()}]! 🏆`);
-      setText(this.subtitleEl, '🎉 Toàn thể đấu trường tung hô và vinh danh các chiến binh nhẫn giả huyền thoại!');
+      setText(this.subtitleEl, `🎉 Vinh quang thuộc về ${winnerName}!${mvp}${total}`);
       this.barEl.style.display = 'none';
-      setText(this.teamsEl, `⭐ Vinh quang thuộc về ${winnerName}! Pháo hoa rực sáng Đấu Trường! ⭐`);
+      setText(this.teamsEl, `⭐ Pháo hoa rực sáng Đấu Trường! Tỷ số vinh danh: Đội A (${b?.teamAWins ?? 0}) - Đội B (${b?.teamBWins ?? 0}) ⭐`);
     }
   }
 

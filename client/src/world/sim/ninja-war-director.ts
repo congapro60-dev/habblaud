@@ -32,6 +32,14 @@ export interface NinjaTeamBattleState {
   teamBChars: Character[];
   spectatorChars: Character[];
   nextBattleAt: number;
+  /** Sổ Đen Bingo Book: Thống kê & Phong Thần Nhẫn Giả */
+  bingoRecord?: {
+    totalBattles: number;
+    teamAWins: number;
+    teamBWins: number;
+    mvpName?: string;
+    mvpTitle?: string;
+  };
 }
 
 export const CLASSIC_SCENARIOS: readonly NinjaWarScenario[] = Object.freeze([
@@ -137,6 +145,14 @@ export class NinjaWarDirector {
   private nextBattleTime: number;
   private listeners = new Set<(state: NinjaTeamBattleState | null) => void>();
   private nextClashAct = 0;
+  // Sổ đen Bingo Book: Thống kê số trận và thành tích
+  private bingoStats = {
+    totalBattles: 0,
+    teamAWins: 0,
+    teamBWins: 0,
+    mvpName: 'Uzumaki Naruto',
+    mvpTitle: 'Anh Hùng Làng Lá',
+  };
 
   constructor(sim: Sim, now = Date.now()) {
     this.sim = sim;
@@ -251,6 +267,7 @@ export class NinjaWarDirector {
       teamBChars,
       spectatorChars,
       nextBattleAt: now + BATTLE_INTERVAL_MS,
+      bingoRecord: { ...this.bingoStats },
     };
 
     this.positionRally(now);
@@ -377,8 +394,18 @@ export class NinjaWarDirector {
     const winner: 'A' | 'B' = this.state.scoreA >= this.state.scoreB ? 'A' : 'B';
     this.state.winnerTeam = winner;
 
+    // Cập nhật Sổ Đen Bingo Book
+    this.bingoStats.totalBattles++;
+    if (winner === 'A') this.bingoStats.teamAWins++;
+    else this.bingoStats.teamBWins++;
     const winners = winner === 'A' ? this.state.teamAChars : this.state.teamBChars;
     const losers = winner === 'A' ? this.state.teamBChars : this.state.teamAChars;
+    const mvpChar = winners[Math.floor(Math.random() * winners.length)];
+    if (mvpChar) {
+      this.bingoStats.mvpName = mvpChar.info.name ?? 'Nhẫn Giả Vô Danh';
+      this.bingoStats.mvpTitle = mvpChar.info.role ?? 'Huyền Thoại Nhẫn Giới';
+    }
+    this.state.bingoRecord = { ...this.bingoStats };
 
     for (const ch of winners) {
       this.clearPlanAndQueue(ch);

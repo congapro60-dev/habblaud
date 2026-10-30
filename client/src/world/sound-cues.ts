@@ -23,6 +23,8 @@ export class SoundCues {
   private keysAt = 0;
   private nextKeysAt = 0;
   private nextArcadeAt = 0;
+  private nextNinjaFxAt = 0;
+  private lastWarPhase = '';
   private rally = new Map<number, number>();
 
   constructor(
@@ -40,6 +42,7 @@ export class SoundCues {
     this.elevators(view, emit);
     this.keys(now, view, near, emit);
     this.social(now, view, near, emit);
+    this.ninjaSounds(now, view, near, emit);
   }
 
   private pan(x: number, v: ViewRect): number {
@@ -114,6 +117,60 @@ export class SoundCues {
       }
     }
     for (const id of this.rally.keys()) if (!alive.has(id)) this.rally.delete(id);
+  }
+
+  /** Âm thanh giao đấu nhẫn thuật: va chạm phi tiêu, sấm sét Chidori, xoáy Rasengan, bùa bộc phá và chuông đại chiến. */
+  private ninjaSounds(now: number, view: ViewRect, near: number, emit: (cue: SoundCue) => void): void {
+    const war = this.sim.ninjaWar.getState();
+    const currentPhase = war?.phase ?? '';
+    // Chuông mõ lệnh khai chiến khi bắt đầu đại chiến hoặc kết thúc chiến thắng
+    if (currentPhase !== this.lastWarPhase) {
+      if (currentPhase === 'clash' || currentPhase === 'victory') {
+        emit({ kind: 'ninja_gong', gain: 0.95, pan: 0 });
+      }
+      this.lastWarPhase = currentPhase;
+    }
+
+    if (now < this.nextNinjaFxAt) return;
+
+    // Trong lúc đại chiến (clash)
+    if (war && war.phase === 'clash') {
+      this.nextNinjaFxAt = now + 250 + this.rng() * 450;
+      const r = this.rng();
+      const midX = (this.sim.building.core[0]?.rect.x ?? 20) * 16;
+      const pan = this.pan(midX, view);
+      if (r < 0.35) {
+        emit({ kind: 'ninja_clink', gain: near * 0.9, pan });
+      } else if (r < 0.6) {
+        emit({ kind: 'ninja_chidori', gain: near * 0.85, pan });
+      } else if (r < 0.8) {
+        emit({ kind: 'ninja_rasengan', gain: near * 0.85, pan });
+      } else {
+        emit({ kind: 'ninja_boom', gain: near * 0.95, pan });
+      }
+      return;
+    }
+
+    // Các trận giao đấu 1v1 ngẫu nhiên giữa các ninja trên sàn
+    for (const g of this.sim.social.gatherings) {
+      if (g.kind === 'rps' && g.phase === 'run') {
+        let x = 0;
+        let count = 0;
+        for (const m of g.members) {
+          const ch = this.sim.chars.get(m.id);
+          if (ch) { x += ch.x; count++; }
+        }
+        if (!count) continue;
+        x /= count;
+        this.nextNinjaFxAt = now + 400 + this.rng() * 600;
+        const pan = this.pan(x, view);
+        const r = this.rng();
+        if (r < 0.45) emit({ kind: 'ninja_clink', gain: near * 0.8, pan });
+        else if (r < 0.75) emit({ kind: 'ninja_rasengan', gain: near * 0.75, pan });
+        else emit({ kind: 'ninja_boom', gain: near * 0.8, pan });
+        return;
+      }
+    }
   }
 }
 

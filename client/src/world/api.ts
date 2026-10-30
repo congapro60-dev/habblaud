@@ -42,7 +42,17 @@ export function seasonalThemeFor(theme: OfficeTheme | undefined, date: Date): Se
 export type DaylightMode = 'auto' | 'day' | 'night';
 
 /** Sons do ambiente que o mundo sugere (quem toca, e se toca, é a UI). */
-export type SoundCueKind = 'keys' | 'elevator' | 'pingpong' | 'table' | 'arcade';
+export type SoundCueKind =
+  | 'keys'
+  | 'elevator'
+  | 'pingpong'
+  | 'table'
+  | 'arcade'
+  | 'ninja_clink'
+  | 'ninja_chidori'
+  | 'ninja_rasengan'
+  | 'ninja_boom'
+  | 'ninja_gong';
 
 export interface SoundCue {
   kind: SoundCueKind;

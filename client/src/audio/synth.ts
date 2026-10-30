@@ -96,6 +96,53 @@ export function playVoice(ac: AudioContext, dest: AudioNode, kind: SoundKind, t:
       }
       return;
     }
+    case 'ninja_clink': {
+      // Tiếng va chạm kim loại kunai/shuriken đanh gọn (metallic clink)
+      tone(ac, out, 'triangle', 2800 + o.rng() * 400, t, 0.12 * g, 0.001, 0.06, 1600);
+      tone(ac, out, 'sine', 4200 + o.rng() * 500, t, 0.08 * g, 0.001, 0.04);
+      return;
+    }
+    case 'ninja_chidori': {
+      // Tiếng sấm sét Lôi Độn Chidori rít chói tai (high frequency lightning crackle)
+      const bp = ac.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 2200;
+      bp.Q.value = 3;
+      bp.connect(out);
+      for (let i = 0; i < 4; i++) {
+        tone(ac, bp, 'sawtooth', 1400 + o.rng() * 1800, t + i * 0.02, 0.08 * g, 0.002, 0.035);
+      }
+      return;
+    }
+    case 'ninja_rasengan': {
+      // Tiếng gió xoáy Chakra Rasengan nén áp suất (spinning chakra swirl)
+      const lp = ac.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(400, t);
+      lp.frequency.linearRampToValueAtTime(1400, t + 0.18);
+      lp.connect(out);
+      tone(ac, lp, 'sawtooth', 180, t, 0.15 * g, 0.02, 0.22, 520);
+      tone(ac, lp, 'triangle', 260, t + 0.04, 0.1 * g, 0.02, 0.18, 640);
+      return;
+    }
+    case 'ninja_boom': {
+      // Tiếng nổ bùa bộc phá Kibaku Fuda (explosion blast)
+      const lp = ac.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(800, t);
+      lp.frequency.exponentialRampToValueAtTime(100, t + 0.35);
+      lp.connect(out);
+      tone(ac, lp, 'sawtooth', 120, t, 0.22 * g, 0.005, 0.35, 45);
+      tone(ac, out, 'triangle', 65, t, 0.18 * g, 0.008, 0.4, 30);
+      return;
+    }
+    case 'ninja_gong': {
+      // Tiếng chuông mõ võ quán khai chiến ngân vang (temple war gong)
+      tone(ac, out, 'sine', 261.6, t, 0.2 * g, 0.005, 1.8); // C4
+      tone(ac, out, 'sine', 523.2, t, 0.12 * g, 0.004, 1.2); // C5
+      tone(ac, out, 'triangle', 392.0, t, 0.08 * g, 0.005, 1.4); // G4
+      return;
+    }
   }
 }
 

@@ -2014,7 +2014,147 @@ export class Renderer {
       }
     }
 
+    // 4. THUẬT TRIỆU HỒI LINH THÚ KHỔNG LỒ (KUCHIYOSE NO JUTSU)
+    this.drawKuchiyoseBeasts(ctx, war, now);
+
     ctx.restore();
+  }
+
+  /** Render Linh Thú Khổng Lồ triệu hồi: Gamabunta (Cóc khổng lồ ngậm tẩu), Manda (Đại xà tím) & Katsuyu (Ốc sên) */
+  private drawKuchiyoseBeasts(ctx: CanvasRenderingContext2D, war: any, now: number): void {
+    const ax = war.arenaCenter.x * TILE;
+    const ay = war.arenaCenter.y * TILE;
+
+    const allCombatants = [...war.teamAChars, ...war.teamBChars];
+    const hasChar = (pat: string) => allCombatants.some((c) => (c.info.name ?? '').toLowerCase().includes(pat));
+
+    const summonGama = hasChar('naruto') || hasChar('jiraiya');
+    const summonManda = hasChar('orochimaru') || hasChar('sasuke');
+    const summonKatsuyu = hasChar('tsunade') || hasChar('sakura');
+
+    // Gamabunta - Đại Cóc Diệu Mộc Sơn (bên trái đấu trường)
+    if (summonGama && war.phase === 'clash') {
+      const gx = ax - 90;
+      const gy = ay - 40;
+      // Khói triệu hồi trắng dày đặc bồng bềnh
+      ctx.fillStyle = 'rgba(241, 245, 249, 0.45)';
+      ctx.beginPath();
+      ctx.arc(gx, gy + 10, 28, 0, Math.PI * 2);
+      ctx.arc(gx + 15, gy + 5, 22, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Thân cóc Gamabunta màu đỏ cam rực rỡ
+      ctx.fillStyle = '#c2410c'; // cam đỏ da cóc
+      ctx.beginPath();
+      ctx.ellipse(gx, gy, 32, 24, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#7c2d12';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Áo Haori xanh dương của Gamabunta
+      ctx.fillStyle = '#1e3a8a';
+      ctx.beginPath();
+      ctx.ellipse(gx, gy + 4, 30, 16, 0, 0, Math.PI);
+      ctx.fill();
+
+      // Mắt vàng và sẹo chéo đặc trưng
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(gx + 8, gy - 12, 8, 4);
+      ctx.fillStyle = '#09090b';
+      ctx.fillRect(gx + 12, gy - 12, 3, 4);
+      // Vết sẹo chéo
+      ctx.strokeStyle = '#450a0a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(gx + 4, gy - 16);
+      ctx.lineTo(gx + 16, gy - 6);
+      ctx.stroke();
+
+      // Tẩu thuốc lá bằng gỗ nhả khói trắng
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(gx + 18, gy - 4, 18, 4);
+      ctx.fillRect(gx + 34, gy - 8, 6, 8);
+      // Làn khói thuốc bốc lên
+      ctx.fillStyle = 'rgba(226, 232, 240, 0.7)';
+      ctx.beginPath();
+      ctx.arc(gx + 38, gy - 12 - (now % 600) / 40, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Đại đao khổng lồ Dosu gác sau lưng
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(gx - 22, gy + 16);
+      ctx.lineTo(gx - 38, gy - 28);
+      ctx.stroke();
+    }
+
+    // Manda - Mãng Xà Tím Khổng Lồ Làng Sương/Ryuchi Cave (bên phải đấu trường)
+    if (summonManda && war.phase === 'clash') {
+      const mx = ax + 90;
+      const my = ay - 40;
+      // Khói triệu hồi tím mờ ảo
+      ctx.fillStyle = 'rgba(192, 132, 252, 0.35)';
+      ctx.beginPath();
+      ctx.arc(mx, my + 10, 26, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Thân rắn Manda cuộn tròn màu tím vân đen
+      ctx.strokeStyle = '#581c87';
+      ctx.lineWidth = 16;
+      ctx.beginPath();
+      ctx.arc(mx, my, 28, 0.4, Math.PI * 1.8);
+      ctx.stroke();
+
+      // Đầu rắn Manda vươn cao
+      ctx.fillStyle = '#7e22ce';
+      ctx.beginPath();
+      ctx.ellipse(mx - 18, my - 24, 16, 11, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#3b0764';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Mắt rắn màu lục bảo & lưỡi rắn đỏ chẻ đôi thè ra
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(mx - 24, my - 27, 4, 4);
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(mx - 32, my - 22);
+      ctx.lineTo(mx - 42, my - 22);
+      ctx.lineTo(mx - 46, my - 25);
+      ctx.moveTo(mx - 42, my - 22);
+      ctx.lineTo(mx - 46, my - 19);
+      ctx.stroke();
+    }
+
+    // Katsuyu - Ốc Sên Thần Rừng Shikkotsu (ở hậu phương)
+    if (summonKatsuyu && war.phase === 'clash') {
+      const kx = ax;
+      const ky = ay + 65;
+      // Thân ốc sên trắng muốt sọc lam
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.ellipse(kx, ky, 28, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 3;
+      // Dải sọc lam chạy dọc thân Katsuyu
+      ctx.beginPath();
+      ctx.moveTo(kx - 24, ky);
+      ctx.quadraticCurveTo(kx, ky - 6, kx + 24, ky);
+      ctx.stroke();
+      // Hai râu cảm giác nhúc nhích
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(kx - 16, ky - 8);
+      ctx.lineTo(kx - 22, ky - 18);
+      ctx.moveTo(kx - 10, ky - 8);
+      ctx.lineTo(kx - 12, ky - 20);
+      ctx.stroke();
+    }
   }
 
   private icon(name: IconName): Sprite | null {
