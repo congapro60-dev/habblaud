@@ -1484,7 +1484,7 @@ function itemPos(dc: Dc): Pt | null {
 // ---------------------------------------------------------------- composição
 
 /** Usa o mesmo rig da cabeça para acompanhar quique, cochilo e poses sentadas. */
-function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume'], color?: string, kageRole?: CharacterFrameRequest['kageRole']): void {
+function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume'], color?: string, kageRole?: CharacterFrameRequest['kageRole'], charName?: string): void {
   if (!costume) return;
   const { b, r } = dc;
   const x = HX + r.lean;
@@ -1511,7 +1511,7 @@ function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume'], color?: 
     b.vline(x + 8, y + 1, y + 4, '#f9ae48');
     b.hline(x + 2, x + 11, y + 5, '#8d4930');
   } else if (costume === 'ninja' || costume === 'kage') {
-    drawNinja(dc, color ?? '#3f7a3f', kageRole);
+    drawNinja(dc, color ?? '#3f7a3f', kageRole, charName);
   } else {
     // Gola da capa: rosto e crachá continuam visíveis.
     b.rect(x, y + 12, 2, 5, '#702743');
@@ -1520,12 +1520,17 @@ function drawCostume(dc: Dc, costume: CharacterFrameRequest['costume'], color?: 
 }
 
 /**
- * Nhẫn giả & Kage:
- * - Hokage / Kazekage / Mizukage / Raikage / Tsuchikage: Mũ Kage chóp rộng truyền thống, Áo choàng Haori Kage trắng viền đỏ/vàng/xanh, Hán tự Kage sau lưng.
- * - Akatsuki: Áo choàng mây đỏ cổ cao.
- * - Jonin/Chunin: Áo giáp rêu, băng đô Hitai-ate.
+ * Tạo hình nhẫn giả Naruto nguyên tác:
+ * - Shikamaru: tóc búi dứa cao nhọn dựng ngược sau đầu, khuyên tai tròn bạc, áo giáp Jonin xanh rêu.
+ * - Naruto: tóc vàng nhọn xù, áo khoác cam sọc đen, 3 râu mèo mỗi bên má.
+ * - Sasuke: tóc đen đuôi vịt rẽ ngôi, áo xanh tím than, huy hiệu quạt Uchiha sau lưng.
+ * - Kakashi: khẩu trang đen kín mặt, mắt chéo băng bảo hộ trán, tóc xám bạc lệch.
+ * - Gaara: bầu hồ lô cát khổng lồ đeo chéo lưng, chữ Ái đỏ trên trán, áo choàng đỏ sa mạc.
+ * - Jiraiya: tóc bạc nhọn dài qua lưng, 2 vệt sơn đỏ dài dưới mắt, áo khoác đỏ viền xanh.
+ * - Akatsuki: áo choàng đen cổ đứng cao che kín cổ, họa tiết mây đỏ viền trắng.
+ * - Kage: nón Kage chóp rộng ngũ hành & áo Haori trắng viền lửa.
  */
-function drawNinja(dc: Dc, color: string, kageRole?: CharacterFrameRequest['kageRole']): void {
+function drawNinja(dc: Dc, color: string, kageRole?: CharacterFrameRequest['kageRole'], charName?: string): void {
   const { b, r } = dc;
   const x = HX + r.lean;
   const y = HY + r.ub + r.hd;
@@ -1533,92 +1538,178 @@ function drawNinja(dc: Dc, color: string, kageRole?: CharacterFrameRequest['kage
   const clothDk = shade(color, -0.32);
   const isAkatsuki = color === '#a61c1c';
   const torsoY = 17 + r.ub;
+  const n = (charName ?? '').toLowerCase();
 
+  // 1. KAGE
   if (kageRole) {
-    // === ĐỒNG PHỤC KAGE CHUẨN NGUYÊN MẪU TRUYỆN NARUTO ===
-    // 1. Áo choàng Haori Kage màu trắng trùm vai, viền gấu áo theo ngũ hành
-    b.rect(5 + r.lean, torsoY, 14, 11, '#ffffff'); // Áo choàng trắng
+    b.rect(5 + r.lean, torsoY, 14, 11, '#ffffff');
     b.rect(6 + r.lean, torsoY + 1, 12, 9, '#f8fafc');
-
-    // Viền lửa/sóng gấu áo Haori đặc trưng
     const trimColor = kageRole === 'hokage' ? '#dc2626' : kageRole === 'kazekage' ? '#d97706' : kageRole === 'mizukage' ? '#0284c7' : kageRole === 'raikage' ? '#ca8a04' : '#57534e';
     b.rect(5 + r.lean, torsoY + 9, 14, 2, trimColor);
-    b.set(6 + r.lean, torsoY + 8, trimColor);
-    b.set(8 + r.lean, torsoY + 8, trimColor);
-    b.set(10 + r.lean, torsoY + 8, trimColor);
-    b.set(12 + r.lean, torsoY + 8, trimColor);
-    b.set(14 + r.lean, torsoY + 8, trimColor);
-
-    // Dải thắt lưng đỏ trước ngực
+    for (let i = 0; i < 5; i++) b.set(6 + r.lean + i * 2, torsoY + 8, trimColor);
     b.rect(10 + r.lean, torsoY + 3, 4, 2, '#b91c1c');
 
-    // 2. MŨ KAGE TRUYỀN THỐNG (Chóp rộng hình tam giác & dải vải buông dài hai bên che gáy)
-    // Chóp mũ Kage (Hỏa = Đỏ, Phong = Xanh lá/vàng, Thủy = Xanh lam, Lôi = Vàng, Thổ = Nâu)
+    // Mũ Kage chóp rộng
     const hatColor = trimColor;
-    b.rect(x - 2, y + 2, 18, 3, '#ffffff'); // Vành mũ rộng trắng
-    b.rect(x + 1, y - 2, 12, 4, hatColor);  // Thân mũ Kage màu biểu trưng
-    b.rect(x + 4, y - 5, 6, 3, hatColor);   // Đỉnh chóp nón
-    b.rect(x + 6, y - 7, 2, 2, '#ffffff');  // Đỉnh nón nhọn màu trắng
-
-    // Biểu tượng tròn đính trước nón Kage
+    b.rect(x - 2, y + 2, 18, 3, '#ffffff');
+    b.rect(x + 1, y - 2, 12, 4, hatColor);
+    b.rect(x + 4, y - 5, 6, 3, hatColor);
+    b.rect(x + 6, y - 7, 2, 2, '#ffffff');
     b.ellipse(x + 7, y - 1, 3, 3, '#ffffff');
-    b.set(x + 7, y - 1, hatColor); // Hán tự tâm mũ
-
-    // Dải vải trắng của mũ Kage rủ xuống 2 bên tai
+    b.set(x + 7, y - 1, hatColor);
     b.rect(x - 1, y + 5, 2, 7, '#ffffff');
     b.rect(x + 13, y + 5, 2, 7, '#ffffff');
     return;
   }
 
-  // 1. Áo choàng / Quần áo Ninja thường (Chunin xanh rêu hoặc Akatsuki mây đỏ)
-  if (isAkatsuki) {
-    // Áo choàng đen Akatsuki cổ cao trùm thân
-    b.rect(6 + r.lean, torsoY, 12, 10, '#181820');
-    b.rect(7 + r.lean, torsoY + 1, 10, 8, '#242430');
-    // Họa tiết mây đỏ Akatsuki
-    b.rect(9 + r.lean, torsoY + 3, 4, 3, '#d42222');
-    b.rect(10 + r.lean, torsoY + 2, 2, 5, '#e03030');
-    b.set(8 + r.lean, torsoY + 4, '#ffffff'); // viền mây trắng
-  } else {
-    // Áo giáp Jonin/Chunin màu rêu đặc trưng Naruto
-    b.rect(6 + r.lean, torsoY, 12, 7, '#2b4d32');
-    b.rect(7 + r.lean, torsoY + 1, 10, 5, '#3b6643');
-    // 2 túi nhẫn cụ trước ngực
-    b.rect(7 + r.lean, torsoY + 3, 2, 3, '#1f3824');
-    b.rect(13 + r.lean, torsoY + 3, 2, 3, '#1f3824');
+  // 2. SHIKAMARU
+  if (n.includes('shikamaru')) {
+    // Áo giáp Chunin Konoha màu xanh rêu chuẩn
+    b.rect(6 + r.lean, torsoY, 12, 8, '#2d5a32');
+    b.rect(7 + r.lean, torsoY + 1, 10, 6, '#3a7241');
+    b.rect(7 + r.lean, torsoY + 3, 2, 3, '#1e3d22');
+    b.rect(13 + r.lean, torsoY + 3, 2, 3, '#1e3d22');
+    // Áo trong dài tay màu xám đen
+    b.rect(5 + r.lean, torsoY + 2, 2, 6, '#374151');
+    b.rect(15 + r.lean, torsoY + 2, 2, 6, '#374151');
+    // TÓC DỨA ĐẶC TRƯNG SHIKAMARU: chùm tóc đen dựng nhọn ngược lên trên và ra sau đỉnh đầu
+    b.rect(x + 5, y - 3, 4, 4, '#171717');
+    b.rect(x + 6, y - 6, 3, 4, '#171717');
+    b.set(x + 7, y - 7, '#171717');
+    b.set(x + 8, y - 8, '#262626');
+    // Khuyên tai tròn bạc hai bên
+    b.set(x + 1, y + 8, '#e2e8f0');
+    b.set(x + 12, y + 8, '#e2e8f0');
+    // Băng đeo tay bảo hộ Konoha ở bắp tay trái thay vì đội đầu
+    b.rect(4 + r.lean, torsoY + 3, 3, 3, '#1e3a8a');
+    b.rect(5 + r.lean, torsoY + 3, 2, 2, '#cbd5e1');
+    return;
   }
 
-  // 2. Băng đô bảo hộ trán (Hitai-ate)
+  // 3. UZUMAKI NARUTO
+  if (n.includes('naruto')) {
+    // Áo khoác thể thao màu cam rực rỡ với vai áo đen
+    b.rect(6 + r.lean, torsoY, 12, 8, '#ea580c');
+    b.rect(7 + r.lean, torsoY + 1, 10, 6, '#f97316');
+    b.rect(6 + r.lean, torsoY, 12, 3, '#18181b'); // vai áo đen
+    // Xoáy tròn Konoha màu đỏ sau lưng
+    b.ellipse(11 + r.lean, torsoY + 4, 3, 3, '#dc2626');
+    // Băng trán Konoha màu đen che trán
+    b.rect(x + 1, y + 5, 12, 3, '#18181b');
+    b.rect(x + 4, y + 5, 6, 3, '#e2e8f0');
+    // Tóc vàng nhọn dựng của Naruto
+    b.rect(x + 3, y + 1, 8, 4, '#eab308');
+    b.set(x + 2, y, '#facc15');
+    b.set(x + 5, y - 1, '#facc15');
+    b.set(x + 8, y - 1, '#facc15');
+    b.set(x + 11, y, '#facc15');
+    // 3 vệt râu mèo mỗi bên má
+    if (r.view === 'down') {
+      b.set(x + 3, y + 9, '#78350f');
+      b.set(x + 4, y + 10, '#78350f');
+      b.set(x + 9, y + 10, '#78350f');
+      b.set(x + 10, y + 9, '#78350f');
+    }
+    return;
+  }
+
+  // 4. UCHIHA SASUKE
+  if (n.includes('sasuke')) {
+    // Áo xanh tím than cổ cao mở ngực
+    b.rect(6 + r.lean, torsoY, 12, 8, '#1e1b4b');
+    b.rect(7 + r.lean, torsoY + 1, 10, 6, '#312e81');
+    // Quạt Uchiha sau lưng (trên đỏ, dưới trắng)
+    b.rect(10 + r.lean, torsoY + 2, 4, 2, '#dc2626');
+    b.rect(10 + r.lean, torsoY + 4, 4, 2, '#ffffff');
+    // Đai quấn dây thừng tím Shimenawa quanh eo
+    b.rect(6 + r.lean, torsoY + 6, 12, 3, '#7c3aed');
+    // Tóc đen đuôi vịt chĩa hai bên
+    b.rect(x + 1, y + 3, 3, 6, '#09090b');
+    b.rect(x + 10, y + 3, 3, 6, '#09090b');
+    b.set(x, y + 7, '#09090b');
+    b.set(x + 13, y + 7, '#09090b');
+    return;
+  }
+
+  // 5. HATAKE KAKASHI
+  if (n.includes('kakashi')) {
+    // Áo giáp Jonin xanh rêu
+    b.rect(6 + r.lean, torsoY, 12, 8, '#2b4d32');
+    b.rect(7 + r.lean, torsoY + 1, 10, 6, '#3b6643');
+    // Băng bảo hộ trán đeo chéo che kín mắt trái Sharingan
+    b.line(x + 2, y + 4, x + 11, y + 8, '#1e293b');
+    b.rect(x + 3, y + 6, 4, 3, '#cbd5e1');
+    // Khẩu trang xanh đậm che kín nửa mặt từ mũi xuống cằm
+    b.rect(x + 2, y + 8, 10, 5, '#0f172a');
+    // Mái tóc xám bạc chĩa nghiêng sang trái đặc trưng
+    b.rect(x + 3, y - 2, 9, 5, '#e2e8f0');
+    b.set(x + 2, y - 3, '#f1f5f9');
+    b.set(x + 4, y - 4, '#f1f5f9');
+    b.set(x + 7, y - 5, '#f1f5f9');
+    b.set(x + 10, y - 3, '#cbd5e1');
+    return;
+  }
+
+  // 6. GAARA SA MẠC
+  if (n.includes('gaara')) {
+    // Bầu hồ lô cát khổng lồ đeo chéo lưng
+    b.ellipse(14 + r.lean, torsoY + 1, 5, 5, '#d97706');
+    b.ellipse(15 + r.lean, torsoY + 5, 6, 6, '#b45309');
+    b.set(13 + r.lean, torsoY + 3, '#78350f'); // nút thắt hồ lô
+    // Áo dài màu mận đỏ sa mạc
+    b.rect(6 + r.lean, torsoY, 12, 9, '#7f1d1d');
+    b.rect(7 + r.lean, torsoY + 1, 10, 7, '#991b1b');
+    // Dải thắt lưng vải trắng vắt chéo ngực
+    b.line(6 + r.lean, torsoY + 1, 14 + r.lean, torsoY + 7, '#f8fafc');
+    // Tóc đỏ sẫm không băng trán, có chữ Ái (愛) đỏ trên trán trái
+    b.rect(x + 3, y + 1, 8, 4, '#991b1b');
+    b.set(x + 4, y + 5, '#dc2626'); // Chữ Ái
+    b.rect(x + 3, y + 7, 3, 2, '#18181b'); // Quầng thâm đen quanh mắt
+    b.rect(x + 8, y + 7, 3, 2, '#18181b');
+    return;
+  }
+
+  // 7. AKATSUKI
+  if (isAkatsuki) {
+    b.rect(5 + r.lean, torsoY - 1, 14, 11, '#181820');
+    b.rect(6 + r.lean, torsoY, 12, 9, '#242430');
+    // Cổ áo đứng cao dựng đứng đặc trưng che cằm
+    b.rect(x + 2, y + 9, 10, 4, '#181820');
+    b.hline(x + 2, x + 11, y + 9, '#3f3f46');
+    // Đám mây đỏ viền trắng Akatsuki
+    b.rect(8 + r.lean, torsoY + 3, 5, 4, '#dc2626');
+    b.rect(9 + r.lean, torsoY + 2, 3, 6, '#ef4444');
+    b.hline(x + 8, x + 13, torsoY + 2, '#ffffff');
+    b.set(8 + r.lean, torsoY + 4, '#ffffff');
+    b.set(13 + r.lean, torsoY + 5, '#ffffff');
+
+    // Băng bảo hộ trán gạch ngang phản bội làng
+    b.rect(x + 1, y + 5, 12, 3, '#181820');
+    b.rect(x + 4, y + 5, 6, 3, '#d8e2ed');
+    b.hline(x + 4, x + 9, y + 6, '#dc2626');
+    return;
+  }
+
+  // 8. JONIN / CHUNIN CHUNG
+  b.rect(6 + r.lean, torsoY, 12, 7, '#2b4d32');
+  b.rect(7 + r.lean, torsoY + 1, 10, 5, '#3b6643');
+  b.rect(7 + r.lean, torsoY + 3, 2, 3, '#1f3824');
+  b.rect(13 + r.lean, torsoY + 3, 2, 3, '#1f3824');
+
+  // Băng trán Ninja Hitai-ate
   b.rect(x + 1, y + 5, 12, 3, color);
   b.hline(x + 1, x + 12, y + 5, cloth);
-  // Tấm kim loại hộ trán sáng loáng ở giữa trán
   b.rect(x + 4, y + 5, 6, 3, '#d8e2ed');
   b.set(x + 5, y + 5, '#ffffff');
   b.set(x + 7, y + 7, '#748094');
-  if (isAkatsuki) {
-    // Vết gạch ngang phản bội làng của Akatsuki
-    b.hline(x + 4, x + 9, y + 6, '#a61c1c');
-  }
 
-  // Cauda/Dải vải bay phía sau
+  // Dải vải bay
   if (r.view === 'side') {
     b.rect(x + 11, y + 6, 3, 2, color);
     b.rect(x + 13, y + 8, 2, 3, clothDk);
   } else {
     b.rect(x - 1, y + 6, 2, 2, color);
     b.rect(x - 2, y + 8, 2, 3, clothDk);
-  }
-
-  // 3. Khẩu trang Ninja che mặt từ mũi xuống cằm
-  if (r.view === 'down') {
-    b.rect(x + 3, y + 9, 8, 4, cloth);
-    b.hline(x + 3, x + 10, y + 12, clothDk);
-    b.set(x + 6, y + 10, color);
-  } else if (r.view === 'side') {
-    b.rect(x + 2, y + 9, 7, 4, cloth);
-    b.hline(x + 2, x + 8, y + 12, clothDk);
-  } else {
-    b.rect(x + 5, y + 6, 4, 3, clothDk);
   }
 }
 
@@ -1649,7 +1740,7 @@ export function renderCharacter(req: CharacterFrameRequest): BufSprite {
     drawFacialHair(dc);
     drawHair(dc, 'front');
     drawAccessory(dc);
-    drawCostume(dc, req.costume, req.costumeColor, req.kageRole);
+    drawCostume(dc, req.costume, req.costumeColor, req.kageRole, req.charName);
   };
 
   if (view !== 'side' && r.itemAt) {
@@ -1676,7 +1767,7 @@ export function renderCharacter(req: CharacterFrameRequest): BufSprite {
     drawFacialHair(dc);
     drawHair(dc, 'front');
     drawAccessory(dc);
-    drawCostume(dc, req.costume, req.costumeColor, req.kageRole);
+    drawCostume(dc, req.costume, req.costumeColor, req.kageRole, req.charName);
     if (ip && !r.itemBehind) drawItem(dc, ip[0], ip[1]);
     drawArm(dc, r.armB, sr, sleeve, 0, true);
   } else {
@@ -1696,7 +1787,7 @@ export function renderCharacter(req: CharacterFrameRequest): BufSprite {
     drawFacialHair(dc);
     drawHair(dc, 'front');
     drawAccessory(dc);
-    drawCostume(dc, req.costume, req.costumeColor, req.kageRole);
+    drawCostume(dc, req.costume, req.costumeColor, req.kageRole, req.charName);
     // Braços cruzados por cima do cabelo comprido que cai no peito (a mão que bate fica visível).
     if (r.crossFront !== null) drawCrossedArms(dc, sr, sleeve, r.crossFront === 1);
     if (ip && !r.itemBehind) {

@@ -139,6 +139,8 @@ export interface CharacterFrameRequest {
   costumeColor?: string;
   /** Danh hiệu Kage: 'hokage' | 'kazekage' | 'mizukage' | 'raikage' | 'tsuchikage' */
   kageRole?: 'hokage' | 'kazekage' | 'mizukage' | 'raikage' | 'tsuchikage';
+  /** Tên nhân vật (để nhận diện tạo hình pixel chuẩn nguyên tác Naruto: Naruto, Sasuke, Kakashi, Shikamaru, Gaara, Pain...) */
+  charName?: string;
 }
 
 export type FurnitureKind =

@@ -962,7 +962,7 @@ export class Renderer {
     req.dir = ch.dir;
     req.pose = ch.pose;
     req.held = ch.held;
-    req.seated = ch.seated;
+    req.charName = ch.info.name;
     const nameLower = (ch.info.name ?? '').toLowerCase();
     const isAkatsuki = nameLower.includes('pain') || nameLower.includes('konan') || nameLower.includes('itachi') || nameLower.includes('kisame') || nameLower.includes('deidara') || nameLower.includes('sasori') || nameLower.includes('hidan') || nameLower.includes('kakuzu') || nameLower.includes('tobi') || nameLower.includes('orochimaru');
     const isHokage = nameLower.includes('hokage') || nameLower.includes('tsunade') || nameLower.includes('hashirama') || nameLower.includes('tobirama') || nameLower.includes('hiruzen') || nameLower.includes('minato') || nameLower.includes('kakashi') || nameLower.includes('cường');
