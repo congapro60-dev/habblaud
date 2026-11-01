@@ -164,6 +164,8 @@ export class Sim {
   readonly chars = new Map<string, Character>();
   private readonly virtualHeadIds = new Set<string>();
   readonly npcNinjaIds = new Set<string>();
+  /** id NPC ninja -> khu vực core (võ đường) được phân bổ, để giải tán về đúng nhà sau trận. */
+  readonly npcNinjaHome = new Map<string, string>();
   private readonly virtualHeadHome = new Map<string, string>();
   readonly rooms = new Map<string, RoomState>();
   readonly spots = new SpotRegistry();
@@ -315,7 +317,15 @@ export class Sim {
       ch.setPose('stand');
       this.chars.set(def.id, ch);
       this.npcNinjaIds.add(def.id);
+      this.npcNinjaHome.set(def.id, def.roomId);
     }
+  }
+
+  /** Khu vực core (võ đường) là nhà của NPC ninja / trưởng phòng ảo; null nếu là nhân vật thật. */
+  homeCoreIdOf(ch: Character): string | null {
+    if (this.npcNinjaIds.has(ch.id)) return this.npcNinjaHome.get(ch.id) ?? null;
+    if (this.virtualHeadIds.has(ch.id)) return this.virtualHeadHome.get(ch.id.slice('virtual:'.length)) ?? ch.info.roomId;
+    return null;
   }
 
   /** Hành vi NPC của các Ninja thường trực: đi dạo vài bước trong khu vực, kết ấn, tập kiếm, không tranh bàn ghế */

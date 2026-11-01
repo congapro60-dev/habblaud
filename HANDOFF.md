@@ -12,8 +12,10 @@
   - **Hệ thống Âm thanh Nhẫn Giả Web Audio API** (`synth.ts`, `sound-cues.ts`): Synth tiếng va chạm kunai/shuriken, sấm Chidori, bão gió Rasengan, bùa bộc phá Kibaku Fuda và chuông mõ khai chiến.
   - **Thuật Triệu Hồi Linh Thú Khổng Lồ (Kuchiyose no Jutsu)** (`renderer.ts`): Gamabunta (Cóc khổng lồ ngậm tẩu), Manda (Mãng xà tím khổng lồ) & Katsuyu (Ốc sên thần) xuất hiện giữa đại chiến.
   - **Sổ Đen Ninja Bingo Book & Vinh Danh MVP** (`ninja-war-director.ts`, `ninja-war-banner.ts`): Tự động ghi chép chiến tích, tỷ số các phe và vinh danh MVP cuối trận.
+  - **Fix giải tán sau trận (Nov 01, 2026)**: `enterDisperse` giờ chủ động đưa NPC ninja & trưởng phòng ảo về đúng võ đường (`sim.homeCoreIdOf` + `npcNinjaHome`) thay vì kẹt lại quanh võ đài cạnh Cổng Làng (`core:recepcao`).
+  - **Fix bảo vệ session thật (Nov 01, 2026)**: Đại chiến chỉ draft NPC ninja & trưởng phòng ảo làm đấu thủ; session thật (Claude/Codex/OpenCode) chỉ lên sàn khi thiếu người VÀ đang idle — người đang `working` không bao giờ bị kéo khỏi bàn.
 
 ## Kiểm thử & Build
 - `npx tsc --noEmit`: 0 errors.
 - `npm run build:client`: Vite bundle thành công `dist/client/`.
-- `vitest`: 30/30 tests passed.
+- `vitest`: 83/83 tests passed (client/src/world/sim/).

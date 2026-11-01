@@ -221,11 +221,28 @@ export class NinjaWarDirector {
       if (match && !teamAChars.includes(match) && !teamBChars.includes(match)) teamBChars.push(match);
     }
 
-    // Đảm bảo phân bổ nhân sự hiện có trong văn phòng vào 2 đội đấu (tối đa 3 vs 3)
+    // Đảm bảo phân bổ nhân sự vào 2 đội đấu (tối đa 3 vs 3).
+    // ƯU TIÊN TUYỆT ĐỐI: NPC ninja & trưởng phòng ảo làm đấu thủ. Session thật (Claude/Codex/
+    // OpenCode) chỉ được drafted khi còn thiếu người VÀ đang rảnh (idle/không có bàn) — người
+    // đang làm việc không bao giờ bị kéo ra khỏi bàn.
+    const isFighterNpc = (c: Character): boolean =>
+      this.sim.npcNinjaIds.has(c.id) || !!((this.sim as any).virtualHeadIds?.has(c.id));
     for (const c of allChars) {
       if (teamAChars.includes(c) || teamBChars.includes(c)) continue;
+      if (!isFighterNpc(c)) continue;
       if (teamAChars.length <= teamBChars.length && teamAChars.length < 3) teamAChars.push(c);
       else if (teamBChars.length < 3) teamBChars.push(c);
+    }
+    // Chỉ khi NPC không đủ người mới mời session thật đang rảnh lên sàn
+    if (teamAChars.length === 0 || teamBChars.length === 0) {
+      for (const c of allChars) {
+        if (teamAChars.includes(c) || teamBChars.includes(c)) continue;
+        if (isFighterNpc(c)) continue;
+        const isFree = c.mode === 'idle' || !c.homeSpot;
+        if (!isFree) continue;
+        if (teamAChars.length <= teamBChars.length && teamAChars.length < 3) teamAChars.push(c);
+        else if (teamBChars.length < 3) teamBChars.push(c);
+      }
     }
 
     if (teamAChars.length === 0 && teamBChars.length > 1) {
@@ -452,6 +469,21 @@ export class NinjaWarDirector {
       ch.reactUntil = 0;
       ch.setPose('stand');
       ch.setIcon(null, 0, now);
+      // NPC ninja & trưởng phòng ảo KHÔNG chạy planner: phải chủ động đưa về đúng võ đường của
+      // mình, nếu không chúng sẽ kẹt lại quanh võ đài (hành lang cạnh Cổng Làng) mãi mãi.
+      const homeCoreId = this.sim.homeCoreIdOf(ch);
+      if (homeCoreId) {
+        const area = this.sim.building.core.find((a) => a.id === homeCoreId);
+        if (area) {
+          const tx = Math.floor(area.rect.x + 2 + ch.rng() * Math.max(1, area.rect.w - 4));
+          const ty = Math.floor(area.rect.y + 2 + ch.rng() * Math.max(1, area.rect.h - 4));
+          const walk = this.sim.building.grid.nearestWalkable(tx, ty, 8) ?? { x: tx, y: ty };
+          ch.queue.push(
+            { t: 'go', tx: walk.x, ty: walk.y, run: false },
+            { t: 'do', fn: () => { ch.roomId = homeCoreId; ch.info.roomId = homeCoreId; } },
+          );
+        }
+      }
     }
 
     this.emit();
