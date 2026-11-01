@@ -211,6 +211,8 @@ export class Social {
     };
     a.gathering = g;
     b.gathering = g;
+    // passo 'gather': aplica as poses do duelo e solta a roda quando ela acaba (sem isto o personagem fica preso nela)
+    for (const c of [a, b]) c.queue.push({ t: 'gather', g }, { t: 'do', fn: () => c.gathering === g && (c.gathering = null) });
     this.gatherings.add(g);
     this.say(a, 'Lên đi! Tỉ thí nhẫn thuật!', now, 1_200);
     this.say(b, 'Tiếp chiêu!', now + 200, 1_200);

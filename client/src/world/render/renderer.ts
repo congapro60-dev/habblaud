@@ -995,6 +995,7 @@ export class Renderer {
     if (ch.mode === 'wait') this.drawAlertRing(x, y, now);
     if (sel.agent === ch.id) this.drawRing(x, y, '#7fe3ff', now, true);
     else if (sel.hover === ch.id) this.drawRing(x, y, '#ffffff', now, false);
+    else if (this.sim.chars.has(ch.id) && !this.sim.isLocalCast(ch) && !ch.leaving) this.drawSessionMark(x, y);
     if (!ch.seated) {
       const sh = shadowSprite();
       ctx.drawImage(sh.canvas, x - sh.ax, y - sh.ay);
@@ -1302,6 +1303,21 @@ export class Renderer {
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.ellipse(x, y, 8 * k, 3.5 * k, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /** Vệt sáng xanh dưới chân session thật, để không lẫn với NPC ninja trùng tên. */
+  private drawSessionMark(x: number, y: number): void {
+    const { ctx } = this;
+    ctx.save();
+    ctx.globalAlpha *= 0.85;
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.28)';
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 9, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.stroke();
     ctx.restore();
   }
@@ -1901,45 +1917,49 @@ export class Renderer {
     const war = this.sim.ninjaWar?.getState();
     if (!war || war.phase === 'idle' || war.phase === 'disperse') return;
     const { ctx } = this;
-    const ax = war.arenaCenter.x * TILE;
-    const ay = war.arenaCenter.y * TILE;
 
     ctx.save();
 
-    // 1. VÕ ĐÀI TRUNG TÂM & VÀNG HÀO QUANG ĐẠI CHIẾN
-    const pulse = Math.sin(now / 150) * 8;
-    const rad = 72 + pulse;
-    const auraGrad = ctx.createRadialGradient(ax, ay, 10, ax, ay, rad + 40);
-    auraGrad.addColorStop(0, war.phase === 'victory' ? 'rgba(255, 215, 0, 0.45)' : 'rgba(239, 68, 68, 0.35)');
-    auraGrad.addColorStop(0.5, war.phase === 'victory' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(59, 130, 246, 0.25)');
-    auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = auraGrad;
-    ctx.beginPath();
-    ctx.arc(ax, ay, rad + 40, 0, Math.PI * 2);
-    ctx.fill();
+    // 1. HÀO QUANG & VÀNH ẤN CHÚ Ở TỪNG ĐIỂM GIAO CHIẾN DỌC HÀNH LANG
+    const pulse = Math.sin(now / 150) * 5;
+    const rad = 34 + pulse;
+    for (const spot of war.duelSpots) {
+      const ax = (spot.x + 0.5) * TILE;
+      const ay = (spot.y + 0.5) * TILE;
+      const auraGrad = ctx.createRadialGradient(ax, ay, 6, ax, ay, rad + 20);
+      auraGrad.addColorStop(0, war.phase === 'victory' ? 'rgba(255, 215, 0, 0.45)' : 'rgba(239, 68, 68, 0.35)');
+      auraGrad.addColorStop(0.5, war.phase === 'victory' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(59, 130, 246, 0.25)');
+      auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.arc(ax, ay, rad + 20, 0, Math.PI * 2);
+      ctx.fill();
 
-    // Vành đai ấn chú trận pháp bảo hộ sàn đấu
-    ctx.strokeStyle = war.phase === 'victory' ? '#fbbf24' : '#f97316';
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash([8, 6]);
-    ctx.beginPath();
-    ctx.arc(ax, ay, rad, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
+      ctx.strokeStyle = war.phase === 'victory' ? '#fbbf24' : '#f97316';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.arc(ax, ay, rad, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // tia sét va chạm giữa hai đấu thủ khi đang giao tranh
+      if (war.phase === 'clash') {
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        for (let s = 0; s < 5; s++) {
+          const ang = (s * Math.PI * 2) / 5 + now / 200;
+          const dist = 12 + Math.sin(now / 60 + s) * 8;
+          ctx.moveTo(ax, ay);
+          ctx.lineTo(ax + Math.cos(ang) * dist, ay + Math.sin(ang) * dist);
+        }
+        ctx.stroke();
+      }
+    }
 
     // 2. KHI ĐANG GIAO TRANH (CLASH): VẼ CÁC ĐẠI CHIÊU NHẪN THUẬT CHO CÁC ĐẤU THỦ
     if (war.phase === 'clash') {
-      // Tia sét và sóng năng lượng va chạm ở giữa tâm võ đài
-      ctx.strokeStyle = '#fef08a';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      for (let s = 0; s < 5; s++) {
-        const ang = (s * Math.PI * 2) / 5 + now / 200;
-        const dist = 18 + Math.sin(now / 60 + s) * 12;
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(ax + Math.cos(ang) * dist, ay + Math.sin(ang) * dist);
-      }
-      ctx.stroke();
 
       // Hiệu ứng từng nhẫn giả tham gia trận chiến
       const allCombatants = [...war.teamAChars, ...war.teamBChars];

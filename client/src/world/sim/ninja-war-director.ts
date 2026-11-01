@@ -26,6 +26,8 @@ export interface NinjaTeamBattleState {
   phaseEndsAt: number;
   winnerTeam: 'A' | 'B' | null;
   arenaCenter: { x: number; y: number };
+  /** Các điểm giao chiến rải dọc hành lang: mỗi cặp đấu thủ đánh ở một điểm riêng. */
+  duelSpots: { x: number; y: number }[];
   scoreA: number;
   scoreB: number;
   teamAChars: Character[];
@@ -164,6 +166,13 @@ export class NinjaWarDirector {
     return this.state;
   }
 
+  /** Nhân vật đang ở võ đài (đấu thủ hoặc khán giả) trong lúc tập kết, giao tranh, vinh danh. */
+  isEngaged(ch: Character): boolean {
+    const s = this.state;
+    if (!s || s.phase === 'idle' || s.phase === 'disperse') return false;
+    return s.teamAChars.includes(ch) || s.teamBChars.includes(ch) || s.spectatorChars.includes(ch);
+  }
+
   getNextBattleTime(): number {
     return this.nextBattleTime;
   }
@@ -202,11 +211,13 @@ export class NinjaWarDirector {
       this.scenarioIndex++;
     }
 
-    // Tìm kiếm các Character tham gia vào Team A và Team B
-    const allChars = [...this.sim.chars.values()].filter((c) => !c.gone && !c.leaving);
+    // Chỉ dàn nhân vật cục bộ (NPC ninja & trưởng phòng ảo) lên sàn. Session thật (Claude/Codex/OpenCode),
+    // dù đang làm hay đang rảnh, không bao giờ bị kéo khỏi phòng — kể cả khi trùng tên với kịch bản.
+    const allChars = [...this.sim.chars.values()].filter((c) => !c.gone && !c.leaving && this.sim.isLocalCast(c));
     const charMatch = (pattern: string): Character | undefined => {
-      const p = pattern.toLowerCase();
-      return allChars.find((c) => (c.info.name ?? '').toLowerCase().includes(p));
+      // khớp nguyên từ: 'ay' là Raikage Ay, không phải mọi tên có chữ "ay"
+      const re = new RegExp(`(^|[^a-z])${pattern.toLowerCase()}([^a-z]|$)`);
+      return allChars.find((c) => re.test((c.info.name ?? '').toLowerCase()));
     };
 
     const teamAChars: Character[] = [];
@@ -221,28 +232,11 @@ export class NinjaWarDirector {
       if (match && !teamAChars.includes(match) && !teamBChars.includes(match)) teamBChars.push(match);
     }
 
-    // Đảm bảo phân bổ nhân sự vào 2 đội đấu (tối đa 3 vs 3).
-    // ƯU TIÊN TUYỆT ĐỐI: NPC ninja & trưởng phòng ảo làm đấu thủ. Session thật (Claude/Codex/
-    // OpenCode) chỉ được drafted khi còn thiếu người VÀ đang rảnh (idle/không có bàn) — người
-    // đang làm việc không bao giờ bị kéo ra khỏi bàn.
-    const isFighterNpc = (c: Character): boolean =>
-      this.sim.npcNinjaIds.has(c.id) || !!((this.sim as any).virtualHeadIds?.has(c.id));
+    // Kịch bản thiếu người thì bổ sung NPC khác cho đủ (tối đa 3 vs 3)
     for (const c of allChars) {
       if (teamAChars.includes(c) || teamBChars.includes(c)) continue;
-      if (!isFighterNpc(c)) continue;
       if (teamAChars.length <= teamBChars.length && teamAChars.length < 3) teamAChars.push(c);
       else if (teamBChars.length < 3) teamBChars.push(c);
-    }
-    // Chỉ khi NPC không đủ người mới mời session thật đang rảnh lên sàn
-    if (teamAChars.length === 0 || teamBChars.length === 0) {
-      for (const c of allChars) {
-        if (teamAChars.includes(c) || teamBChars.includes(c)) continue;
-        if (isFighterNpc(c)) continue;
-        const isFree = c.mode === 'idle' || !c.homeSpot;
-        if (!isFree) continue;
-        if (teamAChars.length <= teamBChars.length && teamAChars.length < 3) teamAChars.push(c);
-        else if (teamBChars.length < 3) teamBChars.push(c);
-      }
     }
 
     if (teamAChars.length === 0 && teamBChars.length > 1) {
@@ -255,22 +249,20 @@ export class NinjaWarDirector {
 
     if (teamAChars.length === 0 || teamBChars.length === 0) return false;
 
-    // Tất cả các NPC ninja, Kage và nhân viên đang rảnh rỗi đóng vai trò KHÁN GIẢ
-    // Các nhân sự đang tập trung làm việc tại bàn của session thật (mode === 'work') tiếp tục làm việc bình thường
+    // Các NPC ninja & Kage còn lại đóng vai trò KHÁN GIẢ
     const combatantSet = new Set<Character>([...teamAChars, ...teamBChars]);
-    const spectatorChars = allChars.filter((c) => {
-      if (combatantSet.has(c)) return false;
-      const isNpc = this.sim.npcNinjaIds.has(c.id);
-      const isHead = (this.sim as any).virtualHeadIds?.has(c.id);
-      if (isNpc || isHead) return true;
-      return c.mode === 'idle' || !c.homeSpot;
-    });
+    const spectatorChars = allChars.filter((c) => !combatantSet.has(c));
 
-    // Tìm tâm võ đài trên hành lang chính
-    const cols = Math.max(3, Math.floor(allChars.length / 5));
-    const cx = Math.max(16, Math.min(32, cols * 8));
-    const cy = CORRIDOR_Y + 2;
-    const centerTile = this.sim.building.grid.nearestWalkable(cx, cy, 6) ?? { x: cx, y: cy };
+    // Rải các điểm giao chiến đều dọc hành lang chính (không quây vào một võ đài)
+    const grid = this.sim.building.grid;
+    const corridor = this.sim.building.corridor.rect;
+    const pairs = Math.max(teamAChars.length, teamBChars.length);
+    const cy = corridor.y + Math.floor(corridor.h / 2);
+    const duelSpots = Array.from({ length: pairs }, (_, i) => {
+      const cx = Math.floor(corridor.x + ((i + 0.5) * corridor.w) / pairs);
+      return grid.nearestWalkable(cx, cy, 4) ?? { x: cx, y: cy };
+    });
+    const centerTile = duelSpots[Math.floor(pairs / 2)] ?? { x: corridor.x + Math.floor(corridor.w / 2), y: cy };
 
     this.state = {
       scenario,
@@ -278,6 +270,7 @@ export class NinjaWarDirector {
       phaseEndsAt: now + 5_500, // 5.5 giây cho màn triệu tập quân
       winnerTeam: null,
       arenaCenter: centerTile,
+      duelSpots,
       scoreA: 50,
       scoreB: 50,
       teamAChars,
@@ -295,14 +288,16 @@ export class NinjaWarDirector {
   /** Bố trí quân giai đoạn RALLY: Đấu thủ chạy ra đối diện nhau, khán giả vây quanh xem */
   private positionRally(now: number): void {
     if (!this.state) return;
-    const { arenaCenter, teamAChars, teamBChars, spectatorChars } = this.state;
+    const { duelSpots, teamAChars, teamBChars, spectatorChars } = this.state;
     const grid = this.sim.building.grid;
+    const spotOf = (idx: number) => duelSpots[idx % duelSpots.length];
 
-    // Team A đứng bên trái võ đài (khoảng cách 3-5 ô sang trái), quay mặt sang PHẢI
+    // Mỗi đấu thủ Team A đứng bên trái điểm giao chiến của cặp mình, quay mặt sang PHẢI
     teamAChars.forEach((ch, idx) => {
       this.clearPlanAndQueue(ch);
-      const targetTx = arenaCenter.x - 3 - (idx % 2);
-      const targetTy = arenaCenter.y - 1 + idx;
+      const spot = spotOf(idx);
+      const targetTx = spot.x - 2;
+      const targetTy = spot.y;
       const walk = grid.nearestWalkable(targetTx, targetTy, 4) ?? { x: targetTx, y: targetTy };
       ch.queue.push(
         { t: 'go', tx: walk.x, ty: walk.y, run: true },
@@ -311,11 +306,12 @@ export class NinjaWarDirector {
       );
     });
 
-    // Team B đứng bên phải võ đài (khoảng cách 3-5 ô sang phải), quay mặt sang TRÁI
+    // Đối thủ Team B đứng bên phải điểm giao chiến, quay mặt sang TRÁI
     teamBChars.forEach((ch, idx) => {
       this.clearPlanAndQueue(ch);
-      const targetTx = arenaCenter.x + 3 + (idx % 2);
-      const targetTy = arenaCenter.y - 1 + idx;
+      const spot = spotOf(idx);
+      const targetTx = spot.x + 2;
+      const targetTy = spot.y;
       const walk = grid.nearestWalkable(targetTx, targetTy, 4) ?? { x: targetTx, y: targetTy };
       ch.queue.push(
         { t: 'go', tx: walk.x, ty: walk.y, run: true },
@@ -324,13 +320,15 @@ export class NinjaWarDirector {
       );
     });
 
-    // Toàn bộ khán giả xếp thành hàng rào xem quanh hai bên hành lang và sảnh
+    // Khán giả chia nhau vây quanh từng điểm giao chiến
     spectatorChars.forEach((ch, idx) => {
       this.clearPlanAndQueue(ch);
-      const side = idx % 2 === 0 ? -1 : 1;
-      const dist = 5 + Math.floor(idx / 2) * 2;
-      const targetTx = arenaCenter.x + (side === -1 ? -dist : dist);
-      const targetTy = arenaCenter.y + ((idx % 3) - 1);
+      const spot = spotOf(idx);
+      const ring = Math.floor(idx / duelSpots.length);
+      const side = ring % 2 === 0 ? -1 : 1;
+      const dist = 4 + Math.floor(ring / 2);
+      const targetTx = spot.x + side * dist;
+      const targetTy = spot.y + ((ring % 3) - 1);
       const walk = grid.nearestWalkable(targetTx, targetTy, 8) ?? { x: ch.tx, y: ch.ty };
       ch.queue.push(
         { t: 'go', tx: walk.x, ty: walk.y, run: true },
@@ -338,7 +336,7 @@ export class NinjaWarDirector {
         {
           t: 'do',
           fn: () => {
-            ch.dir = ch.tx < arenaCenter.x ? 'right' : 'left';
+            ch.dir = ch.tx < spot.x ? 'right' : 'left';
             if (Math.random() < 0.6) ch.setIcon(Math.random() < 0.5 ? 'star' : 'alert', 3_000, now);
           },
         },
@@ -473,7 +471,7 @@ export class NinjaWarDirector {
       // mình, nếu không chúng sẽ kẹt lại quanh võ đài (hành lang cạnh Cổng Làng) mãi mãi.
       const homeCoreId = this.sim.homeCoreIdOf(ch);
       if (homeCoreId) {
-        const area = this.sim.building.core.find((a) => a.id === homeCoreId);
+        const area = this.sim.localArea(homeCoreId);
         if (area) {
           const tx = Math.floor(area.rect.x + 2 + ch.rng() * Math.max(1, area.rect.w - 4));
           const ty = Math.floor(area.rect.y + 2 + ch.rng() * Math.max(1, area.rect.h - 4));

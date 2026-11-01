@@ -89,6 +89,9 @@ export function createUI(root: HTMLElement, store: OfficeStore, world: WorldApi,
   /** Botão Mundo e a ida e volta da cidade (só quando app.ts monta a cena). */
   let scene: SceneSwitch | null = null;
   const inCity = () => !!scene?.inCity;
+  // Declarados antes dos componentes: alguns (ex.: NinjaWarBanner) chamam ctx.invalidate() já no construtor.
+  let rafId = 0;
+  let hiddenTimer: ReturnType<typeof setTimeout> | null = null;
 
   const ctx: UiContext = {
     store,
@@ -312,9 +315,6 @@ export function createUI(root: HTMLElement, store: OfficeStore, world: WorldApi,
   components.push(worldSocial);
 
   // ---------------------------------------------------------------- renderização agrupada por quadro
-  let rafId = 0;
-  let hiddenTimer: ReturnType<typeof setTimeout> | null = null;
-
   function renderAll(): void {
     rafId = 0;
     for (const c of components) {
