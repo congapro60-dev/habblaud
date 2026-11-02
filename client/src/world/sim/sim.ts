@@ -18,6 +18,7 @@ import { PROGRAM_SEED } from '../social/gathering';
 import { hasTrait, personaFor, soloWeights } from '../social/persona';
 import { Social } from '../social/social';
 import { browserStorage, type StorageLike } from '../social/wallet';
+import { BeastShow } from './beast-show';
 import { NinjaWarDirector, type NinjaTeamBattleState } from './ninja-war-director';
 import { DOOR_IN, DOOR_OUT, outdoorRoute, outdoorSpot, type OutdoorZone, type TilePoint } from './outdoors';
 import {
@@ -242,6 +243,8 @@ export class Sim {
   controlledIntent: VisitorIntent = { ...NO_INTENT };
   /** Bộ điều phối màn thi đấu team & đại chiến nhẫn giả kinh điển (3 phút/trận) */
   readonly ninjaWar: NinjaWarDirector;
+  /** Màn hoá hình và triệu hồi của dàn NPC (vĩ thú, Susanoo, Lục Đạo...). */
+  readonly beastShow: BeastShow;
   /** Trưởng phòng ảo cục bộ: só quando o scene do escritório pede (`SimMode.heads`). */
   private readonly withHeads: boolean;
 
@@ -256,6 +259,7 @@ export class Sim {
     this.withHeads = !this.visit && !!mode.heads;
     this.social = new Social(this, storage);
     this.ninjaWar = new NinjaWarDirector(this);
+    this.beastShow = new BeastShow(this);
     this.building = assembleBuilding(columnsFor([]), [], 0);
     this.finder = new PathFinder(this.building.grid);
     this.spots.setSpots(this.building.spots);
@@ -373,6 +377,15 @@ export class Sim {
       this.npcNinjaIds.add(def.id);
       this.outdoorPatrolIds.add(def.id);
     }
+  }
+
+  isInBattle(ch: Character): boolean {
+    return this.ninjaWar.isEngaged(ch);
+  }
+
+  battleActive(): boolean {
+    const phase = this.ninjaWar.getState()?.phase;
+    return !!phase && phase !== 'idle' && phase !== 'disperse';
   }
 
   /** Thuộc đội tuần tra ngoài nhà (không vào trong, không lên sàn đại chiến). */
@@ -532,7 +545,7 @@ export class Sim {
     for (const other of this.chars.values()) {
       if (other === ch || other.gone || other.leaving || !this.isLocalCast(other)) continue;
       if (other.gathering && other.gathering.phase !== 'ended') continue;
-      if (this.ninjaWar.isEngaged(other)) continue;
+      if (this.ninjaWar.isEngaged(other) || this.beastShow.isEngaged(other)) continue;
       const d = Math.abs(other.tx - ch.tx) + Math.abs(other.ty - ch.ty);
       if (d <= radius && d < bestD) {
         best = other;
@@ -1037,6 +1050,7 @@ export class Sim {
     this.updateRooms(now);
     this.social.update(now);
     this.ninjaWar.update(now);
+    if (this.withHeads) this.beastShow.update(now);
     if (this.roomFx.active.size) this.roomFx.update(this, now);
     for (const ch of this.chars.values()) {
       if (ch.missingSince !== null && !ch.leaving && now - ch.missingSince >= MISSING_DEBOUNCE_MS) this.refreshMode(ch);
@@ -1241,8 +1255,8 @@ export class Sim {
         const done = this.runStep(ch, ch.step, dt, now);
         ch.stepT += dt * 1000;
         if (done) { ch.step = null; ch.stepT = 0; ch.stepStarted = false; }
-      } else if (this.ninjaWar.isEngaged(ch)) {
-        // đang ở võ đài: bộ điều phối đại chiến giữ vị trí và tư thế
+      } else if (this.ninjaWar.isEngaged(ch) || this.beastShow.isEngaged(ch)) {
+        // đang ở võ đài hoặc đang hoá hình: bộ điều phối giữ vị trí và tư thế
       } else if (this.npcNinjaIds.has(ch.id)) {
         this.runNpcBehavior(ch, now);
       } else {

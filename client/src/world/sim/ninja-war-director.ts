@@ -352,6 +352,7 @@ export class NinjaWarDirector {
     this.nextClashAct = now;
 
     const { teamAChars, teamBChars } = this.state;
+    this.sim.beastShow?.onBattleClash([...teamAChars, ...teamBChars], now, this.state.phaseEndsAt);
     // Các đấu thủ lao sát vào giữa giao tranh
     teamAChars.forEach((ch, idx) => {
       ch.dir = 'right';
