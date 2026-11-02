@@ -9,20 +9,23 @@
   - Đại chiến 3 vs 3 mỗi 3 phút (`NinjaWarDirector`): mỗi cặp đánh tại một điểm riêng (`duelSpots`) rải dọc hành lang; chỉ NPC & trưởng phòng ảo lên sàn/làm khán giả.
   - Session thật (Claude/Codex/OpenCode): không bao giờ bị kéo vào trận; làm việc thì ngồi bàn, rảnh mới đi dạo (hành vi gốc). Có vệt sáng xanh dưới chân để phân biệt với NPC trùng tên.
   - Âm thanh Web Audio, Kuchiyose (Gamabunta/Manda/Katsuyu), Bingo Book, HUD WASD/C.
+  - Quota 9Router: nút trên thanh công cụ (`client/src/ui/router-quota.ts`), API `GET /api/router/quota` (`server/router-quota.ts`). Server hỏi 9Router mỗi 2 phút qua `/api/providers/client` + `/api/usage/:id`, lưu bản tốt gần nhất vào `<dataDir>/router-quota.json`; API trả bản lưu ngay và làm mới ở nền, `?force=1` mới chờ 9Router. Không lưu số mới khi 9Router chết, chỉ hiện bản cũ kèm giờ cập nhật.
 - **Chưa có / còn nợ (chủ dự án đã yêu cầu):**
   - Phòng dự án vẫn là bàn máy tính — chưa đổi thành bãi tập/địa danh Naruto (bản HANDOFF cũ ghi đã đổi là sai).
   - Vĩ thú, jinchūriki hoá hình, Thập Vĩ, Lục Đạo; skill riêng từng nhân vật chưa đủ đặc trưng.
   - Anbu/Root/cảnh vệ tuần tra ngoài toà nhà; bỏ xe chạy trên đường; cảnh làng ninja ở rừng/đường.
-  - Quota tracker 9router trong web (cockpit hiện chỉ đọc `/v1/models`, quota luôn `unknown`).
+  - Cockpit `server/router.ts` vẫn chỉ đọc `/v1/models` (endpoint này hay treo khi 9Router quá tải) nên Dinh Hokage vẫn ghi quota `unknown`; chưa nối với dữ liệu quota mới.
 
 ## Bẫy đã gặp
 - `client/src/ui/index.ts`: component gọi `ctx.invalidate()` ngay trong constructor → `rafId`/`hiddenTimer` phải khai báo trước khi tạo component (lỗi TDZ từng làm sập toàn bộ UI).
 - `NinjaWarDirector.subscribe` gọi callback ngay lập tức.
 - `startInstantDuel` phải đẩy bước `gather` để áp tư thế và nhả `ch.gathering` khi trận kết thúc.
 - `git stash@{0}` "backup-phien-truoc-khi-lui" (30/10) vẫn còn, chưa ai rà nội dung.
+- `usage.ts fit()` phải theo dõi cả các khối cạnh thẻ quota: chúng rộng ra sau khi tải trang mà cửa sổ không đổi cỡ, thẻ sẽ đè lên nút (đã sửa bằng ResizeObserver).
+- Server dev bật qua khung xem trước của Claude desktop (`npm run dev`) từng treo trước `listen`, không rõ nguyên nhân; chạy `node node_modules/tsx/dist/cli.mjs watch ... --dev < /dev/null` thì lên bình thường.
 
 ## Kiểm thử & Build
 - `npx tsc --noEmit -p tsconfig.json`: 0 lỗi.
-- `npx vitest run client/src/world/sim/`: 90/90 pass (gồm `ninja-cast.test.ts`).
+- `npx vitest run client/src/world/sim/`: 90/90 pass (gồm `ninja-cast.test.ts`). `server/router-quota.test.ts`: 8/8 pass.
 - Toàn bộ `vitest run`: còn các test hỏng có sẵn từ trước (art, server process/openssl, shared/demo, timeline/timelapse) — đã đối chiếu, hỏng y hệt trên code trước bản sửa.
 - Chụp màn hình headless: `playwright-core` của repo + Edge, trỏ vào `http://127.0.0.1:4747` (server `npm run dev`, Vite middleware).

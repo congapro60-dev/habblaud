@@ -25,6 +25,7 @@ import { HOST_WAIT_MS } from '../host-wait';
 import { WorkOrderError, type WorkOrderStore } from '../work-orders';
 import { assertDepartmentDispatch, CoordinationError } from '../../shared/work-orders';
 import type { RouterService } from '../router';
+import type { RouterQuotaService } from '../router-quota';
 import { ConversationError, type ConversationStore } from '../conversations';
 import { departmentForRuntime, departmentSnapshot, headIdFor } from '../departments';
 import type { OpenCodeRuntime } from '../runtime/opencode';
@@ -104,6 +105,8 @@ export interface ApiDeps {
   /** WorkOrders da sala do diretor; só pela porta local e com a trava do terminal. */
   workOrders?: WorkOrderStore;
   router?: RouterService;
+  /** Quota das contas do 9Router com a última leitura boa salva (só pelo próprio computador). */
+  routerQuota?: RouterQuotaService;
   conversations?: ConversationStore;
   runtime?: OpenCodeRuntime;
   orchestration?: WorkOrderOrchestrator;
@@ -482,6 +485,14 @@ export function createApiHandler(deps: ApiDeps): (req: IncomingMessage, res: Ser
       else if (!deps.router) sendJson(res, 404, { error: tr('9Router não configurado') });
       else if (!trusted(req, 'terminal')) sendJson(res, 403, { error: denied(req, tr('o cockpit do 9Router só funciona pelo próprio computador')) });
       else deps.router.refresh().then((catalog) => sendJson(res, 200, catalog), (err) => fail(res, err));
+      return true;
+    }
+    if (path === '/api/router/quota') {
+      if (!isRead) methodNotAllowed(res, 'GET');
+      else if (!deps.routerQuota) sendJson(res, 404, { error: tr('9Router não configurado') });
+      else if (!trusted(req, 'terminal')) sendJson(res, 403, { error: denied(req, tr('o cockpit do 9Router só funciona pelo próprio computador')) });
+      else if (url.searchParams.get('force') === '1') deps.routerQuota.refresh(true).then((snap) => sendJson(res, 200, snap), (err) => fail(res, err));
+      else sendJson(res, 200, deps.routerQuota.current());
       return true;
     }
     if (path === '/api/departments') {

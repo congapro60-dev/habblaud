@@ -214,8 +214,15 @@ export class UsageCards {
       update: (el, a) => this.updateCard(el, a),
     });
     // A largura da janela mudou: refaz a conta de cabem-ou-não (ver fit()).
-    if (typeof ResizeObserver === 'function') new ResizeObserver(() => this.fit()).observe(ctx.root);
+    if (typeof ResizeObserver === 'function') {
+      this.resize = new ResizeObserver(() => this.fit());
+      this.resize.observe(ctx.root);
+    }
   }
+
+  private resize: ResizeObserver | null = null;
+  /** Os vizinhos da barra já estão sendo observados (ver fit()). */
+  private watchingBar = false;
 
   render(): void {
     const accounts = this.ctx.store.snapshot?.accounts ?? [];
@@ -242,6 +249,12 @@ export class UsageCards {
   private fit(): void {
     const bar = this.el.parentElement;
     if (!bar) return;
+    // Os vizinhos também crescem depois da carga (contadores, selos, botões novos), sem a janela mudar: sem observá-los
+    // os cartões ficariam por cima dos botões até o próximo redimensionamento.
+    if (this.resize && !this.watchingBar) {
+      this.watchingBar = true;
+      for (const c of bar.children) if (c !== this.el) this.resize.observe(c);
+    }
     if (window.matchMedia('(max-width: 600px)').matches) {
       this.ctx.root.classList.remove('has-usage-row');
       return;

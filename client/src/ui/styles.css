@@ -11618,3 +11618,28 @@ html.is-replay #world {
     font-size: 10.5px;
   }
 }
+
+/* Quota 9Router (router-quota.ts): uma conta por bloco, barra = quanto sobra na janela. */
+.ui-quota { width: min(420px, calc(100vw - 20px)); max-height: min(720px, calc(100vh - 84px)); overflow: auto; padding: 14px; }
+.ui-quota__head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.ui-quota__head strong { flex: 1; font-size: 13px; }
+.ui-quota__refresh { padding: 4px 10px; border: 1px solid var(--ui-line-strong); border-radius: var(--radius-sm); background: var(--ui-accent-soft); }
+.ui-quota__close { font-size: 20px; line-height: 1; background: transparent; border: 0; color: var(--ui-muted); }
+.ui-quota__status { margin: 6px 0 10px; color: var(--ui-muted); font-size: 11px; }
+.ui-quota__status.is-warn, .ui-quota__note.is-warn { color: #f5b14c; }
+.ui-quota__acct { border-top: 1px solid var(--ui-line); padding: 10px 0 6px; }
+.ui-quota__acct.is-dim { opacity: .6; }
+.ui-quota__acct-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; margin-bottom: 4px; }
+.ui-quota__provider { font: 600 10px var(--font-px); text-transform: uppercase; color: var(--ui-accent); }
+.ui-quota__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--ui-text); }
+.ui-quota__meta, .ui-quota__reset, .ui-quota__note, .ui-quota__empty { color: var(--ui-muted); font-size: 10.5px; }
+.ui-quota__note { margin: 2px 0 4px; }
+.ui-quota__win { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(50px, 1fr) 34px 86px; align-items: center; gap: 8px; margin: 3px 0; font-size: 11px; }
+.ui-quota__win-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-quota__win-value { text-align: right; font-variant-numeric: tabular-nums; color: var(--ui-text); }
+.ui-quota__bar { height: 6px; border-radius: 3px; background: var(--ui-bg-soft); border: 1px solid var(--ui-line); overflow: hidden; }
+.ui-quota__fill { height: 100%; border-radius: 2px; background: #4ade80; }
+.ui-quota__bar.is-low .ui-quota__fill { background: #f5b14c; }
+.ui-quota__bar.is-out .ui-quota__fill { background: #ef4444; }
+.ui-quota__bar.is-na .ui-quota__fill { background: transparent; }
+.ui-btn-quota.is-warn { color: #f5b14c; }

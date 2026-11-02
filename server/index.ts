@@ -62,6 +62,7 @@ import { BuildingUplink } from './world/uplink';
 import { WorldViewer } from './world/viewer';
 import { WorkOrderStore } from './work-orders';
 import { RouterService } from './router';
+import { RouterQuotaService } from './router-quota';
 import { ConversationStore } from './conversations';
 import { OpenCodeRuntime } from './runtime/opencode';
 import { WorkOrderOrchestrator } from './orchestration';
@@ -88,6 +89,8 @@ try {
   log.warn(tr('Sala do diretor indisponível: {0}', [errMsg(error)]));
 }
 const router = new RouterService(process.env);
+// Quota das contas do 9Router: consulta a cada 2 min e guarda a última leitura boa (aparece mesmo com o 9Router fora)
+const routerQuota = new RouterQuotaService(join(config.dataDir, 'router-quota.json'), process.env);
 const conversations = new ConversationStore(join(config.dataDir, 'conversations.ndjson'));
 try { conversations.load(); } catch (error) { log.warn(tr('Kho conversation indisponível: {0}', [errMsg(error)])); }
 const runtime = new OpenCodeRuntime({ store: workOrders, env: process.env });
@@ -349,6 +352,7 @@ permissions?.start();
 messages?.start();
 stats.start();
 updates.start();
+routerQuota.start();
 worldUplink?.start();
 const ticker = setInterval(() => {
   try {
@@ -398,6 +402,7 @@ const api = createApiHandler({
   world: world ? createWorldRoutes(world, worldViewer, worldSocial) : undefined,
   workOrders,
   router,
+  routerQuota,
   conversations,
   runtime,
   orchestration,
@@ -580,6 +585,7 @@ function shutdown(signal: string): void {
   messages?.stop();
   ptys?.stopAll();
   updates.stop();
+  routerQuota.stop();
   worldViewer?.stop();
   worldUplink?.stop();
   world?.stop();

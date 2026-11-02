@@ -42,6 +42,7 @@ import { WorldChip } from './world/world-chip';
 import { WorldDialog } from './world/world-dialog';
 import { WorldSocialNotifier } from './world/away-summary';
 import { DirectorRoom } from './director-room';
+import { RouterQuotaPanel } from './router-quota';
 // Modal 2D BattleArena removed
 import { NinjaControlHud } from './ninja-control-hud';
 import { NinjaWarBanner } from './ninja-war-banner';
@@ -223,6 +224,8 @@ export function createUI(root: HTMLElement, store: OfficeStore, world: WorldApi,
   topbar.panelGroup.prepend(deliveries.button);
   const director = new DirectorRoom(ctx);
   topbar.addPanelButton(director.button);
+  const routerQuota = new RouterQuotaPanel(ctx);
+  topbar.addPanelButton(routerQuota.button);
   // BattleArena modal popup 2D đã được gỡ bỏ theo yêu cầu người dùng (chỉ tỉ thí ngoài đời)
   // Links com ?agent= / ?delivery= (abrem o agente ou a entrega ao carregar).
   const openLink = (url: URL) => {
@@ -300,7 +303,7 @@ export function createUI(root: HTMLElement, store: OfficeStore, world: WorldApi,
   const scrim = h('div', { class: 'ui-scrim', attrs: { 'aria-hidden': 'true' }, on: { click: () => ctx.togglePanel('sidebar', false) } });
 
   root.classList.add('ui-root');
-  root.append(timelapse.vignette, topbar.el, sidebar.el, scrim, feed.el, drawer.el, terminal.el, pty.el, timelapse.el, timelapse.badge, toasts.el, banner.el, update.el, empty.el, popups.el, tip.el, settings.el, worldDialog.el, history.el, deliveries.el, director.el, help.el, renamer.el, live, splash.el, ninjaHud.el, ninjaWarBanner.el);
+  root.append(timelapse.vignette, topbar.el, sidebar.el, scrim, feed.el, drawer.el, terminal.el, pty.el, timelapse.el, timelapse.badge, toasts.el, banner.el, update.el, empty.el, popups.el, tip.el, settings.el, worldDialog.el, history.el, deliveries.el, director.el, routerQuota.el, help.el, renamer.el, live, splash.el, ninjaHud.el, ninjaWarBanner.el);
   area = new FreeArea(world, { root, topbar: topbar.el, sidebar: sidebar.el, drawer: drawer.el, feed: feed.el }, () => ({
     sidebar: panels.sidebar,
     feed: panels.feed,
@@ -309,7 +312,7 @@ export function createUI(root: HTMLElement, store: OfficeStore, world: WorldApi,
   }));
   drawer.onLayoutChange = () => applyLayout();
 
-  const components: UiComponent[] = [topbar, sidebar, drawer, terminal, pty, history, deliveries, director, feed, toasts, settings, empty, banner, tip, notifier, splash, timelapse, sound, day, updateToaster, worldDialog, popups, worldChip, ninjaHud, ninjaWarBanner];
+  const components: UiComponent[] = [topbar, sidebar, drawer, terminal, pty, history, deliveries, director, routerQuota, feed, toasts, settings, empty, banner, tip, notifier, splash, timelapse, sound, day, updateToaster, worldDialog, popups, worldChip, ninjaHud, ninjaWarBanner];
   if (scene) components.push(scene);
   root.append(worldSocial.el);
   components.push(worldSocial);

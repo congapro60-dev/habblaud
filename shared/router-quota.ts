@@ -1,0 +1,55 @@
+// Quota das contas do 9Router como o Habblaud expõe em /api/router/quota (só leitura, sem credenciais).
+
+export interface RouterQuotaWindow {
+  key: string;
+  label: string;
+  used: number | null;
+  total: number | null;
+  /** 0..100; null quando o 9Router não informa nada utilizável. */
+  remainingPct: number | null;
+  resetAt: string | null;
+  unlimited: boolean;
+}
+
+export interface RouterQuotaAccount {
+  id: string;
+  provider: string;
+  /** Nome da conexão no 9Router (geralmente o e-mail da conta). */
+  label: string;
+  /** testStatus do 9Router: active, unavailable... */
+  status: string;
+  plan: string | null;
+  /** Aviso do 9Router para a conta (ex.: precisa reconectar). */
+  message: string | null;
+  limitReached: boolean;
+  windows: RouterQuotaWindow[];
+  /** Quando estes números foram lidos com sucesso (ms); null = nunca. */
+  fetchedAt: number | null;
+  /** Erro da última tentativa; os números acima continuam os da última leitura boa. */
+  error: string | null;
+}
+
+/**
+ * Janelas para olhar de relance: quando a conta tem totais (`gemini_weekly`, `claude_gpt_session`...), as linhas por
+ * modelo só repetem o mesmo limite; senão mostra tudo.
+ */
+export function summaryWindows(windows: readonly RouterQuotaWindow[]): RouterQuotaWindow[] {
+  const totals = windows.filter((w) => /_(weekly|session)$/.test(w.key));
+  return totals.length ? totals : [...windows];
+}
+
+/** Contas ativas primeiro; dentro de cada grupo, a ordem do 9Router (prioridade). */
+export function accountsForDisplay(accounts: readonly RouterQuotaAccount[]): RouterQuotaAccount[] {
+  return [...accounts.filter((a) => a.status === 'active'), ...accounts.filter((a) => a.status !== 'active')];
+}
+
+export interface RouterQuotaSnapshot {
+  baseUrl: string;
+  /** ok = a última consulta respondeu; unavailable = 9Router não respondeu (mostrando a cópia salva). */
+  health: 'ok' | 'unavailable' | 'unknown';
+  checkedAt: number | null;
+  /** Última vez que a lista de contas veio do 9Router. */
+  fetchedAt: number | null;
+  error: string | null;
+  accounts: RouterQuotaAccount[];
+}
