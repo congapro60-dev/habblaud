@@ -23,6 +23,7 @@
 - `NinjaWarDirector.subscribe` gọi callback ngay lập tức.
 - `startInstantDuel` phải đẩy bước `gather` để áp tư thế và nhả `ch.gathering` khi trận kết thúc.
 - `git stash@{0}` "backup-phien-truoc-khi-lui" (30/10) vẫn còn, chưa ai rà nội dung.
+- 32 ảnh avatar nhân vật (`client/public/assets/ninja/avatars/`) chỉ để trên máy cá nhân, đã gỡ khỏi repo và nằm trong `.gitignore`; thiếu ảnh thì app tự dùng avatar pixel. Lịch sử git cũ vẫn còn ảnh (trước commit gỡ); lấy lại bằng `git checkout 330201c -- client/public/assets/ninja/avatars`. `git clean -x` sẽ xoá các file này.
 - `usage.ts fit()` phải theo dõi cả các khối cạnh thẻ quota: chúng rộng ra sau khi tải trang mà cửa sổ không đổi cỡ, thẻ sẽ đè lên nút (đã sửa bằng ResizeObserver).
 - Server dev bật qua khung xem trước của Claude desktop (`npm run dev`) từng treo trước `listen`, không rõ nguyên nhân; chạy `node node_modules/tsx/dist/cli.mjs watch ... --dev < /dev/null` thì lên bình thường.
 

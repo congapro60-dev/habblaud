@@ -8,3 +8,6 @@ scripts/assets/.cache/
 
 # Configurações locais do Claude Code e caches de geração
 .claude/
+
+# Ảnh avatar nhân vật: chỉ để trên máy cá nhân, không đưa lên repo công khai (thiếu ảnh thì app tự dùng avatar pixel)
+client/public/assets/ninja/avatars/

@@ -54,22 +54,30 @@ export function updateAvatar(box: HTMLElement, agent: AvatarSource, size: Avatar
     box.append(img);
   }
 
+  const image = img;
+  const usePixelArt = () => {
+    image.onerror = null;
+    box.classList.remove('ui-avatar--official-ninja');
+    try {
+      const data = avatarData(agent, SCALE[size]);
+      image.width = data.w;
+      image.height = data.h;
+      image.src = data.url;
+    } catch (err) {
+      // A arte ainda pode estar em construção; a moldura vazia continua legível.
+      console.warn('[ui] falha ao gerar avatar', err);
+    }
+  };
+
   if (ninjaUrl) {
     box.classList.add('ui-avatar--official-ninja');
+    // ảnh avatar chỉ có trên máy cá nhân, không nằm trong repo: thiếu thì về avatar pixel
+    img.onerror = usePixelArt;
     img.src = ninjaUrl;
     img.width = PX_SIZE[size];
     img.height = PX_SIZE[size];
     return;
   }
 
-  box.classList.remove('ui-avatar--official-ninja');
-  try {
-    const data = avatarData(agent, SCALE[size]);
-    img.width = data.w;
-    img.height = data.h;
-    img.src = data.url;
-  } catch (err) {
-    // A arte ainda pode estar em construção; a moldura vazia continua legível.
-    console.warn('[ui] falha ao gerar avatar', err);
-  }
+  usePixelArt();
 }

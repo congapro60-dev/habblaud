@@ -5,7 +5,10 @@ import type { UiComponent, UiContext } from './context';
 import { h, setHidden, setText } from './dom';
 import { resolveNinjaAvatarUrl } from './avatar';
 import { intentFrom, moveKeyOf } from '../world/city/input';
-import { modalOpen } from '../world/input';
+import { modalOpen } from '../world/input';
+
+/** Ảnh avatar đã thử tải và không có trên máy này. */
+const missingAvatars = new Set<string>();
 
 function isTyping(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
@@ -213,7 +216,13 @@ export class NinjaControlHud implements UiComponent {
 
     // Avatar
     const avatarUrl = resolveNinjaAvatarUrl(activeAgent.name);
-    if (avatarUrl) {
+    if (avatarUrl && !missingAvatars.has(avatarUrl)) {
+      // ảnh avatar chỉ có trên máy cá nhân, không nằm trong repo: thiếu thì dùng hình dự phòng
+      this.avatarImg.onerror = () => {
+        missingAvatars.add(avatarUrl);
+        setHidden(this.avatarImg, true);
+        setHidden(this.avatarFallback, false);
+      };
       this.avatarImg.src = avatarUrl;
       setHidden(this.avatarImg, false);
       setHidden(this.avatarFallback, true);
