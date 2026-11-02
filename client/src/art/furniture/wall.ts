@@ -13,7 +13,7 @@ function wallShadow(b: import('../core/pixbuf').PixelBuf, x: number, y: number, 
 export function whiteboard(): BufFurniture {
   const s = wallSheet(3);
   const b = s.buf;
-  const frame = ramp('#c3cad4', 0.06);
+  const frame = ramp('#7a4f2a', 0.06);
   const x = 2;
   const y = -27;
   const w = 44;
@@ -23,7 +23,7 @@ export function whiteboard(): BufFurniture {
   b.vline(x, y, y + h - 1, frame.lt);
   b.vline(x + w - 1, y, y + h - 1, frame.dk);
   b.hline(x, x + w - 1, y + h - 1, frame.dk);
-  b.rect(x + 1, y + 1, w - 2, h - 2, '#fbfcfd');
+  b.rect(x + 1, y + 1, w - 2, h - 2, '#efe3c5');
   // Bản đồ bí mật tác chiến nhẫn giả & ấn chú trên bảng
   b.line(x + 6, y + 5, x + 20, y + 5, '#dc2626');
   b.line(x + 12, y + 5, x + 12, y + 14, '#dc2626');
@@ -34,8 +34,6 @@ export function whiteboard(): BufFurniture {
   b.set(x + 8, y + 9, '#1e293b');
   b.set(x + 9, y + 8, '#1e293b');
   b.set(x + 10, y + 9, '#1e293b');
-  // Reflexo sutil.
-  b.line(x + 38, y + 1, x + 34, y + h - 2, 'rgba(210,225,240,0.5)');
   // Bandeja com pincéis e apagador.
   b.rect(x + 3, y + h, w - 6, 2, frame.base);
   b.hline(x + 3, x + w - 4, y + h, frame.lt);

@@ -20,6 +20,7 @@ import { daylightModeOf, parseHourParam } from './daylight';
 import { RoomFxRenderer } from './github-fx';
 import { Lighting } from './lighting';
 import { Particles } from './particles';
+import { drawTrainingBoard } from '../../art/training-board';
 import { propSprite, shadowSprite } from './props';
 import { countBadge, fallbackIcon } from './shell-sprites';
 import { decorateElevator, drawSeasonalLights, drawSeasonalWindow, seasonalCostume, seasonalFurniture } from './seasonal';
@@ -926,7 +927,7 @@ export class Renderer {
       if (f.kind === 'desk' && s.rects?.screen) {
         const r = s.rects.screen;
         const mode = this.deskScreen(f, area);
-        this.safe(() => this.art.drawScreen(ctx, { x: dx + r.x, y: dy + r.y, w: r.w, h: r.h }, mode, now, f.seed));
+        this.safe(() => drawTrainingBoard(ctx, { x: dx + r.x, y: dy + r.y, w: r.w, h: r.h }, mode, now, f.seed));
       } else if (f.kind === 'coffee_machine' && state === 1) {
         this.drawSteam(f.ax, dy + 2, now, f.seed);
       } else if (f.kind === 'arcade' && s.rects?.screen) {

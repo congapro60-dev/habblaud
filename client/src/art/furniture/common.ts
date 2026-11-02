@@ -217,10 +217,10 @@ export function vendingMachine(): BufFurniture {
 export function cafeTable(): BufFurniture {
   const s = floorSheet(1, 1, 4);
   const b = s.buf;
-  b.ellipse(8, 14.5, 3.5, 1.3, '#3a3f4b');
-  b.rect(7, 7, 2, 7, '#4a505c');
-  b.vline(7, 7, 13, '#6b7282');
-  const t = ramp('#f2efe8', 0.05);
+  b.ellipse(8, 14.5, 3.5, 1.3, '#3a2614');
+  b.rect(7, 7, 2, 7, '#5c3d24');
+  b.vline(7, 7, 13, '#7a4f2a');
+  const t = ramp('#a97a3e', 0.05);
   b.ellipse(8, 5.5, 7, 3.5, t.dk);
   b.ellipse(8, 4.8, 7, 3.2, t.lt);
   b.set(4, 3, t.hi);
@@ -288,7 +288,7 @@ export function cafeChair(variant: string | undefined): BufFurniture {
 
 // ------------------------------------------------------------------ lounge
 
-const SOFA = ramp('#5b7fbd', 0.07);
+const SOFA = ramp('#7a5a3a', 0.07); // ghế gỗ bọc vải nâu của võ đường
 const PILLOW = ramp('#ee8d3e', 0.07);
 
 function pillow(b: PixelBuf, x: number, y: number): void {

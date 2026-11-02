@@ -272,7 +272,8 @@ export const FURNITURE: Readonly<Record<FurnitureKind, FurnitureDef>> = {
 };
 
 export type FloorKind =
-  | 'carpet' // salas de projeto (usa tint/tint2 do tema da sala)
+  | 'carpet' // (usa tint/tint2 do tema da sala)
+  | 'tatami' // salas de projeto: chiếu rơm viền xanh của võ đường
   | 'wood' // lounge
   | 'tile_check' // copa (xadrez)
   | 'tile_white' // banheiro

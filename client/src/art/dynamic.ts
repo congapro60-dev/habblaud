@@ -620,7 +620,7 @@ export function drawBoard(ctx: Ctx, r: Rect, items: readonly { status: 'pending'
   const header = ['#f2b33d', '#3f7fd8', '#3fae5c'];
   for (let c = 0; c < 3; c++) {
     fill(ctx, x + c * colW + 1, y, colW - 2, 1, header[c]);
-    if (c > 0) fill(ctx, x + c * colW - 1, y + 2, 1, h - 3, '#e1e6ec');
+    if (c > 0) fill(ctx, x + c * colW - 1, y + 2, 1, h - 3, '#cdbb95');
   }
   const order = ['pending', 'in_progress', 'completed'] as const;
   const per = colW >= 11 ? 2 : 1;

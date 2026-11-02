@@ -471,9 +471,9 @@ export class Lighting {
         if (f.kind === 'desk' || f.kind === 'desk_back') {
           const mode = scene.deskScreen(f, vis);
           if (mode === 'off') continue;
-          // quem trabalha à noite fica com o rosto iluminado pela tela
+          // ban đêm bàn tập có ánh đèn dầu ấm khi có người
           ctx.globalAlpha = (mode === 'idle' ? 0.2 : 0.35) * k;
-          ctx.drawImage(cool, Math.round(f.ax - 24), Math.round(f.ay - 34));
+          ctx.drawImage(warm, Math.round(f.ax - 32), Math.round(f.ay - 42));
         } else if (f.kind === 'floor_lamp' && n > 0.2 && (!room || room.lightOn)) {
           // bulbo aceso (o halo no chão está no mapa de luz)
           const g = this.lampHead(f);

@@ -103,6 +103,20 @@ function paintTile(b: PixelBuf, kind: FloorKind, tx: number, ty: number, o: Floo
       b.vline(0, 0, TILE - 2, shade(base, 0.025));
       break;
     }
+    case 'tatami': {
+      // Chiếu dài 2 ô, so le theo hàng; vân rơm ngang và viền xanh ở hai đầu chiếu.
+      const base = '#c6bb82';
+      b.rect(0, 0, TILE, TILE, base);
+      for (let a = 1; a < TILE; a += 2) b.hline(0, TILE - 1, a, shade(base, -0.035));
+      for (let i = 0; i < 4; i++) b.set(Math.floor(r(i) * 15), Math.floor(r(i + 9) * 15), shade(base, i % 2 ? 0.05 : -0.07));
+      b.hline(0, TILE - 1, TILE - 1, '#3f5a3a');
+      b.hline(0, TILE - 1, 0, shade(base, 0.05));
+      if ((tx + (ty & 1)) % 2 === 0) {
+        b.rect(0, 0, 2, TILE, '#4c6b45');
+        b.vline(2, 0, TILE - 1, shade(base, -0.1));
+      }
+      break;
+    }
     case 'tile_check': {
       const a = '#f2ede4';
       const c = '#d2d8de';

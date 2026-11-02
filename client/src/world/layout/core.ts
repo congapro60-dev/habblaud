@@ -33,7 +33,7 @@ export const ELEVATOR_CX = [3, 6.5] as const;
 export function layoutReception(): AreaLayout {
   const b = new AreaBuilder(RECEPTION_ID, 'reception', { x: 0, y: NORTH_Y, w: COL_W, h: ROOM_H });
   const wall = CORE_WALLS.reception;
-  b.floor('marble', 0, 0, 16, 12, 101);
+  b.floor('tatami', 0, 0, 16, 12, 101);
   b.rug(1.5, 2.2, 6.5, 2.6, '#3d5a80', 102);
   b.rug(8.6, 6.4, 5.2, 3.2, '#b65f3a', 103);
   b.face(0.5, 15, wall);
@@ -263,7 +263,7 @@ export function layoutLounge(): AreaLayout {
 function layoutDepartment(id: string, col: number, side: 'north' | 'south', seed: number, wall: WallStyle): AreaLayout {
   const b = new AreaBuilder(id, 'department', { x: col * COL_W, y: side === 'north' ? NORTH_Y : SOUTH_Y, w: COL_W, h: ROOM_H });
   const north = side === 'north';
-  b.floor('marble', 0, 0, 16, 12, seed, '#dce4ec', '#c5d0dc');
+  b.floor('tatami', 0, 0, 16, 12, seed);
   b.rug(2, 3, 7, 5, wall.trim ?? wall.base, seed + 1);
   if (north) b.face(0.5, 15, wall);
   else b.face(0.5, 15, wall, [{ lx: DOOR_X, w: DOOR_W }]);
