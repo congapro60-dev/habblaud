@@ -43,6 +43,8 @@ export interface VisitWorld {
 }
 
 export interface CreateWorldOptions {
+  /** Giới hạn số khung hình mỗi giây (chế độ màn hình nền). */
+  maxFps?: number;
   /**
    * Visita a um prédio do mundo (cena Visita): `Sim` sem nada que dependa do tempo do status (SimMode.visit), o
    * visitante andando com o teclado e o clique (a câmera o segue) e as carteiras da vida social na chave `world:`.
@@ -311,8 +313,10 @@ export function createWorld(canvas: HTMLCanvasElement, store: OfficeStore, o: Cr
 
   // ------------------------------------------------------------------ laço
 
+  const minFrameMs = o.maxFps ? 1000 / o.maxFps : 0;
   const loop = (ts: number) => {
     raf = requestAnimationFrame(loop);
+    if (minFrameMs && lastTs && ts - lastTs < minFrameMs - 1) return;
     const real = Date.now();
     const realDt = lastTs ? Math.min(0.1, Math.max(0, (ts - lastTs) / 1000)) : 1 / 60;
     lastTs = ts;

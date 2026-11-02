@@ -9,6 +9,9 @@ import type { CityScene } from './world/city';
 import { migrateLegacyKeys, safeLocalStorage } from './ui/prefs';
 import { getLocale, tr } from '../../shared/i18n';
 
+/** Hình nền chạy suốt ngày nên giới hạn khung hình để đỡ tốn CPU và GPU. */
+const WALLPAPER_FPS = 20;
+
 export function start(): void {
   // Antes de tudo: o mundo (carteiras) e a UI (preferências) leem o localStorage ao serem criados.
   migrateLegacyKeys(safeLocalStorage());
@@ -24,9 +27,12 @@ export function start(): void {
   const store = new OfficeStore({ mock: params.has('mock') });
   const worldCanvas = document.getElementById('world') as HTMLCanvasElement;
   const uiRoot = document.getElementById('ui') as HTMLElement;
-  const world = createWorld(worldCanvas, store);
-  const city = cityHost({ world, worldCanvas, uiRoot, mock: store.mock, params, version: () => store.liveSnapshot?.meta.version ?? '' });
-  createUI(uiRoot, store, world, city);
+  // Chế độ màn hình nền (?wallpaper=1, xem Lively Wallpaper): chỉ còn thế giới, không bảng điều khiển, không âm thanh.
+  const wallpaper = params.has('wallpaper');
+  const world = createWorld(worldCanvas, store, wallpaper ? { maxFps: WALLPAPER_FPS } : {});
+  const city = wallpaper ? undefined : cityHost({ world, worldCanvas, uiRoot, mock: store.mock, params, version: () => store.liveSnapshot?.meta.version ?? '' });
+  if (wallpaper) uiRoot.hidden = true;
+  else createUI(uiRoot, store, world, city);
   // O que esta página pode fazer (porta local ou remota com login) chega antes do primeiro snapshot (ou desiste em
   // poucos segundos e fica a regra de antes).
   if (store.mock) store.connect();

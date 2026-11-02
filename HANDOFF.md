@@ -18,6 +18,11 @@
   - Tên chiêu của vĩ thú có thể bị bảng tên phòng che (bảng tên phòng là lớp DOM nằm trên canvas). Năm vĩ thú chưa có NPC jinchūriki nên hiện ra trong rừng thay vì hoá hình.
   - Cockpit `server/router.ts` vẫn chỉ đọc `/v1/models` (endpoint này hay treo khi 9Router quá tải) nên Dinh Hokage vẫn ghi quota `unknown`; chưa nối với dữ liệu quota mới.
 
+## Màn hình nền (chỉ cấu hình trên máy chủ dự án, ngoài repo)
+- Client: `?wallpaper=1` ẩn toàn bộ UI, giới hạn 20 khung/giây (`client/src/app.ts`, `maxFps` trong `world/index.ts`).
+- Server: tác vụ Task Scheduler `Habblaud Local Service` chạy `~/.habblaud/start-habblaud.vbs` khi đăng nhập, dùng **bản build** `dist/`. Sửa code xong phải `npm run build` rồi khởi động lại server thì hình nền mới đổi; `npm run dev` sẽ đụng cổng 4747 nên phải tắt server này trước.
+- Lively Wallpaper: mục thư viện ở `%LOCALAPPDATA%\Lively Wallpaper\Library\wallpapers\habblaud` (Type 3 = URL).
+
 ## Bẫy đã gặp
 - `client/src/ui/index.ts`: component gọi `ctx.invalidate()` ngay trong constructor → `rafId`/`hiddenTimer` phải khai báo trước khi tạo component (lỗi TDZ từng làm sập toàn bộ UI).
 - `NinjaWarDirector.subscribe` gọi callback ngay lập tức.
