@@ -11,8 +11,8 @@ const LIST_TIMEOUT_MS = 10_000;
 const USAGE_TIMEOUT_MS = 25_000;
 /** Consulta em segundo plano: a cópia salva fica em dia mesmo sem ninguém olhando. */
 const POLL_MS = 120_000;
-/** Pedidos da interface dentro desta janela reaproveitam a última consulta. */
-const CACHE_MS = 30_000;
+/** Pedidos da interface dentro desta janela reaproveitam a última consulta (cada consulta chega até os provedores). */
+const CACHE_MS = 60_000;
 const MAX_PAGES = 10;
 const CONCURRENCY = 3;
 

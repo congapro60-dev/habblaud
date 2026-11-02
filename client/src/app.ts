@@ -4,6 +4,7 @@ import { loadAccess } from './net/access';
 import { OfficeStore } from './net/store';
 import { createWorld, type WorldApi } from './world';
 import { createUI } from './ui';
+import { mountWallpaperHud } from './ui/wallpaper-hud';
 import type { CitySceneHost } from './ui/world/scene-switch';
 import type { CityScene } from './world/city';
 import { migrateLegacyKeys, safeLocalStorage } from './ui/prefs';
@@ -31,8 +32,10 @@ export function start(): void {
   const wallpaper = params.has('wallpaper');
   const world = createWorld(worldCanvas, store, wallpaper ? { maxFps: WALLPAPER_FPS } : {});
   const city = wallpaper ? undefined : cityHost({ world, worldCanvas, uiRoot, mock: store.mock, params, version: () => store.liveSnapshot?.meta.version ?? '' });
-  if (wallpaper) uiRoot.hidden = true;
-  else createUI(uiRoot, store, world, city);
+  if (wallpaper) {
+    uiRoot.classList.add('ui-root', 'is-wallpaper');
+    mountWallpaperHud(uiRoot, world);
+  } else createUI(uiRoot, store, world, city);
   // O que esta página pode fazer (porta local ou remota com login) chega antes do primeiro snapshot (ou desiste em
   // poucos segundos e fica a regra de antes).
   if (store.mock) store.connect();

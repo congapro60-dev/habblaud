@@ -11643,3 +11643,26 @@ html.is-replay #world {
 .ui-quota__bar.is-out .ui-quota__fill { background: #ef4444; }
 .ui-quota__bar.is-na .ui-quota__fill { background: transparent; }
 .ui-btn-quota.is-warn { color: #f5b14c; }
+
+/* Chế độ màn hình nền (wallpaper-hud.ts): quota thu gọn ở góc phải và nút zoom. */
+#ui.is-wallpaper { pointer-events: none; }
+.ui-wall-quota, .ui-wall-zoom { position: fixed; right: 16px; pointer-events: auto; color: #e8ecf5; background: rgba(14, 17, 24, 0.78); border: 1px solid rgba(160, 176, 210, 0.24); border-radius: 10px; font: 12px/1.35 var(--font-ui); }
+.ui-wall-quota { top: 16px; width: 290px; max-height: calc(100vh - 150px); overflow: hidden; padding: 9px 11px; }
+.ui-wall-quota > strong { font-size: 12.5px; }
+.ui-wall-quota__status { margin-bottom: 5px; color: #9aa4b8; font-size: 10.5px; }
+.ui-wall-quota.is-down .ui-wall-quota__status { color: #f5b14c; }
+.ui-wall-quota__acct { padding: 4px 0; border-top: 1px solid rgba(160, 176, 210, 0.14); }
+.ui-wall-quota__name { overflow: hidden; color: #c9d2e3; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.ui-wall-quota__win { display: grid; grid-template-columns: 82px minmax(30px, 1fr) 30px 24px; align-items: center; gap: 5px; font-size: 10.5px; }
+.ui-wall-quota__win > span:first-child { overflow: hidden; color: #9aa4b8; text-overflow: ellipsis; white-space: nowrap; }
+.ui-wall-quota__win > b { display: block; height: 5px; overflow: hidden; border-radius: 3px; background: rgba(255, 255, 255, 0.1); }
+.ui-wall-quota__win > b > i { display: block; height: 100%; background: #4ade80; }
+.ui-wall-quota__win.is-low > b > i { background: #f5b14c; }
+.ui-wall-quota__win.is-out > b > i { background: #ef4444; }
+.ui-wall-quota__pct { text-align: right; font-variant-numeric: tabular-nums; }
+.ui-wall-quota__reset { color: #9aa4b8; text-align: right; }
+.ui-wall-quota__more { padding-top: 4px; border-top: 1px solid rgba(160, 176, 210, 0.14); color: #9aa4b8; font-size: 10.5px; }
+.ui-wall-zoom { bottom: 64px; display: flex; flex-direction: column; overflow: hidden; }
+.ui-wall-zoom__btn { width: 38px; height: 38px; color: #e8ecf5; background: transparent; border: 0; font-size: 19px; line-height: 1; cursor: pointer; }
+.ui-wall-zoom__btn + .ui-wall-zoom__btn { border-top: 1px solid rgba(160, 176, 210, 0.2); }
+.ui-wall-zoom__btn:hover { background: rgba(255, 255, 255, 0.14); }

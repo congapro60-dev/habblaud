@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { accountsForDisplay, summaryWindows, type RouterQuotaAccount } from '../shared/router-quota';
+import { accountsForDisplay, compactQuota, summaryWindows, type RouterQuotaAccount } from '../shared/router-quota';
 import { parseWindows, RouterQuotaService } from './router-quota';
 
 const ENV = { HABBLAUD_9ROUTER_URL: 'http://127.0.0.1:20128' };
@@ -56,6 +56,21 @@ describe('quota 9Router', () => {
     expect(summaryWindows(codex).map((w) => w.key)).toEqual(['session', 'weekly']);
     const acc = (id: string, status: string) => ({ id, status }) as RouterQuotaAccount;
     expect(accountsForDisplay([acc('a', 'unavailable'), acc('b', 'active'), acc('c', 'active')]).map((a) => a.id)).toEqual(['b', 'c', 'a']);
+  });
+
+  it('bản thu gọn cho màn hình nền: chỉ tài khoản dùng được, 2 hạn mức sắp hết nhất, có cảnh báo', () => {
+    const acc = (over: Partial<RouterQuotaAccount>): RouterQuotaAccount => ({ id: 'x', provider: 'codex', label: 'me@mail.com', status: 'active', plan: null, message: null, limitReached: false, windows: [], fetchedAt: 1, error: null, ...over });
+    const view = compactQuota({
+      accounts: [
+        acc({ windows: parseWindows({ a: { used: 10, total: 100 }, b: { used: 80, total: 100 }, c: { used: 98, total: 100 } }) }),
+        acc({ status: 'unavailable' }),
+        acc({ limitReached: true }),
+      ],
+    });
+    expect(view.hidden).toBe(2);
+    expect(view.rows).toHaveLength(1);
+    expect(view.rows[0].label).toBe('me');
+    expect(view.rows[0].windows.map((w) => [w.key, w.level])).toEqual([['c', 'out'], ['b', 'low']]);
   });
 
   it('lê contas ativas e quotas sem expor credenciais', async () => {

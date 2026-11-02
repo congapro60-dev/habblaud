@@ -19,7 +19,7 @@
   - Cockpit `server/router.ts` vẫn chỉ đọc `/v1/models` (endpoint này hay treo khi 9Router quá tải) nên Dinh Hokage vẫn ghi quota `unknown`; chưa nối với dữ liệu quota mới.
 
 ## Màn hình nền (chỉ cấu hình trên máy chủ dự án, ngoài repo)
-- Client: `?wallpaper=1` ẩn toàn bộ UI, giới hạn 20 khung/giây (`client/src/app.ts`, `maxFps` trong `world/index.ts`).
+- Client: `?wallpaper=1` thay toàn bộ UI bằng `client/src/ui/wallpaper-hud.ts` (quota thu gọn hỏi lại mỗi 30 giây, nút zoom, tự về toàn cảnh sau 45 giây không thao tác), giới hạn 20 khung/giây (`maxFps` trong `world/index.ts`). Zoom bằng lăn chuột chạy đúng trong trình duyệt, nhưng người dùng từng bị kẹt khi dùng qua Lively; chưa rõ nguyên nhân gốc. Sau khi thêm nút zoom và bảng quota, người dùng đã dùng thử trên hình nền thật và xác nhận ổn (02/11/2026).
 - Server: tác vụ Task Scheduler `Habblaud Local Service` chạy `~/.habblaud/start-habblaud.vbs` khi đăng nhập, dùng **bản build** `dist/`. Sửa code xong phải `npm run build` rồi khởi động lại server thì hình nền mới đổi; `npm run dev` sẽ đụng cổng 4747 nên phải tắt server này trước.
 - Lively Wallpaper: mục thư viện ở `%LOCALAPPDATA%\Lively Wallpaper\Library\wallpapers\habblaud` (Type 3 = URL).
 
@@ -34,7 +34,7 @@
 
 ## Kiểm thử & Build
 - `npx tsc --noEmit -p tsconfig.json`: 0 lỗi.
-- `npx vitest run client/src/world/`: pass hết (gồm `ninja-cast.test.ts`, `outdoors.test.ts`); `client/src/art/training-board.test.ts`: 4/4 pass; `client/src/art/art.test.ts` còn 5 test cũ mô tả màn hình máy tính, đỏ từ trước. `server/router-quota.test.ts`: 8/8 pass.
+- `npx vitest run client/src/world/`: pass hết (gồm `ninja-cast.test.ts`, `outdoors.test.ts`); `client/src/art/training-board.test.ts`: 4/4 pass; `client/src/art/art.test.ts` còn 5 test cũ mô tả màn hình máy tính, đỏ từ trước. `server/router-quota.test.ts`: 9/9 pass.
 - Toàn bộ `vitest run`: còn các test hỏng có sẵn từ trước (art, server process/openssl, shared/demo, timeline/timelapse) — đã đối chiếu, hỏng y hệt trên code trước bản sửa.
 - Tốc độ khung hình (headless không GPU, đo liên tục 80 giây): 16-27 khung/giây, ngang trước khi thêm chiêu. Đừng đo ngay sau khi sửa file: Vite biên dịch lại và app dựng sprite lần đầu làm số tụt còn 1-2 khung/giây. Lúc đầu trang, `getImageData` trong `opaqueBounds` chiếm phần lớn thời gian.
 - Chụp màn hình headless: `playwright-core` của repo + Edge, trỏ vào `http://127.0.0.1:4747` (server `npm run dev`, Vite middleware).

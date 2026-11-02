@@ -43,6 +43,41 @@ export function accountsForDisplay(accounts: readonly RouterQuotaAccount[]): Rou
   return [...accounts.filter((a) => a.status === 'active'), ...accounts.filter((a) => a.status !== 'active')];
 }
 
+export interface CompactQuotaWindow extends RouterQuotaWindow {
+  level: 'ok' | 'low' | 'out' | 'na';
+}
+
+export interface CompactQuotaRow {
+  provider: string;
+  /** Phần trước @ của e-mail, gọn cho góc màn hình. */
+  label: string;
+  windows: CompactQuotaWindow[];
+}
+
+/** Mức cảnh báo theo phần trăm còn lại. */
+export function quotaLevel(pct: number | null): CompactQuotaWindow['level'] {
+  if (pct === null) return 'na';
+  return pct <= 5 ? 'out' : pct <= 25 ? 'low' : 'ok';
+}
+
+/**
+ * Bản thu gọn cho màn hình nền: chỉ tài khoản đang dùng được, mỗi tài khoản tối đa 2 hạn mức sắp hết nhất.
+ * `hidden` là số tài khoản không dùng được đã lược bỏ.
+ */
+export function compactQuota(snap: Pick<RouterQuotaSnapshot, 'accounts'>): { rows: CompactQuotaRow[]; hidden: number } {
+  const usable = snap.accounts.filter((a) => a.status === 'active' && !a.limitReached);
+  const rows = usable.map((a) => ({
+    provider: a.provider,
+    label: a.label.split('@')[0],
+    windows: summaryWindows(a.windows)
+      .slice()
+      .sort((x, y) => (x.unlimited ? 101 : x.remainingPct ?? 100) - (y.unlimited ? 101 : y.remainingPct ?? 100))
+      .slice(0, 2)
+      .map((w) => ({ ...w, level: w.unlimited ? ('ok' as const) : quotaLevel(w.remainingPct) })),
+  }));
+  return { rows, hidden: snap.accounts.length - usable.length };
+}
+
 export interface RouterQuotaSnapshot {
   baseUrl: string;
   /** ok = a última consulta respondeu; unavailable = 9Router não respondeu (mostrando a cópia salva). */
