@@ -20,7 +20,7 @@ import { daylightModeOf, parseHourParam } from './daylight';
 import { RoomFxRenderer } from './github-fx';
 import { Lighting } from './lighting';
 import { Particles } from './particles';
-import { carSprite, propSprite, shadowSprite } from './props';
+import { propSprite, shadowSprite } from './props';
 import { countBadge, fallbackIcon } from './shell-sprites';
 import { decorateElevator, drawSeasonalLights, drawSeasonalWindow, seasonalCostume, seasonalFurniture } from './seasonal';
 
@@ -44,23 +44,14 @@ const enum K {
   FurnFront,
   Char,
   Prop,
-  Car,
 }
 
 interface Ent {
   k: K;
   y: number;
-  ref: FurnVis | Character | ExteriorProp | Car | null;
+  ref: FurnVis | Character | ExteriorProp | null;
   area: AreaVis | null;
   scale: number;
-}
-
-interface Car {
-  x: number;
-  y: number;
-  dir: 1 | -1;
-  speed: number;
-  variant: number;
 }
 
 /** Posição da cabeça (px de mundo) de cada personagem desenhado neste frame. */
@@ -104,8 +95,6 @@ export class Renderer {
   private layoutVersion = -1;
   private assetsVersion = 0;
   private builtAssetsVersion = 0;
-  cars: Car[] = [];
-  private nextCarAt = 0;
   private ents: Ent[] = [];
   private pool: Ent[] = [];
   private date = new Date();
@@ -483,7 +472,6 @@ export class Renderer {
     const { ctx, camera } = this;
     this.date.setTime(this.clock());
     this.dt = dt;
-    this.updateCars(now, dt);
     const W = this.canvas.width;
     const H = this.canvas.height;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -596,7 +584,7 @@ export class Renderer {
       push(K.Char, ch.depth(), ch, null, 1);
     }
     for (const prop of this.exterior.props) {
-      if (!visible(prop.x - 24, prop.y - 56, 48, 60)) continue;
+      if (!visible(prop.x - 48, prop.y - 70, 96, 74)) continue;
       let alpha = 1;
       if (prop.whenRoom !== undefined) {
         // ex.: cerca viva diante do caminho do jardim — surge junto com a sala
@@ -620,11 +608,10 @@ export class Renderer {
         if (alpha <= 0.02) continue;
       }
       for (const prop of sh.props) {
-        if (!visible(prop.x - 24, prop.y - 56, 48, 60)) continue;
+        if (!visible(prop.x - 48, prop.y - 70, 96, 74)) continue;
         push(K.Prop, prop.y, prop, null, alpha);
       }
     }
-    for (const car of this.cars) if (visible(car.x - 24, car.y - 24, 48, 28)) push(K.Car, car.y, car, null, 1);
     ents.sort((a, b) => a.y - b.y || a.k - b.k);
 
     this.iconCount = 0;
@@ -641,9 +628,6 @@ export class Renderer {
           break;
         case K.Prop:
           this.drawProp(e.ref as ExteriorProp, e.scale);
-          break;
-        case K.Car:
-          this.drawCar(e.ref as Car);
           break;
       }
     }
@@ -1365,24 +1349,6 @@ export class Renderer {
     this.safe(() => this.art.drawFloor(ctx, 'sidewalk', prop.x, prop.y, 2 * TILE, 2 * TILE, { seed: prop.seed }));
     this.pavings.set(key, c);
     return c;
-  }
-
-  private drawCar(car: Car): void {
-    const s = carSprite(car.variant, car.dir < 0);
-    this.ctx.drawImage(s.canvas, Math.round(car.x - s.ax), Math.round(car.y - s.ay));
-  }
-
-  private updateCars(now: number, dt: number): void {
-    const b = this.exterior.bounds;
-    const x0 = b.x * TILE - 40;
-    const x1 = (b.x + b.w) * TILE + 40;
-    if (now >= this.nextCarAt) {
-      this.nextCarAt = now + 4000 + Math.random() * 9000;
-      const lane = this.exterior.lanes[Math.floor(Math.random() * this.exterior.lanes.length)];
-      if (lane) this.cars.push({ x: lane.dir > 0 ? x0 : x1, y: lane.y, dir: lane.dir, speed: 38 + Math.random() * 30, variant: Math.floor(Math.random() * 6) });
-    }
-    for (const c of this.cars) c.x += c.dir * c.speed * Math.min(dt, 0.1);
-    if (this.cars.length) this.cars = this.cars.filter((c) => c.x >= x0 - 10 && c.x <= x1 + 10);
   }
 
   private drawPingPong(now: number): void {

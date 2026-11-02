@@ -213,7 +213,7 @@ export class NinjaWarDirector {
 
     // Chỉ dàn nhân vật cục bộ (NPC ninja & trưởng phòng ảo) lên sàn. Session thật (Claude/Codex/OpenCode),
     // dù đang làm hay đang rảnh, không bao giờ bị kéo khỏi phòng — kể cả khi trùng tên với kịch bản.
-    const allChars = [...this.sim.chars.values()].filter((c) => !c.gone && !c.leaving && this.sim.isLocalCast(c));
+    const allChars = [...this.sim.chars.values()].filter((c) => !c.gone && !c.leaving && this.sim.isLocalCast(c) && !this.sim.isOutdoorPatrol(c));
     const charMatch = (pattern: string): Character | undefined => {
       // khớp nguyên từ: 'ay' là Raikage Ay, không phải mọi tên có chữ "ay"
       const re = new RegExp(`(^|[^a-z])${pattern.toLowerCase()}([^a-z]|$)`);

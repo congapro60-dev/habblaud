@@ -135,6 +135,77 @@ describe('Akatsuki, Thất Kiếm và hành lang', () => {
   });
 });
 
+describe('ngoài toà nhà', () => {
+  const outside = (sim: Sim, c: { tx: number; ty: number }): boolean => !sim.building.grid.inside(c.tx, c.ty) || c.tx < 1;
+
+  it('Anbu, Root và cảnh vệ đi tuần ngoài nhà, không bao giờ bước vào trong', () => {
+    const sim = officeSim();
+    const clock = { now: T0 };
+    const patrols = [...sim.chars.values()].filter((c) => sim.isOutdoorPatrol(c));
+    const names = patrols.map((c) => c.info.name ?? '');
+    expect(names.some((n) => n.includes('Anbu'))).toBe(true);
+    expect(names.some((n) => n.includes('Root'))).toBe(true);
+    expect(names.some((n) => n.includes('Cảnh Vệ'))).toBe(true);
+    const start = new Map(patrols.map((c) => [c.id, { x: c.x, y: c.y }]));
+    const moved = new Set<string>();
+    run(sim, clock, 40, () => {
+      for (const c of patrols) {
+        expect(outside(sim, c), `${c.id} ở (${c.tx},${c.ty})`).toBe(true);
+        const s = start.get(c.id)!;
+        if (Math.hypot(c.x - s.x, c.y - s.y) > 32) moved.add(c.id);
+      }
+    });
+    expect(moved.size).toBe(patrols.length);
+  });
+
+  it('NPC trong nhà có lúc ra ngoài rồi quay về, đi bộ chứ không dịch chuyển tức thời', () => {
+    const sim = officeSim();
+    const clock = { now: T0 };
+    const npcs = [...sim.chars.values()].filter((c) => sim.isLocalCast(c) && !sim.isOutdoorPatrol(c));
+    const last = new Map(npcs.map((c) => [c.id, { x: c.x, y: c.y }]));
+    const wentOut = new Set<string>();
+    const cameBack = new Set<string>();
+    let maxJump = 0;
+    run(sim, clock, 240, () => {
+      for (const c of npcs) {
+        const p = last.get(c.id)!;
+        maxJump = Math.max(maxJump, Math.hypot(c.x - p.x, c.y - p.y));
+        p.x = c.x;
+        p.y = c.y;
+        if (outside(sim, c)) wentOut.add(c.id);
+        else if (wentOut.has(c.id)) cameBack.add(c.id);
+      }
+    });
+    expect(wentOut.size).toBeGreaterThan(0);
+    expect(cameBack.size).toBeGreaterThan(0);
+    expect(maxJump).toBeLessThan(16);
+  });
+
+  it('đang ở ngoài mà có đại chiến: đi bộ về qua cửa, không dịch chuyển; đội tuần tra không lên sàn', () => {
+    const sim = officeSim();
+    const clock = { now: T0 };
+    run(sim, clock, 1);
+    const naruto = sim.chars.get('npc:naruto')!;
+    naruto.placeAtTile(-8, 30);
+    naruto.queue.length = 0;
+    naruto.step = null;
+    expect(sim.ninjaWar.startBattle('konoha-golden', clock.now)).toBe(true);
+    const war = sim.ninjaWar.getState()!;
+    const drafted = [...war.teamAChars, ...war.teamBChars, ...war.spectatorChars];
+    expect(drafted.some((c) => sim.isOutdoorPatrol(c))).toBe(false);
+    expect(drafted).toContain(naruto);
+    let p = { x: naruto.x, y: naruto.y };
+    let maxJump = 0;
+    run(sim, clock, 20, () => {
+      maxJump = Math.max(maxJump, Math.hypot(naruto.x - p.x, naruto.y - p.y));
+      p = { x: naruto.x, y: naruto.y };
+    });
+    expect(maxJump).toBeLessThan(16);
+    expect(naruto.ty >= sim.building.corridor.rect.y && naruto.ty < sim.building.corridor.rect.y + sim.building.corridor.rect.h).toBe(true);
+    expect(naruto.tx).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe('đại chiến không động tới session thật', () => {
   it('session thật (đang làm hay đang rảnh) không bị chọn làm đấu thủ hay khán giả, kể cả khi trùng tên kịch bản', () => {
     const sim = officeSim();

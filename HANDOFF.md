@@ -9,11 +9,11 @@
   - Đại chiến 3 vs 3 mỗi 3 phút (`NinjaWarDirector`): mỗi cặp đánh tại một điểm riêng (`duelSpots`) rải dọc hành lang; chỉ NPC & trưởng phòng ảo lên sàn/làm khán giả.
   - Session thật (Claude/Codex/OpenCode): không bao giờ bị kéo vào trận; làm việc thì ngồi bàn, rảnh mới đi dạo (hành vi gốc). Có vệt sáng xanh dưới chân để phân biệt với NPC trùng tên.
   - Âm thanh Web Audio, Kuchiyose (Gamabunta/Manda/Katsuyu), Bingo Book, HUD WASD/C.
+  - Ngoài toà nhà (đợt 1/4 đồ hoạ): `WalkGrid` chỉ phủ trong nhà, nên ngoài nhà dùng bước `walk` đi thẳng theo lộ trình vòng quanh (`sim/outdoors.ts`), qua cửa tây hành lang. Đội tuần tra `OUTDOOR_PATROL_ROSTER` (Anbu, Root, cảnh vệ) không vào nhà và không lên sàn đại chiến; NPC khác ra ngoài theo `OUTING_CHANCE`. Bước `go` từ ngoài nhà tự đi bộ về cửa rồi mới tìm đường. Đã gỡ nhân vật chạy theo làn xe; cảnh làng trong `layout/exterior.ts` + `render/props.ts`.
   - Quota 9Router: nút trên thanh công cụ (`client/src/ui/router-quota.ts`), API `GET /api/router/quota` (`server/router-quota.ts`). Server hỏi 9Router mỗi 2 phút qua `/api/providers/client` + `/api/usage/:id`, lưu bản tốt gần nhất vào `<dataDir>/router-quota.json`; API trả bản lưu ngay và làm mới ở nền, `?force=1` mới chờ 9Router. Không lưu số mới khi 9Router chết, chỉ hiện bản cũ kèm giờ cập nhật.
 - **Chưa có / còn nợ (chủ dự án đã yêu cầu):**
   - Phòng dự án vẫn là bàn máy tính — chưa đổi thành bãi tập/địa danh Naruto (bản HANDOFF cũ ghi đã đổi là sai).
   - Vĩ thú, jinchūriki hoá hình, Thập Vĩ, Lục Đạo; skill riêng từng nhân vật chưa đủ đặc trưng.
-  - Anbu/Root/cảnh vệ tuần tra ngoài toà nhà; bỏ xe chạy trên đường; cảnh làng ninja ở rừng/đường.
   - Cockpit `server/router.ts` vẫn chỉ đọc `/v1/models` (endpoint này hay treo khi 9Router quá tải) nên Dinh Hokage vẫn ghi quota `unknown`; chưa nối với dữ liệu quota mới.
 
 ## Bẫy đã gặp
@@ -26,6 +26,6 @@
 
 ## Kiểm thử & Build
 - `npx tsc --noEmit -p tsconfig.json`: 0 lỗi.
-- `npx vitest run client/src/world/sim/`: 90/90 pass (gồm `ninja-cast.test.ts`). `server/router-quota.test.ts`: 8/8 pass.
+- `npx vitest run client/src/world/`: 287/287 pass (gồm `ninja-cast.test.ts`, `outdoors.test.ts`). `server/router-quota.test.ts`: 8/8 pass.
 - Toàn bộ `vitest run`: còn các test hỏng có sẵn từ trước (art, server process/openssl, shared/demo, timeline/timelapse) — đã đối chiếu, hỏng y hệt trên code trước bản sửa.
 - Chụp màn hình headless: `playwright-core` của repo + Edge, trỏ vào `http://127.0.0.1:4747` (server `npm run dev`, Vite middleware).

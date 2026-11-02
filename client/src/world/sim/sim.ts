@@ -1,6 +1,7 @@
 // Simulação do escritório: concilia snapshots do servidor com os personagens e salas do mundo,
 // planeja comportamentos e executa as filas de passos a cada frame.
 import { partsKey } from '../../../../shared/appearance';
+import { mulberry32 } from '../../../../shared/hash';
 import type { AgentInfo, OfficeSnapshot, Provider, RoomInfo } from '../../../../shared/types';
 import { LOCAL_DEPARTMENT_HEADS } from '../../../../shared/local-character-roster';
 import type { ArtModule, Dir, RoomTheme } from '../../art/api';
@@ -18,6 +19,7 @@ import { hasTrait, personaFor, soloWeights } from '../social/persona';
 import { Social } from '../social/social';
 import { browserStorage, type StorageLike } from '../social/wallet';
 import { NinjaWarDirector, type NinjaTeamBattleState } from './ninja-war-director';
+import { DOOR_IN, DOOR_OUT, outdoorRoute, outdoorSpot, type OutdoorZone, type TilePoint } from './outdoors';
 import {
   canDismantle,
   chooseSeat,
@@ -137,6 +139,23 @@ const TROUBLEMAKER_NPC_IDS: ReadonlySet<string> = new Set([
   'npc:zabuza', 'npc:haku',
 ]);
 
+/** Đội tuần tra ngoài toà nhà: rừng và đường làng, không vào trong và không lên sàn đại chiến. */
+const OUTDOOR_PATROL_ROSTER = [
+  { id: 'npc:anbu-cao', name: 'Anbu Ám Bộ (Mặt Nạ Cáo)', role: 'Ám Bộ Konoha', zones: ['westForest', 'southForest', 'northForest'], seed: 0x7a110101 },
+  { id: 'npc:anbu-meo', name: 'Anbu Ám Bộ (Mặt Nạ Mèo)', role: 'Ám Bộ Konoha', zones: ['eastForest', 'southForest', 'northForest'], seed: 0x7a110102 },
+  { id: 'npc:anbu-gau', name: 'Anbu Ám Bộ (Mặt Nạ Gấu)', role: 'Ám Bộ Konoha', zones: ['road', 'southForest'], seed: 0x7a110103 },
+  { id: 'npc:root-1', name: 'Anbu Root (Ne - Gốc Rễ)', role: 'Tổ Chức Gốc Rễ', zones: ['westForest', 'southForest'], seed: 0x7a110104 },
+  { id: 'npc:root-2', name: 'Anbu Root (Ne - Mặt Nạ Trắng)', role: 'Tổ Chức Gốc Rễ', zones: ['eastForest', 'southForest'], seed: 0x7a110105 },
+  { id: 'npc:canhve-1', name: 'Cảnh Vệ Uchiha (Tuần Tra Làng)', role: 'Cảnh Vệ Konoha', zones: ['road'], seed: 0x7a110106 },
+  { id: 'npc:canhve-2', name: 'Cảnh Vệ Uchiha (Canh Cổng Làng)', role: 'Cảnh Vệ Konoha', zones: ['road'], seed: 0x7a110107 },
+  { id: 'npc:canhve-3', name: 'Cảnh Vệ Uchiha (Đội Đường Làng)', role: 'Cảnh Vệ Konoha', zones: ['road', 'northForest'], seed: 0x7a110108 },
+] as const satisfies readonly { id: string; name: string; role: string; zones: readonly OutdoorZone[]; seed: number }[];
+const PATROL_ZONES: ReadonlyMap<string, readonly OutdoorZone[]> = new Map(OUTDOOR_PATROL_ROSTER.map((p) => [p.id, p.zones]));
+/** Khu NPC trong nhà ghé thăm khi ra ngoài. */
+const OUTING_ZONES: readonly OutdoorZone[] = ['road', 'road', 'southForest', 'westForest', 'eastForest'];
+/** Xác suất mỗi lần NPC nghĩ việc mới thì ra ngoài một chuyến. */
+const OUTING_CHANCE = 0.05;
+
 const FALLBACK_THEME: RoomTheme = {
   carpet: '#5b7fa6',
   carpet2: '#4f7093',
@@ -172,6 +191,7 @@ export class Sim {
   readonly npcNinjaIds = new Set<string>();
   /** id NPC ninja -> khu vực core (võ đường) được phân bổ, để giải tán về đúng nhà sau trận. */
   readonly npcNinjaHome = new Map<string, string>();
+  private readonly outdoorPatrolIds = new Set<string>();
   private readonly virtualHeadHome = new Map<string, string>();
   readonly rooms = new Map<string, RoomState>();
   readonly spots = new SpotRegistry();
@@ -325,6 +345,83 @@ export class Sim {
       this.npcNinjaIds.add(def.id);
       this.npcNinjaHome.set(def.id, def.roomId);
     }
+    this.populateOutdoorPatrols();
+  }
+
+  /** Anbu, Root và cảnh vệ: rải sẵn ngoài nhà ngay từ đầu. */
+  private populateOutdoorPatrols(): void {
+    const rng = mulberry32(0x0a7b0);
+    for (const def of OUTDOOR_PATROL_ROSTER) {
+      const info: AgentInfo = {
+        id: def.id, kind: 'main', roomId: this.building.corridor.id, name: def.name, look: 'm', role: def.role, title: def.role,
+        sessionId: def.id, account: '@npc-ninja', status: 'working', recent: [], tasks: [], startedAt: 0, lastEventAt: 0, statusSince: 0,
+        stats: { toolCalls: 0, tokensIn: 0, tokensOut: 0, subagents: 0 }, seed: def.seed, custom: true, permissionMode: 'READ_ONLY',
+        activity: { id: `${def.id}:ready`, kind: 'plan', icon: '👁️', text: `${def.name} · ${def.role}`, at: 0 },
+      };
+      let appearance;
+      try {
+        appearance = this.art.appearanceFromSeed(info.seed, { look: info.look, parts: info.parts });
+      } catch {
+        continue;
+      }
+      const ch = new Character(info, appearance);
+      const at = outdoorSpot(def.zones[Math.floor(rng() * def.zones.length)], this.building.cols, rng);
+      ch.placeAtTile(at.x, at.y);
+      ch.mode = 'work';
+      ch.setPose('stand');
+      this.chars.set(def.id, ch);
+      this.npcNinjaIds.add(def.id);
+      this.outdoorPatrolIds.add(def.id);
+    }
+  }
+
+  /** Thuộc đội tuần tra ngoài nhà (không vào trong, không lên sàn đại chiến). */
+  isOutdoorPatrol(ch: Character): boolean {
+    return this.outdoorPatrolIds.has(ch.id);
+  }
+
+  /** Dàn nhân vật cục bộ đang đứng ngoài toà nhà (lưới đi lại không phủ tới đó). */
+  private isOutdoors(ch: Character): boolean {
+    if (ch.id !== DIRECTOR_AGENT_ID && !this.isLocalCast(ch)) return false;
+    return ch.tx < 1 || !this.building.grid.inside(ch.tx, ch.ty);
+  }
+
+  private walkSteps(route: readonly TilePoint[], run: boolean): Step[] {
+    return route.map((p) => ({ t: 'walk' as const, tx: p.x, ty: p.y, run }));
+  }
+
+  /** Từ chỗ đang đứng ngoài nhà đi bộ về tới trong cửa tây. */
+  private walkHomeSteps(ch: Character, run = false): Step[] {
+    return this.walkSteps([...outdoorRoute({ x: ch.tx, y: ch.ty }, DOOR_OUT, this.building.cols), DOOR_IN], run);
+  }
+
+  /** Ra cửa tây, đi tới một điểm ngoài nhà, đứng một lúc rồi về. */
+  private planOutdoorTrip(ch: Character): void {
+    const cols = this.building.cols;
+    const zone = OUTING_ZONES[Math.floor(ch.rng() * OUTING_ZONES.length)];
+    const to = outdoorSpot(zone, cols, ch.rng);
+    const run = ch.rng() < 0.4;
+    if (ch.atSpot) ch.queue.push({ t: 'exit' });
+    ch.queue.push(
+      { t: 'go', tx: DOOR_IN.x, ty: DOOR_IN.y, run },
+      ...this.walkSteps([DOOR_OUT, ...outdoorRoute(DOOR_OUT, to, cols)], run),
+      { t: 'act', pose: ch.rng() < 0.5 ? 'rps' : 'stand', ms: 3_000 + ch.rng() * 5_000 },
+      ...this.walkSteps([...outdoorRoute(to, DOOR_OUT, cols), DOOR_IN], run),
+    );
+  }
+
+  /** Anbu, Root, cảnh vệ: đi hết điểm này tới điểm khác ngoài nhà, dừng quan sát một lúc. */
+  private runPatrol(ch: Character, now: number): void {
+    if (!ch.thinkAt) ch.thinkAt = now + ch.rng() * 2_000;
+    if (now < ch.thinkAt) return;
+    ch.thinkAt = now + 500;
+    const zones = PATROL_ZONES.get(ch.id) ?? ['road'];
+    const to = outdoorSpot(zones[Math.floor(ch.rng() * zones.length)], this.building.cols, ch.rng);
+    const run = ch.info.name?.includes('Anbu') === true && ch.rng() < 0.45;
+    ch.queue.push(
+      ...this.walkSteps(outdoorRoute({ x: ch.tx, y: ch.ty }, to, this.building.cols), run),
+      { t: 'act', pose: 'stand', ms: 1_500 + ch.rng() * 3_500 },
+    );
   }
 
   /** Khu vực cục bộ theo id: các võ đường (core) hoặc hành lang chính (không nằm trong `building.core`). */
@@ -351,6 +448,15 @@ export class Sim {
       if (ch.gathering.phase !== 'ended') return;
       ch.gathering = null;
     }
+    if (this.isOutdoorPatrol(ch)) {
+      this.runPatrol(ch, now);
+      return;
+    }
+    // bị gián đoạn khi đang ở ngoài (vừa tỉ thí xong...): đi về trước đã
+    if (this.isOutdoors(ch)) {
+      ch.queue.push(...this.walkHomeSteps(ch));
+      return;
+    }
     if (TROUBLEMAKER_NPC_IDS.has(ch.id)) {
       this.runTroublemaker(ch, now);
       return;
@@ -358,6 +464,10 @@ export class Sim {
     if (!ch.thinkAt) ch.thinkAt = now + 4_000 + ch.rng() * 6_000;
     if (now < ch.thinkAt) return;
     ch.thinkAt = now + 6_000 + ch.rng() * 8_000;
+    if (ch.rng() < OUTING_CHANCE) {
+      this.planOutdoorTrip(ch);
+      return;
+    }
 
     const rng = ch.rng();
     if (rng < 0.4) {
@@ -1218,7 +1328,14 @@ export class Sim {
     ch.stepStarted = true;
     switch (s.t) {
       case 'go':
+        // o A* só existe dentro do prédio: de fora, anda até a porta oeste antes de seguir o caminho
+        if (!s.path && this.isOutdoors(ch)) {
+          ch.queue.unshift(...this.walkHomeSteps(ch, s.run), s);
+          return true;
+        }
         return this.stepGo(ch, s, dt);
+      case 'walk':
+        return this.stepWalk(ch, s, dt);
       case 'enter': {
         const spot = this.spots.get(s.spot);
         if (!spot) return true;
@@ -1312,6 +1429,29 @@ export class Sim {
       out.unshift(s.x, s.y);
       return true;
     }
+    return false;
+  }
+
+  /** Đi thẳng tới tile đích (ngoài nhà không có vật cản nên không cần A*). */
+  private stepWalk(ch: Character, s: Extract<Step, { t: 'walk' }>, dt: number): boolean {
+    const gx = s.tx * TILE + FOOT_DX;
+    const gy = s.ty * TILE + FOOT_DY;
+    const dx = gx - ch.x;
+    const dy = gy - ch.y;
+    const d = Math.hypot(dx, dy);
+    const budget = (s.run ? RUN_SPEED : WALK_SPEED) * ch.speedK * dt;
+    if (d <= budget) {
+      ch.placeAtTile(s.tx, s.ty);
+      ch.setPose('stand');
+      return true;
+    }
+    ch.dir = dirOf(dx, dy, ch.dir);
+    ch.x += (dx / d) * budget;
+    ch.y += (dy / d) * budget;
+    const t = tileAt(ch.x, ch.y);
+    ch.tx = t.x;
+    ch.ty = t.y;
+    ch.setPose(s.run ? 'run' : 'walk');
     return false;
   }
 
@@ -1903,6 +2043,10 @@ export class Sim {
     const isDirector = this.director?.id === ch.id;
     const homeAreaId = isDirector ? DIRECTOR_ID : (this.homeCoreIdOf(ch) ?? ch.roomId);
     const homeArea = this.localArea(homeAreaId) ?? this.building.core[0];
+    if (ch.rng() < OUTING_CHANCE && !this.isOutdoors(ch)) {
+      this.planOutdoorTrip(ch);
+      return true;
+    }
     // đang ngồi ghế (Giám đốc ở bàn làm việc) thì đứng dậy trước khi đi
     if (ch.atSpot) ch.queue.push({ t: 'exit' });
 
@@ -2531,6 +2675,9 @@ export class Sim {
 
   private finishStep(ch: Character, s: Step, now: number): void {
     switch (s.t) {
+      case 'walk':
+        ch.placeAtTile(s.tx, s.ty);
+        break;
       case 'go':
         ch.placeAtTile(s.tx, s.ty);
         if (s.fx !== undefined && s.fy !== undefined) {

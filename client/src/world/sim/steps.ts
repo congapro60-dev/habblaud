@@ -5,6 +5,8 @@ import type { Gathering } from '../social/gathering';
 export type Step =
   /** Anda (ou corre) até o tile (tx, ty); depois, opcionalmente, até a posição fina (fx, fy) e vira para `dir`. */
   | { t: 'go'; tx: number; ty: number; run?: boolean; fx?: number; fy?: number; dir?: Dir; held?: HeldItem; path?: number[]; i?: number; fine?: boolean }
+  /** Đi thẳng tới một tile, không qua lưới đi lại (khu ngoài toà nhà, xem outdoors.ts). */
+  | { t: 'walk'; tx: number; ty: number; run?: boolean }
   /** Encaixa no spot (assento ou ponto de uso). Exige estar no tile de aproximação. */
   | { t: 'enter'; spot: string }
   /** Sai do spot atual de volta ao tile de aproximação (levantar). */

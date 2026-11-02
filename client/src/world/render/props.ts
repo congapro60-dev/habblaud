@@ -1,4 +1,4 @@
-// Sprites procedurais da área externa (árvores, arbustos, postes, carros...) e utilitários
+// Sprites procedurais da área externa (árvores, arbustos, postes, casas da vila...) e utilitários
 // visuais do mundo (sombra, brilhos). Mesma direção de arte do módulo de arte: contorno
 // cinza-azulado escuro, 3–4 tons por material, luz vinda de cima/esquerda.
 import { mulberry32 } from '../../../../shared/hash';
@@ -328,6 +328,146 @@ function totemSprite(): PropSprite {
   return { canvas: c, ax: 8, ay: 32 };
 }
 
+/** Vẽ nhanh một khối màu đặc. */
+function block(ctx: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number): void {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+/** Vòng xoáy đỏ, hoạ tiết quen thuộc trên tường nhà làng ninja. */
+function swirl(ctx: CanvasRenderingContext2D, cx: number, cy: number, color: string): void {
+  block(ctx, color, cx - 2, cy - 3, 5, 1);
+  block(ctx, color, cx + 2, cy - 2, 1, 4);
+  block(ctx, color, cx - 2, cy + 2, 5, 1);
+  block(ctx, color, cx - 3, cy - 2, 1, 4);
+  block(ctx, color, cx, cy - 1, 1, 2);
+}
+
+/** Nhà dân làng ninja: tường trắng ngà, mái ngói nhiều tầng, cửa gỗ. */
+function ninjaHouseSprite(seed: number): PropSprite {
+  const [c, ctx] = makeCanvas(56, 50);
+  const roofs: [string, string, string][] = [
+    ['#b4532a', '#d9713f', '#7c3518'],
+    ['#2f7f79', '#43a39b', '#1f5552'],
+    ['#6b5a8e', '#8877ad', '#463a60'],
+  ];
+  const [roof, roofLight, roofDark] = roofs[seed % roofs.length];
+  shadowEllipse(ctx, 28, 47, 25, 3, 0.25);
+  block(ctx, '#e8dcc3', 7, 22, 42, 25);
+  block(ctx, '#cfbf9f', 7, 42, 42, 5);
+  block(ctx, '#f4ead4', 7, 22, 42, 2);
+  block(ctx, '#5c3d24', 7, 22, 2, 25);
+  block(ctx, '#5c3d24', 47, 22, 2, 25);
+  // mái ngói ba tầng, nhô ra hai bên
+  block(ctx, roofDark, 2, 17, 52, 6);
+  block(ctx, roof, 3, 16, 50, 5);
+  block(ctx, roofLight, 3, 16, 50, 1);
+  block(ctx, roofDark, 9, 10, 38, 6);
+  block(ctx, roof, 10, 9, 36, 6);
+  block(ctx, roofLight, 10, 9, 36, 1);
+  block(ctx, roofDark, 18, 4, 20, 5);
+  block(ctx, roof, 19, 3, 18, 5);
+  block(ctx, roofLight, 19, 3, 18, 1);
+  // cửa và cửa sổ
+  block(ctx, '#4a2f1b', 24, 32, 9, 15);
+  block(ctx, '#6d4627', 25, 33, 7, 14);
+  block(ctx, '#3b5b78', 12, 29, 7, 6);
+  block(ctx, '#5c3d24', 15, 29, 1, 6);
+  block(ctx, '#3b5b78', 38, 29, 7, 6);
+  block(ctx, '#5c3d24', 41, 29, 1, 6);
+  swirl(ctx, 42, 40, '#c8452f');
+  return { canvas: c, ax: 28, ay: 47 };
+}
+
+/** Quầy hàng ven đường: mái sọc, rèm vải, quầy gỗ và hai ghế đẩu. */
+function marketStallSprite(seed: number): PropSprite {
+  const [c, ctx] = makeCanvas(46, 36);
+  const stripes: [string, string][] = [
+    ['#d8542f', '#f3e3c3'],
+    ['#2f8a6b', '#f3e3c3'],
+    ['#c79a2c', '#7a3b1e'],
+  ];
+  const [a, b] = stripes[seed % stripes.length];
+  shadowEllipse(ctx, 23, 33, 21, 2, 0.25);
+  block(ctx, '#5c3d24', 5, 8, 2, 25);
+  block(ctx, '#5c3d24', 39, 8, 2, 25);
+  for (let x = 2; x < 44; x += 6) {
+    block(ctx, (x - 2) % 12 === 0 ? a : b, x, 2, 6, 7);
+  }
+  block(ctx, '#3a2614', 2, 9, 42, 1);
+  for (let x = 8; x < 38; x += 6) block(ctx, '#e9ddc2', x, 10, 5, 7);
+  // quầy gỗ
+  block(ctx, '#8a5a30', 5, 22, 36, 4);
+  block(ctx, '#a97544', 5, 22, 36, 1);
+  block(ctx, '#6d4627', 7, 26, 32, 7);
+  // bát trên quầy
+  block(ctx, '#f4ead4', 12, 20, 5, 2);
+  block(ctx, '#c8452f', 28, 20, 5, 2);
+  // ghế đẩu
+  block(ctx, '#5c3d24', 13, 32, 5, 2);
+  block(ctx, '#5c3d24', 28, 32, 5, 2);
+  return { canvas: c, ax: 23, ay: 33 };
+}
+
+/** Cổng làng lớn: hai trụ gỗ, xà và mái xanh, giữa để trống cho đường đi qua. */
+function villageGateSprite(): PropSprite {
+  const [c, ctx] = makeCanvas(88, 68);
+  shadowEllipse(ctx, 12, 64, 9, 2, 0.28);
+  shadowEllipse(ctx, 76, 64, 9, 2, 0.28);
+  for (const x of [6, 70]) {
+    block(ctx, '#4a2f1b', x, 18, 12, 47);
+    block(ctx, '#6d4627', x + 1, 18, 9, 47);
+    block(ctx, '#8a5a30', x + 1, 18, 2, 47);
+    block(ctx, '#2f5d46', x - 1, 58, 14, 7);
+    block(ctx, '#3f7a5c', x - 1, 58, 14, 2);
+  }
+  // xà ngang và bảng tên
+  block(ctx, '#4a2f1b', 6, 24, 76, 6);
+  block(ctx, '#7a4f2a', 6, 24, 76, 2);
+  block(ctx, '#2c2118', 30, 30, 28, 11);
+  block(ctx, '#e8dcc3', 32, 32, 24, 7);
+  swirl(ctx, 44, 35, '#c8452f');
+  // mái xanh hai tầng cong nhẹ ở hai đầu
+  block(ctx, '#1f4d39', 0, 14, 88, 7);
+  block(ctx, '#2f6d50', 1, 12, 86, 7);
+  block(ctx, '#4b9672', 1, 12, 86, 1);
+  block(ctx, '#1f4d39', 10, 6, 68, 6);
+  block(ctx, '#2f6d50', 11, 4, 66, 7);
+  block(ctx, '#4b9672', 11, 4, 66, 1);
+  return { canvas: c, ax: 44, ay: 64 };
+}
+
+/** Cổng đền đỏ giữa rừng. */
+function toriiSprite(): PropSprite {
+  const [c, ctx] = makeCanvas(38, 38);
+  shadowEllipse(ctx, 19, 35, 15, 2, 0.25);
+  block(ctx, '#a02c20', 8, 8, 4, 28);
+  block(ctx, '#c8452f', 9, 8, 2, 28);
+  block(ctx, '#a02c20', 26, 8, 4, 28);
+  block(ctx, '#c8452f', 27, 8, 2, 28);
+  block(ctx, '#2c2118', 1, 2, 36, 2);
+  block(ctx, '#c8452f', 2, 4, 34, 4);
+  block(ctx, '#e0614a', 2, 4, 34, 1);
+  block(ctx, '#a02c20', 6, 13, 26, 3);
+  block(ctx, '#8a5a30', 17, 8, 4, 5);
+  return { canvas: c, ax: 19, ay: 35 };
+}
+
+/** Bãi cọc tập: ba khúc gỗ dựng, có dây quấn ở cọc giữa. */
+function trainingLogSprite(): PropSprite {
+  const [c, ctx] = makeCanvas(34, 28);
+  shadowEllipse(ctx, 17, 25, 15, 2, 0.25);
+  for (const [x, top] of [[4, 11], [14, 4], [24, 11]] as const) {
+    block(ctx, '#4a2f1b', x, top, 7, 25 - top);
+    block(ctx, '#7a4f2a', x + 1, top, 5, 25 - top);
+    block(ctx, '#9a6c3e', x + 1, top, 2, 25 - top);
+    block(ctx, '#b58a5c', x, top, 7, 2);
+  }
+  block(ctx, '#e8dcc3', 14, 11, 7, 2);
+  block(ctx, '#e8dcc3', 14, 15, 7, 2);
+  return { canvas: c, ax: 17, ay: 25 };
+}
+
 export function propSprite(prop: ExteriorProp): PropSprite {
   const key = prop.kind === 'lamp' || prop.kind === 'bench' || prop.kind === 'totem' ? prop.kind : `${prop.kind}:${prop.seed % 7}`;
   let s = cache.get(key);
@@ -363,74 +503,25 @@ export function propSprite(prop: ExteriorProp): PropSprite {
     case 'totem':
       s = totemSprite();
       break;
+    case 'ninja_house':
+      s = ninjaHouseSprite(prop.seed % 7);
+      break;
+    case 'market_stall':
+      s = marketStallSprite(prop.seed % 7);
+      break;
+    case 'village_gate':
+      s = villageGateSprite();
+      break;
+    case 'torii':
+      s = toriiSprite();
+      break;
+    case 'training_log':
+      s = trainingLogSprite();
+      break;
     default:
       // 'paving' e outros tipos desenhados pelo próprio renderer
       s = { canvas: makeCanvas(1, 1)[0], ax: 0, ay: 0 };
   }
-  cache.set(key, s);
-  return s;
-}
-
-const NINJA_SPRINT_STYLES: [string, string, string, string][] = [
-  ['#ea580c', '#1e293b', '#facc15', '#f8fafc'], // Naruto (Cam / Lam / Tóc vàng / Băng trán)
-  ['#1e293b', '#475569', '#171412', '#93c5fd'], // Sasuke (Áo chàm / Tóc đen / Chidori)
-  ['#15803d', '#166534', '#171412', '#22c55e'], // Gai / Lee (Đồ bó xanh lá Mộc Diệp)
-  ['#dc2626', '#171412', '#cbd5e1', '#ef4444'], // Akatsuki (Áo choàng đen mây đỏ)
-  ['#0284c7', '#0369a1', '#e2e8f0', '#38bdf8'], // Ninja Làng Mây / Kirigakure
-  ['#78350f', '#451a03', '#ca8a04', '#fed7aa'], // Ninja Làng Cát / Làng Đá
-];
-
-/** Nhẫn giả phi thân Naruto run (cúi thấp người, hai tay duỗi thẳng ra sau phóng như bay dọc đường). */
-export function carSprite(variant: number, flip: boolean): PropSprite {
-  const key = `car:${variant % NINJA_SPRINT_STYLES.length}:${flip ? 1 : 0}`;
-  const hit = cache.get(key);
-  if (hit) return hit;
-  const [topCol, botCol, hairCol, fxCol] = NINJA_SPRINT_STYLES[variant % NINJA_SPRINT_STYLES.length];
-  const [c, ctx] = makeCanvas(36, 20);
-  if (flip) {
-    ctx.translate(36, 0);
-    ctx.scale(-1, 1);
-  }
-  // Vệt bóng mờ phi thân trên mặt đất
-  shadowEllipse(ctx, 18, 17, 14, 2, 0.25);
-
-  // 1. Luồng gió / Khói bụi lướt gió sau gót chân
-  ctx.fillStyle = 'rgba(255,255,255,0.45)';
-  ctx.fillRect(4, 15, 6, 2);
-  ctx.fillRect(2, 13, 5, 2);
-
-  // 2. Hai cánh tay duỗi thẳng song song ra sau lưng (Naruto Run đặc trưng)
-  ctx.fillStyle = topCol;
-  ctx.fillRect(6, 9, 12, 3);
-  ctx.fillStyle = '#fed7aa'; // Bàn tay
-  ctx.fillRect(4, 9, 3, 2);
-
-  // 3. Đôi chân sải bước thần tốc
-  ctx.fillStyle = botCol;
-  ctx.fillRect(13, 13, 8, 4); // Chân sau
-  ctx.fillRect(23, 14, 7, 4); // Chân trước
-  ctx.fillStyle = '#1e293b';  // Sandal ninja
-  ctx.fillRect(28, 16, 4, 2);
-
-  // 4. Thân mình cúi gập song song mặt đất phóng về phía trước
-  ctx.fillStyle = topCol;
-  ctx.fillRect(16, 7, 13, 7);
-
-  // 5. Đầu & Tóc nhọn bay theo chiều gió
-  ctx.fillStyle = '#fed7aa'; // Mặt
-  ctx.fillRect(26, 5, 6, 6);
-  ctx.fillStyle = hairCol;   // Mái tóc
-  ctx.fillRect(23, 3, 8, 4);
-  ctx.fillRect(20, 4, 4, 3); // Tóc vuốt ngược ra sau
-
-  // 6. Băng bảo hộ trán ninja kim loại lấp lánh & Dải ruy băng bay phấp phới
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillRect(28, 5, 4, 2);
-  ctx.fillStyle = fxCol;     // Ruy băng bay ra sau
-  ctx.fillRect(19, 6, 5, 1);
-  ctx.fillRect(15, 7, 4, 1);
-
-  const s = { canvas: c, ax: 18, ay: 17 };
   cache.set(key, s);
   return s;
 }

@@ -12,8 +12,6 @@ export interface ExteriorLayout {
   bounds: TileRect;
   floors: FloorPatch[];
   props: ExteriorProp[];
-  /** Faixas da rua (y em px) e sentido (+1 = leste, -1 = oeste). */
-  lanes: { y: number; dir: 1 | -1 }[];
   /** Linha central da rua (px), para as faixas tracejadas. */
   streetY: number;
   streetH: number;
@@ -90,7 +88,22 @@ export function layoutExterior(cols: number): ExteriorLayout {
   for (let x = bounds.x + 4; x < bounds.x + bounds.w; x += 10) {
     props.push({ kind: 'lamp', x: px(x), y: px(south + 3) + 6, seed: x });
   }
-  for (const row of [13, 17, 21]) {
+  // Làng ninja ven đường: nhà dân và quầy hàng phía nam, cổng làng ở hai đầu đường, cổng đền và bãi cọc tập trong rừng
+  for (let x = bounds.x + 6; x < bounds.x + bounds.w - 6; x += 13 + Math.floor(rng() * 5)) {
+    props.push({ kind: 'ninja_house', x: px(x), y: px(south + 15), seed: Math.floor(rng() * 1e9) });
+  }
+  for (let x = bounds.x + 12; x < bounds.x + bounds.w - 6; x += 19 + Math.floor(rng() * 8)) {
+    props.push({ kind: 'market_stall', x: px(x), y: px(south + 11) + 6, seed: Math.floor(rng() * 1e9) });
+  }
+  // A câmera padrão enquadra a largura do prédio: o que fica nas pontas da rua nunca apareceria sem arrastar a vista.
+  props.push({ kind: 'village_gate', x: px(5), y: px(south + 4), seed: 21 });
+  props.push({ kind: 'village_gate', x: px(w - 5), y: px(south + 4), seed: 22 });
+  props.push({ kind: 'torii', x: px(-7), y: px(CORRIDOR_Y + 3), seed: 23 });
+  props.push({ kind: 'torii', x: px(Math.floor(w / 2)), y: px(south + 19), seed: 24 });
+  for (const [tx, ty] of [[-13, 5], [w + 9, 5], [12, south + 19], [w - 14, south + 19], [Math.floor(w / 2) - 9, south + 20]] as const) {
+    props.push({ kind: 'training_log', x: px(tx), y: px(ty), seed: tx * 13 + ty });
+  }
+  for (const row of [19, 22]) {
     for (let x = bounds.x + 3; x < bounds.x + bounds.w - 2; x += 6 + Math.floor(rng() * 5)) {
       props.push({ kind: rng() < 0.2 ? 'pine' : 'tree', x: px(x) + Math.floor(rng() * 10), y: px(south + row) + Math.floor(rng() * 10), seed: Math.floor(rng() * 1e9) });
       if (rng() < 0.3) props.push({ kind: 'bush', x: px(x + 3), y: px(south + row + 1), seed: Math.floor(rng() * 1e9) });
@@ -106,10 +119,6 @@ export function layoutExterior(cols: number): ExteriorLayout {
     bounds,
     floors,
     props,
-    lanes: [
-      { y: streetY + Math.round(streetH * 0.36), dir: 1 },
-      { y: streetY + Math.round(streetH * 0.86), dir: -1 },
-    ],
     streetY,
     streetH,
   };
